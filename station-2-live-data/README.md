@@ -9,8 +9,22 @@ of sensor.
 
 ## Setup
 
+Nebra requires Python ≥3.11. Either:
+
+```
+pipenv install     # uses the Pipfile/Pipfile.lock in this dir, pinned + verified working
+pipenv shell
+```
+
+or plain pip:
+
 ```
 pip install nebra
+```
+
+Then, either way:
+
+```
 export NEBRA_HANDLE=your-handle.bsky.social   # or whatever PDS the base station set you up on
 export NEBRA_PASSWORD=...
 # export NEBRA_BASE_URL=...   # only if not using the default
@@ -32,14 +46,28 @@ this runs on a laptop with nothing attached — swap in a real GPIO/DHT read (se
 | File | What it is |
 |---|---|
 | `sensor_producer.py` | The producer half — reads a sensor, sends a record via `nebra.send()`. |
-| `consumer_viewer.py` | The consumer half — watches for those records via `nebra.stream()`, Matadisco's producer/consumer pattern. |
+| `consumer_viewer.py` | The consumer half — watches for those records via Jetstream, Matadisco's producer/consumer pattern. |
 | `lexicon/science.iosp.sensor.reading.json` | Draft record schema, JSON-Schema-style, modeled on `tilde.cards`' own lexicon template. **Placeholder NSID** — the group hasn't picked a real namespace yet; don't treat `science.iosp.*` as final. |
 
 ## Note on the Nebra API
 
-Confirmed from Nebra's own README: `nebra.send(record, reuse_session=True)`,
-`nebra.stream(collections=[...], handles=[...])`, `nebra.get_atproto_utc_time()`.
-Not independently verified beyond that (e.g. `stream()`'s exact iteration
-semantics) — the library is described upstream as early-development / not yet
-recommended for production scientific use, so double-check behavior once
-installed rather than trusting this skeleton blindly.
+Verified locally (pipenv, nebra 0.1.0) against the live public Jetstream, not
+just read from Nebra's README:
+
+- `nebra.send(record, reuse_session=True)` and `nebra.get_atproto_utc_time()`
+  match their documented signatures — used as-is in `sensor_producer.py`.
+- `nebra.stream(...)` does **not** work as a plain generator — it's a
+  `click.Command` (CLI-only), and the function underneath just `print()`s
+  messages in an infinite loop rather than yielding them. `consumer_viewer.py`
+  reimplements Nebra's own Jetstream connection recipe directly instead (same
+  pieces, exported from `nebra.jetstream`) so it can actually be iterated.
+- Nebra's compressed-streaming path is currently broken upstream: its
+  `get_zstd_decompressor()` downloads a dictionary from a hardcoded GitHub URL
+  that 404s (the file moved in the `bluesky-social/jetstream` repo). Anyone
+  hitting Nebra's own CLI with default settings gets the same crash.
+  `consumer_viewer.py` requests uncompressed JSON instead (`compress=False`)
+  to route around it — real Jetstream supports that directly, no dictionary
+  needed.
+
+The library is still early-development (per its own README), so re-check this
+closer to the workshop in case upstream has changed.
