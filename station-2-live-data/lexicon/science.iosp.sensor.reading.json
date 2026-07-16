@@ -1,0 +1,42 @@
+{
+  "lexicon": 1,
+  "id": "science.iosp.sensor.reading",
+  "_comment": "DRAFT — placeholder NSID for the workshop only. NSID authority (the domain that owns 'science.iosp.*') hasn't been decided by the group; finalize a real namespace before anyone publishes records under this at the actual event. Modeled on tilde.cards' cards.tilde.card.json lexicon template.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A single reading from a live sensor (e.g. temperature, humidity), published via Nebra.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["sensorType", "value", "unit", "createdAt"],
+        "properties": {
+          "sensorType": {
+            "type": "string",
+            "description": "What kind of sensor this reading came from, e.g. 'temperature', 'humidity'.",
+            "maxLength": 64
+          },
+          "value": {
+            "type": "number",
+            "description": "The reading itself."
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit for value, e.g. 'celsius', 'percent'.",
+            "maxLength": 32
+          },
+          "deviceId": {
+            "type": "string",
+            "description": "Free-form identifier for which physical device produced this — e.g. which Raspberry Pi.",
+            "maxLength": 128
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "ATProto-compatible UTC timestamp — use nebra.get_atproto_utc_time()."
+          }
+        }
+      }
+    }
+  }
+}
