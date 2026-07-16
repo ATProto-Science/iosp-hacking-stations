@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
   "id": "science.iosp.sensor.reading",
-  "_comment": "DRAFT — placeholder NSID for the workshop only. NSID authority (the domain that owns 'science.iosp.*') hasn't been decided by the group; finalize a real namespace before anyone publishes records under this at the actual event. Modeled on tilde.cards' cards.tilde.card.json lexicon template.",
+  "_comment": "DRAFT — placeholder NSID for the workshop only. NSID authority (the domain that owns 'science.iosp.*') hasn't been decided by the group; finalize a real namespace before anyone publishes records under this at the actual event. Modeled on tilde.cards' cards.tilde.card.json lexicon template. `value`/`valueScale`: AT Protocol's on-wire record data model has no floating-point type (verified 2026-07-16 against a real PDS — a float `value` gets a 400 from com.atproto.repo.createRecord), so readings are stored as a scaled integer instead; see each field's description.",
   "defs": {
     "main": {
       "type": "record",
@@ -9,7 +9,7 @@
       "key": "tid",
       "record": {
         "type": "object",
-        "required": ["sensorType", "value", "unit", "createdAt"],
+        "required": ["sensorType", "value", "valueScale", "unit", "createdAt"],
         "properties": {
           "sensorType": {
             "type": "string",
@@ -17,8 +17,12 @@
             "maxLength": 64
           },
           "value": {
-            "type": "number",
-            "description": "The reading itself."
+            "type": "integer",
+            "description": "The reading, scaled to an integer by valueScale (AT Protocol records can't hold floats) — real value = value / valueScale."
+          },
+          "valueScale": {
+            "type": "integer",
+            "description": "Divide `value` by this to recover the real-world reading, e.g. value=238, valueScale=10 means 23.8."
           },
           "unit": {
             "type": "string",

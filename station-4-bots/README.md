@@ -1,21 +1,41 @@
-# Station 4 — ATProto Bots
+# Station 4 — AI workflows over ATProto data
 
-Starting point: a bot that makes one real decision (which of several ways to respond
+Starting point: an agent that makes one real decision (which of several strategies
 is worth trying right now) instead of just reacting. The decision-making core
 (`bandit.mjs`, `fact-store.mjs`) is lifted near-verbatim from `sail-judge`, a working
 production bot built for SAIL/haiku.garden — see the header comment in each file for
-provenance. Everything Chatto-specific has been removed; `bot-skeleton.mjs` is the
-part you rewire for this workshop.
+provenance, substrate-agnostic on purpose.
+
+Two example rewirings of that same core, matching the two concrete ideas in IOSP's
+own copy for this station ("map scientific discourse on Bluesky, create new
+connections between research papers on Semble, or convert your paper to modular
+research units"):
+
+- **`bot-skeleton.mjs`** — a chat-response bot: the bandit picks how to respond to
+  an incoming message (answer directly vs. look something up first).
+- **`connections-skeleton.mjs`** — closer to the "create new connections between
+  research papers" framing: the bandit picks *which relation type* (or none) to
+  propose between two candidate papers, a human confirms, the bandit learns from
+  that confirmation. See its own header comment for why proposals go through a
+  human rather than writing straight to Semble.
+
+Pick whichever matches what you want to build, or use one as a template for your
+own idea (the "convert to modular research units" thread doesn't fit the bandit
+shape as naturally — decomposition/publishing, not a repeated decision — so it's
+better started fresh than forked from either skeleton here).
 
 ## Run it now, zero setup
 
 ```
 node bot-skeleton.mjs
+# or:
+node connections-skeleton.mjs
 ```
 
-Feeds itself a scripted demo conversation on stdin and prints which arm the bandit
-picks each turn, and how rewards update the arm weights. No network, no API keys —
-this is step 1: see the mechanism work before wiring in anything real.
+Both feed themselves a scripted demo (a conversation, or a sequence of candidate
+paper pairs) and print which arm the bandit picks each turn, and how rewards update
+the arm weights. No network, no API keys — this is step 1: see the mechanism work
+before wiring in anything real.
 
 ## Then: wire in something real
 
@@ -33,13 +53,26 @@ this is step 1: see the mechanism work before wiring in anything real.
 3. **Output** — replace `console.log` with wherever the bot should actually post
    (a Bluesky reply, back into a chat room, a new PDS record).
 
+`connections-skeleton.mjs` has two:
+
+1. **Candidate lookup** — `findCandidatePair()` is where a real Semble MCP call
+   goes (`semble.semantic_search` or `semble.get_similar_urls` on a seed paper) to
+   find something worth considering a connection to.
+2. **The confirmation signal** — `humanVerdict()` is scripted (a coin flip) for the
+   zero-setup demo; replace it with a real review step (console prompt, small
+   web queue) once you're pairing this with an actual Semble account. As of this
+   writing Semble's MCP surface only exposes reads (`get_url_connections` etc.),
+   not a create-connection call — proposals stay a FactStore entry, not a live
+   write, until that exists or you're doing the write some other way.
+
 ## Files
 
 | File | What it is |
 |---|---|
-| `bandit.mjs` | Thompson sampling over named "arms" — Beta(α,β) posteriors, hand-rolled Marsaglia-Tsang gamma sampler (no stats dependency). Verbatim from `sail-judge.mjs`'s `Bandit` class. |
-| `fact-store.mjs` | A tiny fact store: subject/predicate/object/confidence/disputed/source_event. Verbatim from `sail-judge.mjs`'s `FactStore` class — originally adapted from evaluating ElectricSQL's Burn demo. Substrate-agnostic on purpose: swap the in-process array for Restate `ctx.run()` or a Durable Object later without changing call sites. |
-| `bot-skeleton.mjs` | The part you actually edit. Arms, reward logic, and the three TODOs. |
+| `bandit.mjs` | Thompson sampling over named "arms" — Beta(α,β) posteriors, hand-rolled Marsaglia-Tsang gamma sampler (no stats dependency). Verbatim from `sail-judge.mjs`'s `Bandit` class. Shared by both skeletons below, unchanged. |
+| `fact-store.mjs` | A tiny fact store: subject/predicate/object/confidence/disputed/source_event. Verbatim from `sail-judge.mjs`'s `FactStore` class — originally adapted from evaluating ElectricSQL's Burn demo. Substrate-agnostic on purpose: swap the in-process array for Restate `ctx.run()` or a Durable Object later without changing call sites. Shared by both skeletons below, unchanged. |
+| `bot-skeleton.mjs` | Chat-response bot. Arms, reward logic, and three TODOs. |
+| `connections-skeleton.mjs` | Paper-connection proposer. Arms, reward logic, and two TODOs. |
 
 ## Why JS, not the Rust port
 

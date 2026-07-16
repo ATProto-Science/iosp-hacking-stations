@@ -62,12 +62,20 @@ def stream_records(collections, geo="us-east", instance=1):
 
 def on_record(message):
     record = message.get("commit", {}).get("record", {})
-    print(f"[consumer] {record.get('deviceId', '?')}: {record.get('value')} {record.get('unit')} @ {record.get('createdAt')}")
+    scale = record.get("valueScale", 1)
+    value = record.get("value")
+    real_value = value / scale if value is not None else None
+    print(f"[consumer] {record.get('deviceId', '?')}: {real_value} {record.get('unit')} @ {record.get('createdAt')}")
 
 
 def main():
     print(f"[station-2] watching Jetstream for {COLLECTION} records...")
     for message in stream_records(collections=[COLLECTION]):
+        # Jetstream also sends periodic "identity"/"account" messages
+        # unrelated to any collection filter — skip anything that isn't an
+        # actual record commit.
+        if message.get("kind") != "commit":
+            continue
         on_record(message)
 
 
