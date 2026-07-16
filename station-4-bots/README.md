@@ -24,6 +24,37 @@ own idea (the "convert to modular research units" thread doesn't fit the bandit
 shape as naturally — decomposition/publishing, not a repeated decision — so it's
 better started fresh than forked from either skeleton here).
 
+## Workhorse: `atproto-skills` for your coding agent
+
+If you're building any of this with Claude Code (or forking your own idea from
+scratch), set up **[`atproto-skills`](https://github.com/ngerakines/atproto-skills)**
+first — a Claude Code plugin (MIT, actively maintained) packaging seven ATProto
+skills: lexicon authoring, DID/handle resolution, CID parsing/validation,
+CAR/MST/repo inspection, OAuth 2.1, publish-lexicon, and record attestation.
+Polyglot (Rust/TypeScript/Go) reference material that loads automatically when
+you talk about the matching problem ("help me design a lexicon for…", "my
+`did:plc` lookup is 404ing") — grounded, on-demand detail instead of whatever an
+agent would otherwise guess about ATProto internals. This is the substrate;
+`bot-skeleton.mjs`/`connections-skeleton.mjs` are one example of what to build
+on top of it.
+
+Install (add to your Claude Code config):
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "atproto-skills": {
+      "source": { "source": "github", "repo": "ngerakines/atproto-skills" }
+    }
+  },
+  "enabledPlugins": { "atproto-skills@atproto-skills": true }
+}
+```
+
+You don't invoke skills directly — just work on ATProto code and describe what
+you're doing in natural language; the matching skill loads into context on its
+own.
+
 ## Run it now, zero setup
 
 ```

@@ -137,8 +137,14 @@ to build.
 ### Setup
 
 - [ ] `cd station-4-bots`
-- [ ] Nothing to install — plain Node.js, zero dependencies. Any reasonably
-      current Node works (`node --version`).
+- [ ] Nothing to install for the skeletons themselves — plain Node.js, zero
+      dependencies. Any reasonably current Node works (`node --version`).
+- [ ] **If you're using Claude Code**: set up
+      [`atproto-skills`](https://github.com/ngerakines/atproto-skills) first
+      (see the README's "Workhorse" section for the install snippet) —
+      grounded, on-demand ATProto reference material instead of whatever
+      your agent would otherwise guess. Worth doing even if you're forking
+      your own idea from scratch rather than either skeleton here.
 
 ### Run it — option A: chat-response bot
 
