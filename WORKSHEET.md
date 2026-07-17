@@ -120,22 +120,18 @@ infrastructure Bluesky posts travel over.
 No Pi, no problem — `read_sensor()` just needs to return a number from
 somewhere real. Pick whichever's easiest to grab from where you're sitting:
 
-- [ ] **Your own laptop's sensors** — CPU temperature (`psutil.sensors_temperatures()`
-      in Python, or `/sys/class/thermal/thermal_zone*/temp` directly on
-      Linux), battery percentage/charge rate, or fan speed. Genuinely a
-      "sensor reading," just one everyone already has.
 - [ ] **Webcam as a sensor** — four readings (brightness, saturation, hue,
       contrast), no Python image library needed. See
       `station-2-live-data/WEBCAM-SENSORS.md` for the readings table and
       the exact `read_sensor()`/`UNIT` wiring.
-- [ ] **A real weather API** — same *shape* of data (temperature/humidity)
-      as the DHT22 example, just sourced from a public API for your
-      location instead of hardware. Keeps the lexicon identical; only
-      `read_sensor()` changes.
-- [ ] **Something that isn't a sensor at all, but is a real live number** —
-      network latency to a fixed host (ping RTT), your own keyboard/mouse
-      event rate, system uptime. `SENSOR_TYPE`/`UNIT` are just strings —
-      relabel them to match whatever you're actually measuring.
+- [ ] **CPU temperature, weather, ping latency, uptime** — four more
+      readings, no Pi or webcam needed either. See
+      `station-2-live-data/LOCAL-SENSORS.md` for the readings table and
+      the exact `read_sensor()`/`UNIT` wiring.
+- [ ] Something else entirely — `SENSOR_TYPE`/`UNIT` are just strings,
+      `read_sensor()` just needs to return a number. Relabel to match
+      whatever you're actually measuring (your own keyboard/mouse event
+      rate, a stock price, anything live).
 
 ### Stretch goals (pick any, in order of effort)
 

@@ -65,6 +65,8 @@ this runs on a laptop with nothing attached — swap in a real GPIO/DHT read (se
 | `webcam-grab.sh` | No-Pi alternative for `read_sensor()` — grabs one webcam frame, prints a numeric reading (`brightness`/`saturation`/`hue`/`contrast`) via `ffmpeg`'s `signalstats` filter. See `WEBCAM-SENSORS.md`. |
 | `webcam_sensors.py` | Python wrapper around `webcam-grab.sh` — each reading as a plain function (`read_brightness()` etc.) instead of shelling out yourself. See `WEBCAM-SENSORS.md`. |
 | `WEBCAM-SENSORS.md` | Readings table + the exact `read_sensor()`/`UNIT` call-site changes to wire this into `sensor_producer.py`. |
+| `local_sensors.py` | No-Pi, no-webcam alternative for `read_sensor()` — CPU temperature, weather (Open-Meteo, no API key), ping latency, uptime, each a plain function. See `LOCAL-SENSORS.md`. |
+| `LOCAL-SENSORS.md` | Readings table + the exact `read_sensor()`/`UNIT` call-site changes to wire `local_sensors.py` in. |
 
 ## Note on the Nebra API
 
