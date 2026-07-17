@@ -245,6 +245,34 @@ change, not a restructure.
       this writing, so a real deployment stays proposal-only (or writes some
       other way) until a create-connection call exists.
 
+### Outlook — worth discussing, not required
+
+- **The `other` arm points at a real 2nd-order problem.** It exists because
+  real discourse doesn't cleanly partition into question/claim/evidence.
+  Watch what happens to its weight over your run: if `other` starts winning
+  disproportionately, that's not "the classifier is broken" — it's a signal
+  the *taxonomy* is incomplete for whatever discourse community/topic you
+  pointed it at. This is the same 2nd-order problem Matadisco's own roadmap
+  names as a general principle ("schema evolution informed by real-world use
+  across different domains") — a catch-all bucket that keeps winning is
+  exactly the kind of signal that should feed back into evolving the schema
+  (splitting `other` into new node types specific to what's actually showing
+  up), not permanent overflow. Good show-and-tell question: did `other`
+  dominate in your run? What would you split it into if you kept classifying
+  real data for a week?
+- **Cross-link with station 2 for a real "one substrate" demo, not just an
+  abstract one.** `queryTool()`'s stretch goal is stubbed as a generic Semble
+  search — but station 2 is publishing real `science.iosp.sensor.reading`
+  records at this *same* workshop, on the *same* substrate. If someone posts
+  on Bluesky citing a sensor reading ("check out this temperature spike!"),
+  a bot classifying that post as `evidence` could resolve `queryTool()`'s
+  lookup to an *actual* station-2 record — `com.atproto.repo.listRecords`
+  against a known station-2 handle's collection, not a hypothetical search —
+  and link the resulting fact to that record's real `at://` URI. Worth doing
+  live specifically because both stations are in the same room: a genuine
+  demonstration of two teams leveraging one substrate, not two unrelated
+  demos that happen to share a venue.
+
 ---
 
 ## 3. Show-and-tell — come with answers to these
