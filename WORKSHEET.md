@@ -208,19 +208,25 @@ this station, more than the code itself.
 
 ### Stretch goals
 
-`bot-skeleton.mjs` has three `TODO(station-4)` markers:
+Each `STRETCH` marker is a named stub function already wired into its
+file's main loop — swapping in a real implementation is a one-function
+change, not a restructure.
+
+`bot-skeleton.mjs` has four:
 
 - [ ] **Wire in Semble.** Replace `queryTool()`'s stub with a real MCP call to
       Semble (`semble.search_urls` or `semble.semantic_search`).
-- [ ] **Real input, not a scripted array.** Swap `demoConversation` for an
-      actual live source — a Bluesky firehose subscription (`@atproto/api`'s
+- [ ] **Real input, not a scripted array.** `incomingMessages()` is an async
+      generator yielding a scripted demo conversation — swap it for an actual
+      live source: a Bluesky firehose subscription (`@atproto/api`'s
       `subscribeRepos`), a chat room's message stream, or just `stdin`.
-- [ ] **Real output, not `console.log`.** Post the bot's response somewhere
-      real — a Bluesky reply, a message into a chat room, or a new PDS
-      record.
-- [ ] Bonus: the `reward()` function is a deliberately crude placeholder
-      ("did the next message contain a `?`"). Design a better reward signal
-      for whatever real input/output you wired in above.
+      `main()`'s `for await` loop doesn't need to change.
+- [ ] **Real output, not `console.log`.** `postResponse()` is where the bot's
+      response should actually go — a Bluesky reply, a message into a chat
+      room, or a new PDS record.
+- [ ] Bonus: `reward()` is a deliberately crude placeholder ("did the next
+      message contain a `?`"). Design a better reward signal for whatever
+      real input/output you wired in above.
 
 `connections-skeleton.mjs` has two:
 

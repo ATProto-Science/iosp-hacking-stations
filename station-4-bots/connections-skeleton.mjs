@@ -11,7 +11,9 @@
 // Run with zero setup: `node connections-skeleton.mjs` — feeds a scripted
 // sequence of candidate paper pairs (with a simulated human verdict per
 // proposal) through the same choose -> act -> reward -> learn loop as
-// bot-skeleton.mjs. Look for the two `TODO(station-4)` markers.
+// bot-skeleton.mjs. Look for the two `STRETCH(station-4)` markers — each is
+// a named stub function already wired into the loop below, so swapping in a
+// real implementation is a one-function change, not a restructure.
 
 import { Bandit } from "./bandit.mjs";
 import { FactStore } from "./fact-store.mjs";
@@ -23,11 +25,9 @@ import { FactStore } from "./fact-store.mjs";
 // not a non-decision.
 const ARMS = ["supports", "addresses", "relates-to", "skip"];
 
-// TODO(station-4): this is where a real Semble MCP call would go to find a
-// candidate pair worth considering — e.g. semble.semantic_search or
-// semble.get_similar_urls on a seed paper. Not wired to a live endpoint here
-// (that's workshop-day infrastructure); this stub is the shape a real call
-// would take.
+// STRETCH(station-4): wire in Semble. This is where a real MCP call would go
+// to find a candidate pair worth considering — e.g. semble.semantic_search
+// or semble.get_similar_urls on a seed paper.
 async function findCandidatePair(seedPaper) {
   // e.g.: const similar = await mcpClient.callTool("semble.get_similar_urls", { url: seedPaper.url })
   return { title: `[stub] a paper semantically similar to "${seedPaper.title}"` };
@@ -56,10 +56,9 @@ async function chooseAndPropose(bandit, facts, seedPaper) {
   return { chosen };
 }
 
-// TODO(station-4): replace this with a real confirm/reject signal — a human
-// curator's y/n in a review queue, or (once you trust the bandit more) an
-// actual write to Semble once a create-connection call exists. Scripted here
-// so the demo is deterministic with zero setup.
+// STRETCH(station-4): a real confirm/reject signal instead of a coin flip —
+// a human curator's y/n in a review queue, or (once you trust the bandit
+// more) an actual write to Semble once a create-connection call exists.
 function humanVerdict(chosen) {
   if (chosen === "skip") return true; // "yeah, skipping was right" is also a valid confirmation
   return Math.random() > 0.4;

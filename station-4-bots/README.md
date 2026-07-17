@@ -70,30 +70,38 @@ before wiring in anything real.
 
 ## Then: wire in something real
 
-`bot-skeleton.mjs` has three `// TODO(station-4)` markers:
+Each `STRETCH` marker below is a named stub function already wired into its
+file's main loop — swapping in a real implementation is a one-function
+change, not a restructure.
 
-1. **Input source** — replace the scripted demo feed with a real one: a Bluesky
-   firehose subscription (`@atproto/api`'s `subscribeRepos`), a chat room, or plain
-   stdin from a terminal.
-2. **The query tool** — the recap's brief for this station is "use MCP to query
-   Semble data." `queryTool()` is where that call goes: an MCP client call to
-   whatever Semble MCP server the workshop provides, triggered by the bot's own
-   decision to look something up before responding. Not wired to a live MCP endpoint
-   here — that endpoint is workshop-day infrastructure, not something to hardcode
-   in advance.
-3. **Output** — replace `console.log` with wherever the bot should actually post
-   (a Bluesky reply, back into a chat room, a new PDS record).
+`bot-skeleton.mjs` has four (three `STRETCH(station-4)` plus one `STRETCH(bonus)`):
 
-`connections-skeleton.mjs` has two:
+1. **`incomingMessages()`** — an async generator, currently yielding the
+   scripted demo conversation. Replace it with a real input source: a Bluesky
+   firehose subscription (`@atproto/api`'s `subscribeRepos`), a chat room, or
+   plain stdin. `main()`'s `for await` loop doesn't need to change.
+2. **`queryTool()`** — the recap's brief for this station is "use MCP to query
+   Semble data." This is where that call goes: an MCP client call to whatever
+   Semble MCP server the workshop provides, triggered by the bot's own
+   decision to look something up before responding. Not wired to a live MCP
+   endpoint here — that endpoint is workshop-day infrastructure, not
+   something to hardcode in advance.
+3. **`postResponse()`** — replace `console.log` with wherever the bot should
+   actually post (a Bluesky reply, back into a chat room, a new PDS record).
+4. **`reward()`** (bonus) — a deliberately crude placeholder ("did the next
+   message contain a `?`"). Design a better signal for whatever real
+   input/output you wired in above.
 
-1. **Candidate lookup** — `findCandidatePair()` is where a real Semble MCP call
-   goes (`semble.semantic_search` or `semble.get_similar_urls` on a seed paper) to
+`connections-skeleton.mjs` has two (both `STRETCH(station-4)`):
+
+1. **`findCandidatePair()`** — where a real Semble MCP call goes
+   (`semble.semantic_search` or `semble.get_similar_urls` on a seed paper) to
    find something worth considering a connection to.
-2. **The confirmation signal** — `humanVerdict()` is scripted (a coin flip) for the
-   zero-setup demo; replace it with a real review step (console prompt, small
-   web queue) once you're pairing this with an actual Semble account. As of this
-   writing Semble's MCP surface only exposes reads (`get_url_connections` etc.),
-   not a create-connection call — proposals stay a FactStore entry, not a live
+2. **`humanVerdict()`** — scripted (a coin flip) for the zero-setup demo;
+   replace it with a real review step (console prompt, small web queue) once
+   you're pairing this with an actual Semble account. As of this writing
+   Semble's MCP surface only exposes reads (`get_url_connections` etc.), not
+   a create-connection call — proposals stay a FactStore entry, not a live
    write, until that exists or you're doing the write some other way.
 
 ## Files

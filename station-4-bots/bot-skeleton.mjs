@@ -4,7 +4,10 @@
 // Run with zero setup: `node bot-skeleton.mjs` — feeds a scripted demo
 // conversation through the same decision loop a real deployment would use, so you
 // can see the mechanism (arm chosen -> action -> reward observed -> weights update)
-// before wiring anything real in. Look for the three `TODO(station-4)` markers.
+// before wiring anything real in. Look for the four `STRETCH` markers —
+// three `STRETCH(station-4)` plus one `STRETCH(bonus)` — each a named stub
+// function already wired into the loop, so swapping in a real implementation
+// is a one-function change, not a restructure.
 
 import { Bandit } from "./bandit.mjs";
 import { FactStore } from "./fact-store.mjs";
@@ -18,10 +21,9 @@ const ARMS = {
   "look-up-then-answer": (message) => `(looked-up) checked a source, then responded to: "${message}"`,
 };
 
-// TODO(station-4): this is where an MCP call to a Semble MCP server would go —
-// the recap's brief for this station is "integrate a bot with MCP to query Semble
-// data." Not wired to a live endpoint here (that's workshop-day infrastructure);
-// this stub is the shape a real call would take.
+// STRETCH(station-4): wire in Semble. The recap's brief for this station is
+// "integrate a bot with MCP to query Semble data" — this is where that MCP
+// tool call goes, triggered by the bot's own decision to look something up.
 async function queryTool(message) {
   // e.g.: const result = await mcpClient.callTool("semble.search_urls", { query: message })
   return `[stub] would search Semble for something related to: "${message}"`;
@@ -37,36 +39,49 @@ async function chooseAndAct(bandit, facts, message) {
   }
 
   const action = ARMS[chosen](message);
-  console.log(`  -> ${action}`);
+  await postResponse(action);
   return { chosen, action };
 }
 
-// Cheap, obviously-a-placeholder reward: did the next real message keep the
-// conversation going (contain a "?")? Same kind of proxy sail-judge itself used
-// to prove the bandit loop end-to-end before a better signal existed — document
-// whatever proxy you use as a proxy, and swap it out once you have something
-// better. Not the "right" reward function, just a working one.
+// STRETCH(bonus): a better reward signal than "did the next message contain a
+// '?'". Same kind of proxy sail-judge itself used to prove the bandit loop
+// end-to-end before a better signal existed — document whatever proxy you use
+// as a proxy, and swap it out once you have something better. Design one that
+// fits whatever real input/output you wired in via the other three markers.
 function reward(nextMessage) {
   return nextMessage.includes("?");
 }
 
-async function main() {
-  const bandit = new Bandit(Object.keys(ARMS));
-  const facts = new FactStore();
-
-  // TODO(station-4): replace this scripted array with a real input source —
-  // a Bluesky firehose subscription (@atproto/api's subscribeRepos), a chat
-  // room's message stream, or plain stdin. Each "turn" below stands in for one
-  // incoming message.
+// STRETCH(station-4): real input, not a scripted array. Swap this generator
+// for a Bluesky firehose subscription (@atproto/api's subscribeRepos), a chat
+// room's message stream, or plain stdin — anything that yields one message
+// string per turn. main()'s `for await` loop below doesn't need to change.
+async function* incomingMessages() {
   const demoConversation = [
     "has anyone measured this before?",
     "interesting, what did you find?",
     "not sure I believe that number.",
     "ok how do we check it then?",
   ];
+  for (const message of demoConversation) {
+    yield message;
+  }
+}
+
+// STRETCH(station-4): real output, not console.log. Swap this for wherever
+// the bot should actually post — a Bluesky reply, a message back into a chat
+// room, or a new PDS record (e.g. the same createRecord pattern tilde.cards'
+// bin/memo uses).
+async function postResponse(action) {
+  console.log(`  -> ${action}`);
+}
+
+async function main() {
+  const bandit = new Bandit(Object.keys(ARMS));
+  const facts = new FactStore();
 
   let pendingArm = null;
-  for (const message of demoConversation) {
+  for await (const message of incomingMessages()) {
     console.log(`\n[incoming] "${message}"`);
 
     if (pendingArm) {
@@ -78,11 +93,6 @@ async function main() {
 
     const { chosen } = await chooseAndAct(bandit, facts, message);
     pendingArm = chosen;
-
-    // TODO(station-4): replace this console.log with wherever the bot should
-    // actually post — a Bluesky reply, a message back into a chat room, or a
-    // new PDS record (e.g. via the same createRecord pattern tilde.cards' bin/memo
-    // uses).
   }
 
   console.log("\n[final arm weights]", bandit.snapshot());
