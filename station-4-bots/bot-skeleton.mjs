@@ -18,6 +18,7 @@
 import { Bandit } from "./bandit.mjs";
 import { FactStore } from "./fact-store.mjs";
 import { searchCards } from "./semble-helper.mjs";
+// import { searchUrls } from "./semble-mcp-helper.mjs"; // MCP alternative — see below, needs `npm install` first
 
 // --- Discourse-graph node-type arms --------------------------------------
 // Chan's three fundamental node types, plus "other" for the (very common)
@@ -30,14 +31,18 @@ const ARMS = ["question", "claim", "evidence", "other"];
 // "integrate a bot with MCP to query Semble data" -- here, once a post is
 // classified as evidence, this is where you'd look up which prior
 // claim/question it's evidence *for* -- the relation-typing half of a full
-// discourse graph, not built here. Uncomment the two lines below (needs
-// SEMBLE_API_KEY) for a real search instead of the stub -- see
-// semble-helper.mjs (plain REST, no MCP server needed). If you're using an
-// AI coding agent with Semble's MCP tools already configured, you can also
-// just ask it to search directly instead of writing this function at all.
+// discourse graph, not built here. Two ways to make this real:
+//   (a) REST (no setup): uncomment the searchCards() line below.
+//   (b) MCP (the protocol itself, `npm install` first): uncomment the
+//       searchUrls() line + its import above instead.
+// Harder tier, if you're pairing with an AI coding agent: skip both helpers
+// and have your agent write a real semble-mcp/@semble.so/api integration
+// from scratch in this function -- the stretch goal as originally posed,
+// still fully available, not replaced by the one-liners above.
 async function queryTool(post) {
   // const results = await searchCards(post.text);
-  // if (results.length) return results[0].metadata.title ?? results[0].url;
+  // const results = await searchUrls(post.text);
+  // if (results.length) return results[0].metadata?.title ?? results[0].title ?? results[0].url;
   return `[stub] would search Semble for what "${post.text}" might be evidence for`;
 }
 

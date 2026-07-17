@@ -76,20 +76,37 @@ the mechanism work before wiring in anything real.
 ## Then: wire in something real
 
 Each `STRETCH` marker below is a named stub function already wired into its
-file's main loop — swapping in a real implementation is a one- to few-line
-change (uncomment, done), not a restructure. `semble-helper.mjs` is the
-pre-built library both files' STRETCH functions point at: real REST calls
-against `https://api.semble.so/xrpc` (search, save a URL, read/create a
-typed connection), needs only a `SEMBLE_API_KEY` env var — no MCP server to
-run, no other dependency to install. It's a genuine read/write client, not
-a demo: Semble's MCP surface can *also* write (`create_connection` exists in
-`~/src/semble-mcp`'s source) but only when the MCP server itself was
-launched with a key, so it defaults to read-only for anyone without one —
-REST doesn't have that gate. If you're bringing an AI coding agent with
-Semble's MCP tools already configured, the simplest path for you is often to
-just ask it to search/connect directly in natural language, no code at all;
-`semble-helper.mjs` is for a standalone script that runs without an agent
-watching.
+file's main loop, with two ready-made ways to make it real (both commented
+in, pick one):
+
+- **`semble-helper.mjs`** — REST calls against `https://api.semble.so/xrpc`
+  (search, save a URL, read/create a typed connection). Needs only a
+  `SEMBLE_API_KEY` env var — no MCP server, no `npm install`, matches the
+  rest of this folder's zero-dependency ethos. Genuinely read/write, not a
+  demo.
+- **`semble-mcp-helper.mjs`** — the same operations over the actual MCP
+  protocol, spawning `~/src/semble-mcp` and talking to it over stdio, the
+  same way Claude Desktop/Code do. Needs `npm install` once (this folder now
+  has a `package.json` just for this — `@modelcontextprotocol/sdk`). Reach
+  for this specifically to demonstrate MCP itself, or for a standalone
+  script that should keep working with no live agent attached. Read tools
+  work anonymously (no key); write tools (`create_connection`) only
+  register if the *spawned server* saw a `SEMBLE_API_KEY` — this file passes
+  your shell's env through automatically.
+
+Both are genuinely equivalent for reads; MCP's write path is real too
+(`create_connection`/`add_url_to_library` exist in `~/src/semble-mcp`'s
+source, gated behind the server holding a key) — REST just doesn't need
+that extra gate, which is why it's the simpler default.
+
+**Harder tier, if a participant is pairing with an AI coding agent:** skip
+both helper files and have the agent write a real Semble integration from
+scratch in the stub function directly — the stretch goal exactly as
+originally posed. Both `STRETCH` comments call this out explicitly; it's a
+third option, not something the one-liners replaced. (Separately, if you
+just want to *explore* Semble conversationally with an agent that already
+has its MCP tools configured, you don't need any of this code at all — just
+ask in plain English.)
 
 `bot-skeleton.mjs` has four (three `STRETCH(station-4)` plus one `STRETCH(bonus)`):
 
@@ -101,8 +118,9 @@ watching.
 2. **`queryTool()`** — the recap's brief for this station is "use MCP to query
    Semble data." Here, once a post is classified as evidence, this is where
    you'd look up which prior claim/question it's evidence *for*
-   (`semble-helper.mjs`'s `searchCards()`) — the relation-typing half of a
-   full discourse graph, not built here.
+   (`searchCards()` from `semble-helper.mjs`, or `searchUrls()` from
+   `semble-mcp-helper.mjs`) — the relation-typing half of a full discourse
+   graph, not built here.
 3. **`postClassification()`** — replace `console.log` with wherever the
    classification should actually live (a reply annotating the post, a new
    PDS record tagging it, a row in a shared discourse-graph view).
@@ -113,8 +131,9 @@ watching.
 `connections-skeleton.mjs` has two (both `STRETCH(station-4)`):
 
 1. **`findCandidatePair()`** — where a real Semble search goes
-   (`semble-helper.mjs`'s `searchCards()` on a seed paper's title) to find
-   something worth considering a connection to.
+   (`searchCards()` from `semble-helper.mjs`, or `searchUrls()` from
+   `semble-mcp-helper.mjs`, on a seed paper's title) to find something worth
+   considering a connection to.
 2. **`humanVerdict()`** — scripted (a coin flip) for the zero-setup demo;
    replace it with a real review step (console prompt, small web queue) once
    you're pairing this with an actual Semble account. `main()`'s loop already
@@ -130,7 +149,8 @@ watching.
 | `fact-store.mjs` | A tiny fact store: subject/predicate/object/confidence/disputed/source_event. Verbatim from `sail-judge.mjs`'s `FactStore` class — originally adapted from evaluating ElectricSQL's Burn demo. Substrate-agnostic on purpose: swap the in-process array for Restate `ctx.run()` or a Durable Object later without changing call sites. Shared by both skeletons below, unchanged. |
 | `bot-skeleton.mjs` | Discourse-graph node-type classifier (question/claim/evidence/other). Arms, reward logic, and four `STRETCH` markers. |
 | `connections-skeleton.mjs` | Paper-connection proposer. Arms, reward logic, and two `STRETCH` markers. |
-| `semble-helper.mjs` | Real Semble REST calls (search, save URL, read/create connection) — one `SEMBLE_API_KEY`, no MCP server, no other dependency. What both skeletons' STRETCH functions point at. |
+| `semble-helper.mjs` | Real Semble REST calls (search, save URL, read/create connection) — one `SEMBLE_API_KEY`, no MCP server, no other dependency. Zero-dependency default. |
+| `semble-mcp-helper.mjs` | Same operations over the real MCP protocol — spawns `~/src/semble-mcp`, talks stdio. Needs `npm install` (`package.json` in this folder). Read tools work anonymously; writes need `SEMBLE_API_KEY` set when the spawned server starts. |
 
 ## Why JS, not the Rust port
 

@@ -1,0 +1,9 @@
+{
+  "name": "station-4-bots",
+  "private": true,
+  "type": "module",
+  "description": "Only needed for semble-mcp-helper.mjs (the MCP path). bot-skeleton.mjs, connections-skeleton.mjs, and semble-helper.mjs (REST) stay zero-dependency — run them with plain `node file.mjs`, no npm install.",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  }
+}

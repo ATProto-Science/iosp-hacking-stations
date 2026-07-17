@@ -23,6 +23,7 @@
 import { Bandit } from "./bandit.mjs";
 import { FactStore } from "./fact-store.mjs";
 import { searchCards, createConnection } from "./semble-helper.mjs";
+// import { searchUrls, createConnectionViaMcp } from "./semble-mcp-helper.mjs"; // MCP alternative — needs `npm install` first
 
 // --- Connection-type arms -----------------------------------------------
 // Mirrors Semble's own typed Connection object (a directional link a curator
@@ -42,11 +43,17 @@ const ARM_TO_CONNECTION_TYPE = {
 };
 
 // STRETCH(station-4): wire in Semble — find a candidate pair worth
-// considering a connection to. Uncomment the two lines below (needs
-// SEMBLE_API_KEY) to search real saved cards instead of the stub.
+// considering a connection to. Two ways to make this real:
+//   (a) REST (no setup): uncomment the searchCards() line below.
+//   (b) MCP (the protocol itself, `npm install` first): uncomment the
+//       searchUrls() line + its import above instead.
+// Harder tier, if you're pairing with an AI coding agent: skip both helpers
+// and have your agent write a real semble-mcp/@semble.so/api integration
+// from scratch in this function -- still fully available, not replaced.
 async function findCandidatePair(seedPaper) {
   // const results = await searchCards(seedPaper.title);
-  // if (results.length) return { title: results[0].metadata.title ?? results[0].url, url: results[0].url };
+  // const results = await searchUrls(seedPaper.title);
+  // if (results.length) return { title: results[0].metadata?.title ?? results[0].title ?? results[0].url, url: results[0].url };
   return { title: `[stub] a paper semantically similar to "${seedPaper.title}"` };
 }
 
