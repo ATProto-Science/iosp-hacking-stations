@@ -124,14 +124,23 @@ somewhere real. Pick whichever's easiest to grab from where you're sitting:
       in Python, or `/sys/class/thermal/thermal_zone*/temp` directly on
       Linux), battery percentage/charge rate, or fan speed. Genuinely a
       "sensor reading," just one everyone already has.
-- [ ] **Webcam as a light sensor** — `./webcam-grab.sh` grabs one frame and
-      prints its average brightness, no Python image library needed (just
-      `ffmpeg`'s own `signalstats` filter). Verified working on Linux;
-      `AVFOUNDATION=1 ./webcam-grab.sh` for macOS. Call it from
-      `read_sensor()` via `subprocess.run(["./webcam-grab.sh"], ...)`.
-      Mic as a noise sensor works the same way in spirit (`sounddevice` or
-      `ffmpeg -f alsa` + `astats` instead of `signalstats`), just not
-      scripted here yet.
+- [ ] **Webcam as a sensor** — `./webcam-grab.sh [reading]` grabs one frame
+      and prints a numeric reading from it, no Python image library needed
+      (just `ffmpeg`'s own `signalstats` filter). Four readings available,
+      all verified working on Linux (`AVFOUNDATION=1 ./webcam-grab.sh
+      [reading]` for macOS):
+
+      | reading | what it is |
+      |---|---|
+      | `brightness` (default) | average luma — how bright the frame is |
+      | `saturation` | average colorfulness — grey vs. vivid |
+      | `hue` | average hue angle — dominant color |
+      | `contrast` | luma spread (max−min) — flat vs. high-contrast |
+
+      Call it from `read_sensor()` via `subprocess.run(["./webcam-grab.sh",
+      "brightness"], ...)`. Mic as a noise sensor works the same way in
+      spirit (`sounddevice` or `ffmpeg -f alsa` + `astats` instead of
+      `signalstats`), just not scripted here yet.
 - [ ] **A real weather API** — same *shape* of data (temperature/humidity)
       as the DHT22 example, just sourced from a public API for your
       location instead of hardware. Keeps the lexicon identical; only
