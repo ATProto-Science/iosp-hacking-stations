@@ -15,12 +15,21 @@ is a bonus, not a requirement, for station 2.
 Pick one (see hacking.tilde.style for the current status of each):
 
 - [ ] **`pds.rip`** — a public test PDS, zero commitment. Fastest way to get an
-      account today.
+      account today. **Heads up for station 2 specifically**: `pds.rip`
+      enforces a strict per-IP rate limit (~10 requests/24h) — fine for
+      light use, but a producer writing every 5 seconds will blow through
+      it fast. Prefer `memo.dog` (below) or Aster if you're doing station 2.
 - [ ] **Aster** — the new science PDS, via invite code, if it's live by the
       time you're reading this.
+- [ ] **`memo.dog`** — our own self-hosted test PDS (invite-code only, ask
+      at the station for a code), built specifically to handle station 2's
+      continuous-write load without the `pds.rip` rate limit. Load-tested
+      at 10 concurrent accounts writing every 5s with zero errors.
+      **Not a permanent service** — workshop duration + a few days, not
+      somewhere to keep real data. Your handle will be `you.memo.dog`.
 
-Either way, you end up with a **handle** (e.g. `you.pds.rip`) and a
-**password**. That's all both stations below need.
+Either way, you end up with a **handle** (e.g. `you.pds.rip` or
+`you.memo.dog`) and a **password**. That's all both stations below need.
 
 - [ ] Clone the code: `git clone https://github.com/ATProto-Science/iosp-hacking-stations`
 
@@ -44,13 +53,14 @@ producer simulates a sensor reading by default.
   or `pip install nebra` directly.
 - [ ] Set your identity from step 0:
   ```
-  export NEBRA_HANDLE=you.pds.rip
+  export NEBRA_HANDLE=you.pds.rip        # or you.memo.dog, etc.
   export NEBRA_PASSWORD=...
-  export NEBRA_BASE_URL=https://pds.rip   # the PDS your account actually lives on
+  export NEBRA_BASE_URL=https://pds.rip  # or https://memo.dog — the PDS your account actually lives on
   ```
   (Skip `NEBRA_BASE_URL` only if your account is on `bsky.social` itself —
-  that's Nebra's default. Every other PDS, including `pds.rip`, needs it set
-  explicitly or you'll get a `401 Invalid identifier or password`.)
+  that's Nebra's default. Every other PDS, including `pds.rip` and
+  `memo.dog`, needs it set explicitly or you'll get a `401 Invalid
+  identifier or password`.)
 
 ### Run it
 
