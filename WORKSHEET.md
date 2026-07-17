@@ -55,19 +55,19 @@ producer simulates a sensor reading by default.
 ### Run it
 
 Open two terminals (or split one with `tmux`/your terminal's own split —
-`tmux new -s station2` then `Ctrl-b %`). Both scripts run forever, so wrap
-each in `run_forever.sh` — it restarts the loop if a websocket drops or
-something throws, instead of just quietly stopping:
+`tmux new -s station2` then `Ctrl-b %`). Both scripts run forever, so run
+them via `run_producer.sh`/`run_consumer.sh` — these wrap the pipenv/env
+boilerplate *and* auto-restart the loop if a websocket drops or something
+throws, instead of quietly stopping:
 
-- [ ] Terminal A (producer): `../run_forever.sh python sensor_producer.py`
+- [ ] Terminal A (producer): `./run_producer.sh`
       — you should see a new simulated reading printed every 5 seconds, and
       each one sent as a real ATProto record.
-- [ ] Terminal B (consumer): `../run_forever.sh python consumer_viewer.py`
+- [ ] Terminal B (consumer): `./run_consumer.sh`
       — this connects to the public Jetstream firehose and should start
       printing back the same readings Terminal A is producing, within a few
       seconds of each `sent:` line in A.
-- [ ] `Ctrl-C` stops a `run_forever.sh` loop for good (it won't restart after
-      that).
+- [ ] `Ctrl-C` stops either loop for good (it won't restart after that).
 
 **Checkpoint**: if B is printing lines that match A's `deviceId`/`value`/`unit`,
 the whole loop — sensor → PDS record → Jetstream → consumer — is working
