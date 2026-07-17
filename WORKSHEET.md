@@ -115,6 +115,28 @@ infrastructure Bluesky posts travel over.
       value with a real reading — marked `TODO(station-2)` in
       `sensor_producer.py`.
 
+### If you don't — other real (non-simulated) data sources
+
+No Pi, no problem — `read_sensor()` just needs to return a number from
+somewhere real. Pick whichever's easiest to grab from where you're sitting:
+
+- [ ] **Your own laptop's sensors** — CPU temperature (`psutil.sensors_temperatures()`
+      in Python, or `/sys/class/thermal/thermal_zone*/temp` directly on
+      Linux), battery percentage/charge rate, or fan speed. Genuinely a
+      "sensor reading," just one everyone already has.
+- [ ] **Webcam or mic as a crude sensor** — average frame brightness from
+      the webcam as a light sensor, or RMS audio level from the mic as a
+      noise sensor. A bit more setup (`opencv-python`/`sounddevice`), more
+      fun to demo.
+- [ ] **A real weather API** — same *shape* of data (temperature/humidity)
+      as the DHT22 example, just sourced from a public API for your
+      location instead of hardware. Keeps the lexicon identical; only
+      `read_sensor()` changes.
+- [ ] **Something that isn't a sensor at all, but is a real live number** —
+      network latency to a fixed host (ping RTT), your own keyboard/mouse
+      event rate, system uptime. `SENSOR_TYPE`/`UNIT` are just strings —
+      relabel them to match whatever you're actually measuring.
+
 ### Stretch goals (pick any, in order of effort)
 
 - [ ] Replace `consumer_viewer.py`'s `print()` with something visual — a
