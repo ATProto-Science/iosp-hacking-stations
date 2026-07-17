@@ -6,18 +6,23 @@ is worth trying right now) instead of just reacting. The decision-making core
 production bot built for SAIL/haiku.garden — see the header comment in each file for
 provenance, substrate-agnostic on purpose.
 
-Two example rewirings of that same core, matching the two concrete ideas in IOSP's
-own copy for this station ("map scientific discourse on Bluesky, create new
-connections between research papers on Semble, or convert your paper to modular
-research units"):
+Two example rewirings of that same core, matching two of the three concrete
+ideas in IOSP's own copy for this station ("map scientific discourse on
+Bluesky, create new connections between research papers on Semble, or
+convert your paper to modular research units"):
 
-- **`bot-skeleton.mjs`** — a chat-response bot: the bandit picks how to respond to
-  an incoming message (answer directly vs. look something up first).
-- **`connections-skeleton.mjs`** — closer to the "create new connections between
-  research papers" framing: the bandit picks *which relation type* (or none) to
-  propose between two candidate papers, a human confirms, the bandit learns from
-  that confirmation. See its own header comment for why proposals go through a
-  human rather than writing straight to Semble.
+- **`bot-skeleton.mjs`** — "map scientific discourse on Bluesky," using
+  [discourse graphs](https://joelchan.me/assets/pdf/Discourse_Graphs_for_Augmented_Knowledge_Synthesis_What_and_Why.pdf)
+  (Joel Chan's model) as the actual method: the bandit classifies an
+  incoming post into one of the model's node types (question/claim/evidence,
+  plus "other" for posts that aren't a discourse move at all) — the
+  node-typing decision is the "mapping." Relation-typing (which prior node a
+  post supports/opposes) is a stretch goal, not built here.
+- **`connections-skeleton.mjs`** — "create new connections between research
+  papers": the bandit picks *which relation type* (or none) to propose
+  between two candidate papers, a human confirms, the bandit learns from
+  that confirmation. See its own header comment for why proposals go through
+  a human rather than writing straight to Semble.
 
 Pick whichever matches what you want to build, or use one as a template for your
 own idea (the "convert to modular research units" thread doesn't fit the bandit
@@ -63,10 +68,10 @@ node bot-skeleton.mjs
 node connections-skeleton.mjs
 ```
 
-Both feed themselves a scripted demo (a conversation, or a sequence of candidate
-paper pairs) and print which arm the bandit picks each turn, and how rewards update
-the arm weights. No network, no API keys — this is step 1: see the mechanism work
-before wiring in anything real.
+Both feed themselves a scripted demo (a discourse thread, or a sequence of
+candidate paper pairs) and print which arm the bandit picks each turn, and how
+rewards update the arm weights. No network, no API keys — this is step 1: see
+the mechanism work before wiring in anything real.
 
 ## Then: wire in something real
 
@@ -76,21 +81,22 @@ change, not a restructure.
 
 `bot-skeleton.mjs` has four (three `STRETCH(station-4)` plus one `STRETCH(bonus)`):
 
-1. **`incomingMessages()`** — an async generator, currently yielding the
-   scripted demo conversation. Replace it with a real input source: a Bluesky
-   firehose subscription (`@atproto/api`'s `subscribeRepos`), a chat room, or
-   plain stdin. `main()`'s `for await` loop doesn't need to change.
+1. **`incomingPosts()`** — an async generator, currently yielding a scripted
+   demo discourse thread. Replace it with a real input source: a Bluesky
+   firehose subscription (`@atproto/api`'s `subscribeRepos`) filtered to a
+   research topic or a specific thread's replies. `main()`'s `for await` loop
+   doesn't need to change.
 2. **`queryTool()`** — the recap's brief for this station is "use MCP to query
-   Semble data." This is where that call goes: an MCP client call to whatever
-   Semble MCP server the workshop provides, triggered by the bot's own
-   decision to look something up before responding. Not wired to a live MCP
-   endpoint here — that endpoint is workshop-day infrastructure, not
-   something to hardcode in advance.
-3. **`postResponse()`** — replace `console.log` with wherever the bot should
-   actually post (a Bluesky reply, back into a chat room, a new PDS record).
-4. **`reward()`** (bonus) — a deliberately crude placeholder ("did the next
-   message contain a `?`"). Design a better signal for whatever real
-   input/output you wired in above.
+   Semble data." Here, once a post is classified as evidence, this is where
+   you'd look up which prior claim/question it's evidence *for*
+   (`semble.semantic_search`) — the relation-typing half of a full discourse
+   graph, not built here.
+3. **`postClassification()`** — replace `console.log` with wherever the
+   classification should actually live (a reply annotating the post, a new
+   PDS record tagging it, a row in a shared discourse-graph view).
+4. **`reward()`** (bonus) — a deliberately crude placeholder (a coin flip).
+   A real deployment might use engagement (did the post later get cited as
+   evidence for something) or explicit curator feedback in a review queue.
 
 `connections-skeleton.mjs` has two (both `STRETCH(station-4)`):
 
@@ -110,8 +116,8 @@ change, not a restructure.
 |---|---|
 | `bandit.mjs` | Thompson sampling over named "arms" — Beta(α,β) posteriors, hand-rolled Marsaglia-Tsang gamma sampler (no stats dependency). Verbatim from `sail-judge.mjs`'s `Bandit` class. Shared by both skeletons below, unchanged. |
 | `fact-store.mjs` | A tiny fact store: subject/predicate/object/confidence/disputed/source_event. Verbatim from `sail-judge.mjs`'s `FactStore` class — originally adapted from evaluating ElectricSQL's Burn demo. Substrate-agnostic on purpose: swap the in-process array for Restate `ctx.run()` or a Durable Object later without changing call sites. Shared by both skeletons below, unchanged. |
-| `bot-skeleton.mjs` | Chat-response bot. Arms, reward logic, and three TODOs. |
-| `connections-skeleton.mjs` | Paper-connection proposer. Arms, reward logic, and two TODOs. |
+| `bot-skeleton.mjs` | Discourse-graph node-type classifier (question/claim/evidence/other). Arms, reward logic, and four `STRETCH` markers. |
+| `connections-skeleton.mjs` | Paper-connection proposer. Arms, reward logic, and two `STRETCH` markers. |
 
 ## Why JS, not the Rust port
 

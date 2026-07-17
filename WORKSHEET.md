@@ -181,15 +181,18 @@ to build.
       your agent would otherwise guess. Worth doing even if you're forking
       your own idea from scratch rather than either skeleton here.
 
-### Run it — option A: chat-response bot
+### Run it — option A: discourse-graph classifier
 
 - [ ] `node bot-skeleton.mjs`
 
-**Checkpoint**: you should see a scripted 4-message demo conversation play
-out, with a line per turn showing which "arm" (response strategy) the bandit
-drew and chose, a reward being fed back for the *previous* turn once the next
-message arrives, and the arm weights shifting over time. At the end: final
-arm weights and a small list of recorded facts.
+**Checkpoint**: you should see a scripted 4-post demo discourse thread play
+out, with a line per turn showing which "arm" (discourse-graph node type —
+question/claim/evidence/other, per [Joel Chan's discourse graph
+model](https://joelchan.me/assets/pdf/Discourse_Graphs_for_Augmented_Knowledge_Synthesis_What_and_Why.pdf))
+the bandit drew and chose, an immediate simulated confirm/correct, and the
+arm weights shifting over time. At the end: final arm weights and a small
+list of recorded facts (each post's classification, plus any evidence-for
+lookups).
 
 ### Run it — option B: paper-connection proposer
 
@@ -214,19 +217,24 @@ change, not a restructure.
 
 `bot-skeleton.mjs` has four:
 
-- [ ] **Wire in Semble.** Replace `queryTool()`'s stub with a real MCP call to
-      Semble (`semble.search_urls` or `semble.semantic_search`).
-- [ ] **Real input, not a scripted array.** `incomingMessages()` is an async
-      generator yielding a scripted demo conversation — swap it for an actual
-      live source: a Bluesky firehose subscription (`@atproto/api`'s
-      `subscribeRepos`), a chat room's message stream, or just `stdin`.
-      `main()`'s `for await` loop doesn't need to change.
-- [ ] **Real output, not `console.log`.** `postResponse()` is where the bot's
-      response should actually go — a Bluesky reply, a message into a chat
-      room, or a new PDS record.
-- [ ] Bonus: `reward()` is a deliberately crude placeholder ("did the next
-      message contain a `?`"). Design a better reward signal for whatever
-      real input/output you wired in above.
+- [ ] **Wire in Semble.** Replace `queryTool()`'s stub with a real MCP call
+      (`semble.semantic_search`) — once a post is classified as evidence,
+      find which prior claim/question it's evidence *for*. This is the
+      relation-typing half of a full discourse graph that this skeleton
+      doesn't build.
+- [ ] **Real input, not a scripted array.** `incomingPosts()` is an async
+      generator yielding a scripted demo discourse thread — swap it for an
+      actual live source: a Bluesky firehose subscription (`@atproto/api`'s
+      `subscribeRepos`) filtered to a research topic or a specific thread's
+      replies. `main()`'s `for await` loop doesn't need to change.
+- [ ] **Real output, not `console.log`.** `postClassification()` is where
+      the classification should actually live — a reply annotating the
+      post, a new PDS record tagging it, a row in a shared discourse-graph
+      view.
+- [ ] Bonus: `reward()` is a deliberately crude placeholder (a coin flip).
+      Design a better signal — engagement (did the post later get cited as
+      evidence for something), or explicit curator feedback in a review
+      queue.
 
 `connections-skeleton.mjs` has two:
 
