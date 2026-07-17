@@ -137,10 +137,41 @@ somewhere real. Pick whichever's easiest to grab from where you're sitting:
       | `hue` | average hue angle — dominant color |
       | `contrast` | luma spread (max−min) — flat vs. high-contrast |
 
-      Call it from `read_sensor()` via `subprocess.run(["./webcam-grab.sh",
-      "brightness"], ...)`. Mic as a noise sensor works the same way in
-      spirit (`sounddevice` or `ffmpeg -f alsa` + `astats` instead of
-      `signalstats`), just not scripted here yet.
+      Mic as a noise sensor works the same way in spirit (`sounddevice` or
+      `ffmpeg -f alsa` + `astats` instead of `signalstats`), just not
+      scripted here yet.
+
+      **Wiring it into `sensor_producer.py`**: `webcam_sensors.py` exposes
+      each reading as a plain function (`read_brightness()`,
+      `read_saturation()`, `read_hue()`, `read_contrast()`) — no need to
+      shell out yourself. Two call-site changes:
+      ```python
+      import webcam_sensors
+
+      UNIT = {
+          "temperature": "celsius",
+          "brightness": "luma",
+          "saturation": "chroma",
+          "hue": "degrees",
+          "contrast": "luma",
+      }.get(SENSOR_TYPE, "percent")
+
+      def read_sensor():
+          if SENSOR_TYPE == "brightness":
+              return round(webcam_sensors.read_brightness(), 1)
+          if SENSOR_TYPE == "saturation":
+              return round(webcam_sensors.read_saturation(), 1)
+          if SENSOR_TYPE == "hue":
+              return round(webcam_sensors.read_hue(), 1)
+          if SENSOR_TYPE == "contrast":
+              return round(webcam_sensors.read_contrast(), 1)
+          if SENSOR_TYPE == "temperature":
+              return round(random.uniform(18.0, 24.0), 1)
+          return round(random.uniform(30.0, 60.0), 1)
+      ```
+      Then run with `SENSOR_TYPE=brightness ./run_producer.sh` instead of
+      the default. `UNIT` needed its own mapping since the original
+      `"celsius" if temperature else "percent"` only covers two cases.
 - [ ] **A real weather API** — same *shape* of data (temperature/humidity)
       as the DHT22 example, just sourced from a public API for your
       location instead of hardware. Keeps the lexicon identical; only
