@@ -76,8 +76,20 @@ the mechanism work before wiring in anything real.
 ## Then: wire in something real
 
 Each `STRETCH` marker below is a named stub function already wired into its
-file's main loop — swapping in a real implementation is a one-function
-change, not a restructure.
+file's main loop — swapping in a real implementation is a one- to few-line
+change (uncomment, done), not a restructure. `semble-helper.mjs` is the
+pre-built library both files' STRETCH functions point at: real REST calls
+against `https://api.semble.so/xrpc` (search, save a URL, read/create a
+typed connection), needs only a `SEMBLE_API_KEY` env var — no MCP server to
+run, no other dependency to install. It's a genuine read/write client, not
+a demo: Semble's MCP surface can *also* write (`create_connection` exists in
+`~/src/semble-mcp`'s source) but only when the MCP server itself was
+launched with a key, so it defaults to read-only for anyone without one —
+REST doesn't have that gate. If you're bringing an AI coding agent with
+Semble's MCP tools already configured, the simplest path for you is often to
+just ask it to search/connect directly in natural language, no code at all;
+`semble-helper.mjs` is for a standalone script that runs without an agent
+watching.
 
 `bot-skeleton.mjs` has four (three `STRETCH(station-4)` plus one `STRETCH(bonus)`):
 
@@ -89,8 +101,8 @@ change, not a restructure.
 2. **`queryTool()`** — the recap's brief for this station is "use MCP to query
    Semble data." Here, once a post is classified as evidence, this is where
    you'd look up which prior claim/question it's evidence *for*
-   (`semble.semantic_search`) — the relation-typing half of a full discourse
-   graph, not built here.
+   (`semble-helper.mjs`'s `searchCards()`) — the relation-typing half of a
+   full discourse graph, not built here.
 3. **`postClassification()`** — replace `console.log` with wherever the
    classification should actually live (a reply annotating the post, a new
    PDS record tagging it, a row in a shared discourse-graph view).
@@ -100,15 +112,15 @@ change, not a restructure.
 
 `connections-skeleton.mjs` has two (both `STRETCH(station-4)`):
 
-1. **`findCandidatePair()`** — where a real Semble MCP call goes
-   (`semble.semantic_search` or `semble.get_similar_urls` on a seed paper) to
-   find something worth considering a connection to.
+1. **`findCandidatePair()`** — where a real Semble search goes
+   (`semble-helper.mjs`'s `searchCards()` on a seed paper's title) to find
+   something worth considering a connection to.
 2. **`humanVerdict()`** — scripted (a coin flip) for the zero-setup demo;
    replace it with a real review step (console prompt, small web queue) once
-   you're pairing this with an actual Semble account. As of this writing
-   Semble's MCP surface only exposes reads (`get_url_connections` etc.), not
-   a create-connection call — proposals stay a FactStore entry, not a live
-   write, until that exists or you're doing the write some other way.
+   you're pairing this with an actual Semble account. `main()`'s loop already
+   has a real `createConnection()` write wired in behind `SEMBLE_API_KEY` +
+   real URLs on both sides — a confirmed proposal can go straight to Semble,
+   not just a FactStore entry, once you swap the demo titles for real cards.
 
 ## Files
 
@@ -118,6 +130,7 @@ change, not a restructure.
 | `fact-store.mjs` | A tiny fact store: subject/predicate/object/confidence/disputed/source_event. Verbatim from `sail-judge.mjs`'s `FactStore` class — originally adapted from evaluating ElectricSQL's Burn demo. Substrate-agnostic on purpose: swap the in-process array for Restate `ctx.run()` or a Durable Object later without changing call sites. Shared by both skeletons below, unchanged. |
 | `bot-skeleton.mjs` | Discourse-graph node-type classifier (question/claim/evidence/other). Arms, reward logic, and four `STRETCH` markers. |
 | `connections-skeleton.mjs` | Paper-connection proposer. Arms, reward logic, and two `STRETCH` markers. |
+| `semble-helper.mjs` | Real Semble REST calls (search, save URL, read/create connection) — one `SEMBLE_API_KEY`, no MCP server, no other dependency. What both skeletons' STRETCH functions point at. |
 
 ## Why JS, not the Rust port
 

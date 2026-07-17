@@ -17,6 +17,7 @@
 
 import { Bandit } from "./bandit.mjs";
 import { FactStore } from "./fact-store.mjs";
+import { searchCards } from "./semble-helper.mjs";
 
 // --- Discourse-graph node-type arms --------------------------------------
 // Chan's three fundamental node types, plus "other" for the (very common)
@@ -28,11 +29,15 @@ const ARMS = ["question", "claim", "evidence", "other"];
 // STRETCH(station-4): wire in Semble. The recap's brief for this station is
 // "integrate a bot with MCP to query Semble data" -- here, once a post is
 // classified as evidence, this is where you'd look up which prior
-// claim/question it's evidence *for* (semble.semantic_search on the post's
-// text) -- the relation-typing half of a full discourse graph, not built
-// here.
+// claim/question it's evidence *for* -- the relation-typing half of a full
+// discourse graph, not built here. Uncomment the two lines below (needs
+// SEMBLE_API_KEY) for a real search instead of the stub -- see
+// semble-helper.mjs (plain REST, no MCP server needed). If you're using an
+// AI coding agent with Semble's MCP tools already configured, you can also
+// just ask it to search directly instead of writing this function at all.
 async function queryTool(post) {
-  // e.g.: const result = await mcpClient.callTool("semble.semantic_search", { query: post.text })
+  // const results = await searchCards(post.text);
+  // if (results.length) return results[0].metadata.title ?? results[0].url;
   return `[stub] would search Semble for what "${post.text}" might be evidence for`;
 }
 

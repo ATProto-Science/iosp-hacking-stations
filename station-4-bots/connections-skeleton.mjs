@@ -4,9 +4,9 @@
 // a chat-response strategy, the bandit chooses which relation type (or no
 // connection at all) to *propose* between two candidate papers. A human still
 // confirms before anything's written to Semble for real — matches the
-// workshop's "expert guidance" framing rather than fully autonomous linking,
-// and sidesteps the fact that Semble's MCP surface (as of this writing) only
-// exposes reads (get_url_connections etc), not a create-connection call.
+// workshop's "expert guidance" framing rather than fully autonomous linking.
+// (Semble *can* write a real connection — see semble-helper.mjs — this is a
+// deliberate choice to keep a human in the loop, not a technical limitation.)
 //
 // Run with zero setup: `node connections-skeleton.mjs` — feeds a scripted
 // sequence of candidate paper pairs (with a simulated human verdict per
@@ -14,9 +14,15 @@
 // bot-skeleton.mjs. Look for the two `STRETCH(station-4)` markers — each is
 // a named stub function already wired into the loop below, so swapping in a
 // real implementation is a one-function change, not a restructure.
+//
+// One-line swap to real Semble calls: see semble-helper.mjs (REST, works
+// with just a SEMBLE_API_KEY, no MCP server to run). If you're using an AI
+// coding agent with Semble's MCP tools already configured, you can also just
+// ask it to search/connect directly — no code needed at all for that tier.
 
 import { Bandit } from "./bandit.mjs";
 import { FactStore } from "./fact-store.mjs";
+import { searchCards, createConnection } from "./semble-helper.mjs";
 
 // --- Connection-type arms -----------------------------------------------
 // Mirrors Semble's own typed Connection object (a directional link a curator
@@ -25,11 +31,22 @@ import { FactStore } from "./fact-store.mjs";
 // not a non-decision.
 const ARMS = ["supports", "addresses", "relates-to", "skip"];
 
-// STRETCH(station-4): wire in Semble. This is where a real MCP call would go
-// to find a candidate pair worth considering — e.g. semble.semantic_search
-// or semble.get_similar_urls on a seed paper.
+// These arm names are deliberately friendlier than Semble's own enum
+// (SUPPORTS/OPPOSES/ADDRESSES/HELPFUL/LEADS_TO/RELATED/SUPPLEMENT/EXPLAINER —
+// see semble-helper.mjs's CONNECTION_TYPES). Translate at the write boundary
+// rather than growing ARMS to match Semble's vocabulary one-for-one.
+const ARM_TO_CONNECTION_TYPE = {
+  supports: "SUPPORTS",
+  addresses: "ADDRESSES",
+  "relates-to": "RELATED",
+};
+
+// STRETCH(station-4): wire in Semble — find a candidate pair worth
+// considering a connection to. Uncomment the two lines below (needs
+// SEMBLE_API_KEY) to search real saved cards instead of the stub.
 async function findCandidatePair(seedPaper) {
-  // e.g.: const similar = await mcpClient.callTool("semble.get_similar_urls", { url: seedPaper.url })
+  // const results = await searchCards(seedPaper.title);
+  // if (results.length) return { title: results[0].metadata.title ?? results[0].url, url: results[0].url };
   return { title: `[stub] a paper semantically similar to "${seedPaper.title}"` };
 }
 
@@ -53,12 +70,14 @@ async function chooseAndPropose(bandit, facts, seedPaper) {
     });
   }
 
-  return { chosen };
+  return { chosen, candidate };
 }
 
 // STRETCH(station-4): a real confirm/reject signal instead of a coin flip —
-// a human curator's y/n in a review queue, or (once you trust the bandit
-// more) an actual write to Semble once a create-connection call exists.
+// a human curator's y/n in a review queue. Once you trust the bandit (or
+// just want to see a live write), a confirmed proposal can go straight to
+// Semble via createConnection() in semble-helper.mjs — see main()'s loop
+// below, guarded on SEMBLE_API_KEY being set.
 function humanVerdict(chosen) {
   if (chosen === "skip") return true; // "yeah, skipping was right" is also a valid confirmation
   return Math.random() > 0.4;
@@ -78,7 +97,7 @@ async function main() {
   for (const seedPaper of demoSeedPapers) {
     console.log(`\n[seed paper] "${seedPaper.title}"`);
 
-    const { chosen } = await chooseAndPropose(bandit, facts, seedPaper);
+    const { chosen, candidate } = await chooseAndPropose(bandit, facts, seedPaper);
 
     const confirmed = humanVerdict(chosen);
     bandit.reward(chosen, confirmed);
@@ -90,6 +109,21 @@ async function main() {
     if (!confirmed && chosen !== "skip") {
       const disputedFact = facts.latest(chosen);
       if (disputedFact) disputedFact.disputed = true;
+    }
+
+    // Real write, once confirmed — needs SEMBLE_API_KEY and both sides to be
+    // actual URLs, not demo titles (the scripted seedPapers/candidate above
+    // are titles only). Swap in real seedPaper.url/candidate.url from
+    // findCandidatePair() to see this actually fire.
+    if (confirmed && chosen !== "skip" && process.env.SEMBLE_API_KEY && seedPaper.url && candidate.url) {
+      const { connectionId } = await createConnection({
+        sourceType: "URL",
+        sourceValue: seedPaper.url,
+        targetType: "URL",
+        targetValue: candidate.url,
+        connectionType: ARM_TO_CONNECTION_TYPE[chosen],
+      });
+      console.log(`  -> wrote real Semble connection ${connectionId}`);
     }
   }
 
