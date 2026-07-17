@@ -124,17 +124,14 @@ somewhere real. Pick whichever's easiest to grab from where you're sitting:
       in Python, or `/sys/class/thermal/thermal_zone*/temp` directly on
       Linux), battery percentage/charge rate, or fan speed. Genuinely a
       "sensor reading," just one everyone already has.
-- [ ] **Webcam as a light sensor, via plain `ffmpeg`** — no Python image
-      libraries needed, one line grabs a frame and prints its average
-      brightness (verified working):
-      ```
-      ffmpeg -f v4l2 -input_format mjpeg -video_size 640x480 -i /dev/video0 \
-        -frames:v 1 -vf "signalstats,metadata=mode=print" -f null - 2>&1 | grep -i yavg
-      ```
-      (macOS: swap `-f v4l2 ... /dev/video0` for `-f avfoundation -i "0"`.)
+- [ ] **Webcam as a light sensor** — `./webcam-grab.sh` grabs one frame and
+      prints its average brightness, no Python image library needed (just
+      `ffmpeg`'s own `signalstats` filter). Verified working on Linux;
+      `AVFOUNDATION=1 ./webcam-grab.sh` for macOS. Call it from
+      `read_sensor()` via `subprocess.run(["./webcam-grab.sh"], ...)`.
       Mic as a noise sensor works the same way in spirit (`sounddevice` or
       `ffmpeg -f alsa` + `astats` instead of `signalstats`), just not
-      verified here yet.
+      scripted here yet.
 - [ ] **A real weather API** — same *shape* of data (temperature/humidity)
       as the DHT22 example, just sourced from a public API for your
       location instead of hardware. Keeps the lexicon identical; only

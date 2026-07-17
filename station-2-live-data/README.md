@@ -62,6 +62,7 @@ this runs on a laptop with nothing attached — swap in a real GPIO/DHT read (se
 | `consumer_viewer.py` | The consumer half — watches for those records via Jetstream, Matadisco's producer/consumer pattern. |
 | `lexicon/science.iosp.sensor.reading.json` | Draft record schema, JSON-Schema-style, modeled on `tilde.cards`' own lexicon template. **Placeholder NSID** — the group hasn't picked a real namespace yet; don't treat `science.iosp.*` as final. |
 | `../run_forever.sh` | Repo-root helper — wraps either script so it restarts on crash/exit instead of ending the demo. See "Run it" above. |
+| `webcam-grab.sh` | No-Pi alternative for `read_sensor()` — grabs one webcam frame, prints its average brightness via `ffmpeg`'s `signalstats` filter. See WORKSHEET.md's "If you don't [have a Pi]" section. |
 
 ## Note on the Nebra API
 
