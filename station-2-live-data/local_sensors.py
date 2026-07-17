@@ -1,4 +1,4 @@
-"""Non-webcam sensor readings for stations without a Raspberry Pi.
+"""Local sensor readings for stations without a Raspberry Pi.
 
 Four sources, each a plain function returning a float:
 - read_cpu_temperature() -- Linux only, via /sys/class/thermal

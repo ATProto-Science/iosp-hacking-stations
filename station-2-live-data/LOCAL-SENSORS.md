@@ -1,4 +1,4 @@
-# Non-webcam sensors
+# Local sensors
 
 `local_sensors.py` exposes four real (non-simulated) data sources as plain
 Python functions — no Pi needed, no shelling out required. All verified
