@@ -62,8 +62,9 @@ this runs on a laptop with nothing attached — swap in a real GPIO/DHT read (se
 | `consumer_viewer.py` | The consumer half — watches for those records via Jetstream, Matadisco's producer/consumer pattern. |
 | `lexicon/science.iosp.sensor.reading.json` | Draft record schema, JSON-Schema-style, modeled on `tilde.cards`' own lexicon template. **Placeholder NSID** — the group hasn't picked a real namespace yet; don't treat `science.iosp.*` as final. |
 | `../run_forever.sh` | Repo-root helper — wraps either script so it restarts on crash/exit instead of ending the demo. See "Run it" above. |
-| `webcam-grab.sh` | No-Pi alternative for `read_sensor()` — grabs one webcam frame, prints a numeric reading (`brightness`/`saturation`/`hue`/`contrast`) via `ffmpeg`'s `signalstats` filter. See WORKSHEET.md's "If you don't [have a Pi]" section. |
-| `webcam_sensors.py` | Python wrapper around `webcam-grab.sh` — each reading as a plain function (`read_brightness()` etc.) instead of shelling out yourself. See WORKSHEET.md for the exact `read_sensor()`/`UNIT` call-site changes to wire it in. |
+| `webcam-grab.sh` | No-Pi alternative for `read_sensor()` — grabs one webcam frame, prints a numeric reading (`brightness`/`saturation`/`hue`/`contrast`) via `ffmpeg`'s `signalstats` filter. See `WEBCAM-SENSORS.md`. |
+| `webcam_sensors.py` | Python wrapper around `webcam-grab.sh` — each reading as a plain function (`read_brightness()` etc.) instead of shelling out yourself. See `WEBCAM-SENSORS.md`. |
+| `WEBCAM-SENSORS.md` | Readings table + the exact `read_sensor()`/`UNIT` call-site changes to wire this into `sensor_producer.py`. |
 
 ## Note on the Nebra API
 
