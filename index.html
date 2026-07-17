@@ -28,8 +28,9 @@
         <h2>Get set up</h2>
         <p>One identity gets you into every station below — pick one:</p>
         <ol>
-          <li><strong>pds.rip</strong> — a public test PDS, zero commitment. Good if you just want to poke around today.</li>
+          <li><strong>pds.rip</strong> — a public test PDS, zero commitment. Good if you just want to poke around today. Heads up if you're doing station 2 specifically: it rate-limits at roughly 10 requests/24h per IP, which a continuous producer will hit fast.</li>
           <li><strong>Aster</strong> — the new science PDS, via invite code. Good if you want this to still exist after today.</li>
+          <li><strong>memo.dog</strong> — our own self-hosted test PDS, invite-code only (ask at the station). Built and load-tested specifically for station 2's continuous-write pattern — not a permanent service, workshop duration + a few days only.</li>
         </ol>
         <p class="stones">
           <span class="stone">Aster signup — coming with the launch</span>
@@ -61,8 +62,8 @@
         </div>
 
         <div class="style-card">
-          <h3>4. ATProto Bots</h3>
-          <p>A bandit-driven bot that decides <em>how</em> to respond, not just that it should — extracted from a real, working production agent. <a href="https://github.com/ATProto-Science/iosp-hacking-stations/tree/main/station-4-bots" class="spark">Start here.</a></p>
+          <h3>4. AI workflows over ATProto data</h3>
+          <p>A bandit-driven agent that decides <em>how</em> to act, not just that it should — extracted from a real, working production agent. Two starting points: a chat-response bot, and a paper-connection proposer for Semble. <a href="https://github.com/ATProto-Science/iosp-hacking-stations/tree/main/station-4-bots" class="spark">Start here.</a></p>
           <p class="stones"><span class="stone">code ready</span></p>
         </div>
       </div>
