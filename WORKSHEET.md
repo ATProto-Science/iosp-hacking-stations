@@ -150,6 +150,13 @@ somewhere real. Pick whichever's easiest to grab from where you're sitting:
       look at `tab`/`ngerakines/atproto-tools` in the README's "Alternative
       ways to watch the stream" section. Same records, different tools —
       that's the "one substrate" point again, from the reading side.
+- [ ] **Deploy the producer as a Cloudflare Worker instead of a local
+      script** — Matadisco's own real example,
+      [`vmx/sentinel-to-atproto`](https://github.com/vmx/sentinel-to-atproto),
+      is exactly this: a Worker on a cron trigger (`*/5 * * * *`), a KV
+      namespace for state between runs, env-var credentials, publishing
+      records the same way `sensor_producer.py` does. No laptop needing to
+      stay on for the demo to keep running.
 
 ---
 
