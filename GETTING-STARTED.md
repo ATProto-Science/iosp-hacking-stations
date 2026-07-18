@@ -49,16 +49,17 @@ Status: devcontainer added and pushed; end-to-end Codespace creation
 requires the `codespace` OAuth scope, which needed a one-time interactive
 grant — pending confirmation as of this writing.
 
-### 3. Self-hosted (gretel) — not recommended for participants right now
+### 3. Self-hosted (gretel) — removed
 
-`code.werk.museum` runs `code-server` on `gretel` (UpCloud, 1GB RAM),
-originally intended as a pre-configured base station. **Known issue as of
-2026-07-18, not yet fixed**: the service runs as `root` with a single
-shared password and no folder restriction — anyone with the password gets
-a root shell on the box via the browser terminal, not just file access.
-Don't point participants at this until that's fixed (dedicated non-root
-user per session, scoped to their own workshop copy). See the workshop
-infra section below for current state.
+`code.werk.museum` used to run `code-server` on `gretel` (UpCloud, 1GB
+RAM) as a pre-configured base station. **Removed entirely on 2026-07-18**
+rather than fixed in place: it ran as `root` with a single shared password
+and no folder restriction — anyone with the password got a root shell on
+the box via the browser terminal, not just file access. StackBlitz and
+Codespaces cover the same "no local setup" need without that box's
+resource ceiling or that security tradeoff, so there was no reason to keep
+it. `code.werk.museum` now just serves the static viewer (below) — see the
+workshop infra section for current state.
 
 **Recommendation: default participants to StackBlitz for station 4.** It's
 free regardless of headcount, requires no account, and matches this
@@ -71,21 +72,23 @@ across multiple sessions.
 `gretel` — UpCloud STARTER-1xCPU-1GB, `212.147.230.215`, originally
 provisioned for werk.museum, doubling as this workshop's base station.
 
-- **code-server** — v4.129.0, `code-server@root.service` (systemd),
-  password auth, bound to `127.0.0.1:8080`, proxied by Caddy at
-  `code.werk.museum` over real TLS. **Runs as root, single shared
-  password, no workspace restriction — see the security note above.** A
-  `new-participant.sh <name>` script exists to give each participant an
-  isolated *copy* of the workshop template, but nothing currently stops
-  the shared root-level instance from browsing past that isolation.
+- **code-server — removed 2026-07-18** (`apt-get purge`, systemd unit and
+  config deleted, freed ~657MB disk + ~200MB RAM). `new-participant.sh
+  <name>` still exists in the workshop template for anyone who wants
+  isolated *copies* of the content locally, but there's no shared
+  server-side instance anymore.
 - **HappyView** — schema-driven AppView, `happyview.werk.museum`, admin
-  login via `tgoerke.bsky.social`.
-- **Caddy** — reverse-proxies both hostnames, real ACME certs issued.
-- **Resource ceiling**: ~139MB RAM free after both services are up. One
-  code-server session is probably fine; running HappyView traffic and
-  code-server simultaneously risks OOM. This is the practical reason to
-  prefer StackBlitz/Codespaces over scaling self-hosted per-participant
-  instances on this box — it can't take many concurrent sessions.
+  login via `tgoerke.bsky.social`. Has its own Lua scripting layer
+  (`happyview_scripts`/`happyview_lexicon_script` in its DB) for
+  per-lexicon logic beyond a plain list query, if a station idea needs
+  more than what `target_collection` alone gives you.
+- **Caddy** — `code.werk.museum` now just serves the static viewer
+  (`/var/www/viewer`) directly; `happyview.werk.museum` unchanged. Real
+  ACME certs issued for both.
+- **Resource ceiling**: was ~139MB RAM free with code-server running
+  alongside HappyView; now ~460MB free with it removed. Still a 1GB box —
+  don't assume headroom for anything heavier without checking `free -h`
+  first.
 
 Full history and cross-references: `werk.museum-vdyd` (werk.museum
 project's own beans, not this repo).
