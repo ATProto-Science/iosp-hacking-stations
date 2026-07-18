@@ -1,0 +1,15 @@
+{
+  "name": "IOSP Hacking Stations",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3"
+    }
+  },
+  "postCreateCommand": "cd station-4-bots && npm install --no-audit --no-fund || true",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint"]
+    }
+  }
+}
