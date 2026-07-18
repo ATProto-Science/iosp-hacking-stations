@@ -15,6 +15,8 @@
       <nav class="ring" aria-label="Site navigation">
         <a href="#base" class="spark">Get set up</a>
         <a href="#stations" class="spark">The 4 stations</a>
+        <a href="#engines" class="spark">Start the engines</a>
+        <a href="#looking" class="spark">Looking around</a>
         <a href="#code" class="spark">Code</a>
         <a href="#contact" class="spark">Contact</a>
       </nav>
@@ -69,11 +71,90 @@
       </div>
     </section>
 
+    <section class="gathered" id="engines">
+      <div class="gathered-inner">
+        <h2>Start the engines</h2>
+        <p>Once you know which station and which identity, here's where the
+        code actually runs:</p>
+
+        <div class="style-card">
+          <h3>StackBlitz</h3>
+          <p>Station 4's recommended default — Node runs entirely in your
+          browser, no account, no install, boots in seconds.
+          <a href="https://stackblitz.com/github/ATProto-Science/iosp-hacking-stations/tree/main/station-4-bots" class="spark">Open station 4 in StackBlitz.</a></p>
+          <p class="stones"><span class="stone">live</span> <span class="stone">external tool</span></p>
+        </div>
+
+        <div class="style-card">
+          <h3>GitHub Codespaces</h3>
+          <p>A full Linux VM per person if you want Python too (station 2) or
+          a persistent environment across sessions. Needs a GitHub account;
+          120 free core-hours/month, on your own account, not shared.
+          Open from the repo's Code → Codespaces button, or
+          <code>gh codespace create --repo ATProto-Science/iosp-hacking-stations</code>.</p>
+          <p class="stones"><span class="stone">live</span> <span class="stone">external tool</span></p>
+        </div>
+
+        <p class="smoke-text">Our own PDS (memo.dog) is under "Get set up" above —
+        it's an identity, not a separate engine to start. There used to be a
+        third option here (a self-hosted browser editor) — removed 2026-07-18
+        once StackBlitz/Codespaces covered the same need without the shared
+        box's resource and security tradeoffs.</p>
+      </div>
+    </section>
+
+    <section class="gathered" id="looking">
+      <div class="gathered-inner">
+        <h2>Looking around</h2>
+        <p>Once you've written something, here's how to see it:</p>
+
+        <div class="style-card">
+          <h3>Viewer</h3>
+          <p>Read station 2's live sensor readings and station 4's SAITO
+          facts back out, side by side — plain <code>fetch()</code>
+          against HappyView, no separate backend.
+          <a href="viewer.html" class="spark">Open the viewer.</a></p>
+          <p class="stones"><span class="stone">live</span></p>
+        </div>
+
+        <div class="style-card">
+          <h3>HappyView</h3>
+          <p>The schema-driven AppView the viewer above reads through, and
+          station 3 uses directly for feeds, lists, and starter packs.
+          <a href="https://happyview.werk.museum" class="spark">happyview.werk.museum</a></p>
+          <p class="stones"><span class="stone">live</span></p>
+          <p class="smoke-text">How the viewer's two tables actually get their
+          data: HappyView doesn't expose a list endpoint just because a record
+          lexicon exists. Each collection needed <em>two</em> lexicons
+          registered by hand in HappyView's admin UI — the record schema
+          itself (<code>science.iosp.sensor.reading</code>,
+          <code>run.saito.fact</code>) <em>and</em> a companion query lexicon
+          (<code>science.iosp.sensor.listReadings</code>,
+          <code>run.saito.listFacts</code>) whose <code>target_collection</code>
+          points back at the record NSID — that pairing is what actually
+          creates the <code>/xrpc/&lt;query-nsid&gt;</code> endpoint the viewer
+          calls. If your own station-4 idea writes a new record type, it won't
+          show up anywhere until you register both halves the same way.</p>
+        </div>
+
+        <div class="style-card">
+          <h3>pdsls</h3>
+          <p>General-purpose ATProto repo browser — inspect any DID's actual
+          records directly on their PDS, not just what HappyView has a query
+          registered for. Useful for checking your own writes landed
+          correctly even before you've wired up a list query.
+          <a href="https://pdsls.dev" class="spark">pdsls.dev</a></p>
+          <p class="stones"><span class="stone">live</span> <span class="stone">external tool</span></p>
+        </div>
+      </div>
+    </section>
+
     <section class="gathered" id="code">
       <div class="gathered-inner">
         <h2>Code</h2>
         <p>Primary: <a href="https://github.com/ATProto-Science/iosp-hacking-stations" class="spark">github.com/ATProto-Science/iosp-hacking-stations</a>.
-        Mirrored to Tangled for an ATProto-native git host alongside the legacy one — clone from whichever you already have set up, same content either way.</p>
+        Mirrored to Tangled for an ATProto-native git host alongside the legacy one — clone from whichever you already have set up, same content either way.
+        The repo's own <code>GETTING-STARTED.md</code> covers the same StackBlitz/Codespaces choice above, plus current workshop-infra status.</p>
       </div>
     </section>
 
