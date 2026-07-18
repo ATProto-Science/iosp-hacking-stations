@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Station 2 — live sensor readings</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.25rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; }
+  th { font-weight: 600; }
+  .empty { color: #888; font-style: italic; }
+  .status { font-size: 0.85rem; color: #666; }
+</style>
+</head>
+<body>
+  <h1>Station 2 — live sensor readings</h1>
+  <p class="status" id="status">loading…</p>
+  <table>
+    <thead>
+      <tr><th>sensor</th><th>value</th><th>device</th><th>when</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <script>
+    // No build step, no framework — HappyView's XRPC endpoint over plain
+    // fetch(), same pattern as the Statusphere tutorial. Only needs a
+    // read-only client key, no OAuth (this page never writes anything).
+    const HAPPYVIEW_URL = "https://happyview.werk.museum";
+    const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc"; // read-only, rate-limited
+    const NSID = "science.iosp.sensor.listReadings";
+    const POLL_MS = 5000;
+
+    async function load() {
+      const statusEl = document.getElementById("status");
+      const rowsEl = document.getElementById("rows");
+      try {
+        const res = await fetch(`${HAPPYVIEW_URL}/xrpc/${NSID}?limit=50`, {
+          headers: { "X-Client-Key": CLIENT_KEY },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const records = data.records ?? [];
+        statusEl.textContent = `${records.length} reading(s) · refreshing every ${POLL_MS / 1000}s`;
+        rowsEl.innerHTML = records.length
+          ? records
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+              .map(
+                (r) => `<tr>
+                  <td>${r.sensorType}</td>
+                  <td>${(r.value / r.valueScale).toFixed(1)} ${r.unit}</td>
+                  <td>${r.deviceId ?? "—"}</td>
+                  <td>${new Date(r.createdAt).toLocaleTimeString()}</td>
+                </tr>`
+              )
+              .join("")
+          : `<tr><td colspan="4" class="empty">no readings yet</td></tr>`;
+      } catch (err) {
+        statusEl.textContent = `error: ${err.message}`;
+      }
+    }
+
+    load();
+    setInterval(load, POLL_MS);
+  </script>
+</body>
+</html>
