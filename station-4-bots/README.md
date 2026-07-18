@@ -152,6 +152,37 @@ ask in plain English.)
 | `semble-helper.mjs` | Real Semble REST calls (search, save URL, read/create connection) — one `SEMBLE_API_KEY`, no MCP server, no other dependency. Zero-dependency default. |
 | `semble-mcp-helper.mjs` | Same operations over the real MCP protocol — spawns `~/src/semble-mcp`, talks stdio. Needs `npm install` (`package.json` in this folder). Read tools work anonymously; writes need `SEMBLE_API_KEY` set when the spawned server starts. |
 
+## SAIL/SAITO lineage
+
+This station is a second live instance of a pattern that started elsewhere, not a
+one-off invention. **SAITO** (Sokratisches KI-Trainingsziel) is Torsten's own training-
+paradigm framework — reward signal = downstream competency gain, not moment-of-response
+preference (RLHF's usual objective). **SAIL** (ATScience-SAIL, "Socratic AI Learning Lab")
+is SAITO's applied/funded proposal, pitched to SPRIND NFAI Stage 1 and BiTS — both
+rejected; see `~/txt/aidle` (tag `rejected-nfai-bits-2026-06` marks that pitched state)
+and `~/txt/catalyze/01-sail.md` for the full proposal. `sail-judge.mjs`
+(haiku.garden/Chatto, being ported to Rust/Restate for production durability) is the
+first real deployment of the bandit/fact-store pattern this station's `bandit.mjs`/
+`fact-store.mjs` are lifted from. This workshop is deliberately framed as "a first
+opportunity to showcase and try SAITO principles," not an incidental reuse.
+
+**On sharing code across the JS/Rust divide:** you can't share source between a
+zero-dependency JS skeleton and a Restate/Rust production service, so "the library"
+between them isn't code — it's the algorithm spec and the fact-store's data shape. A
+real ATProto lexicon for that shape (something like `computer.atmospheric.saito.fact`,
+reusing the already-owned `atmospheric.computer` domain as NSID authority rather than
+buying a new one) would let a JS and a Rust implementation write to and read from the
+same wire format, genuinely interoperable rather than just parallel — parked as
+`atmospheric-computer-23a3` in `~/src/atmospheric-computer/`, not built yet.
+
+**On DiscourseGraphs/SciOS:** real, confirmed groups in the same IOSP ecosystem already
+doing theory-driven discourse-graph work (`github.com/DiscourseGraphs`, SciOS). Alignment
+with their schema is deliberately deferred, not unawareness of it — explore the
+SAITO/SAIL pattern independently here first, then consider merging/extending/aligning.
+Whether "align opportunistically" or "explore our own way first" dominates isn't
+decided, on purpose — it's the same explore/exploit tradeoff Thompson sampling (the
+algorithm powering this station's own bandit) is built to navigate.
+
 ## Why JS, not the Rust port
 
 `sail-judge` also has a productionized Rust + Restate + Docker version
