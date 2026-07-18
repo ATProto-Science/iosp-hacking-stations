@@ -1,0 +1,55 @@
+{
+  "_comment": "Bundled fallback copy — canonical source is ~/src/atmospheric-computer/lexicons/computer/atmospheric/saito/fact.json. Keep these in sync; the canonical one owns the NSID authority, this one just means saito-fact-lexicon.mjs works standalone if that sibling repo isn't checked out.",
+  "lexicon": 1,
+  "id": "computer.atmospheric.saito.fact",
+  "revision": 1,
+  "description": "A single subject-predicate-object fact recorded by a SAITO-pattern agent (Thompson-sampling bandit + fact store) -- a discourse-graph classification, a proposed connection, a sensor's last reading, etc. Direct wire-format mapping of the FactStore shape used by sail-judge.mjs (haiku.garden, production) and station-4-bots' bandit.mjs/fact-store.mjs (iosp-hacking-stations, workshop) -- the point of this lexicon is that both, and any future implementation in any language, read/write the same records instead of forking each other's code.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A single subject-predicate-object fact.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subject", "predicate", "object", "createdAt"],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "What/who this fact is about. Free text for now (e.g. a Bluesky post's raw text) -- not yet a strongRef. Revisit once facts commonly point at other real ATProto records instead of describing them in prose.",
+            "maxLength": 2000
+          },
+          "predicate": {
+            "type": "string",
+            "description": "The relation, e.g. 'classified-as', 'evidence-for', 'supports', 'addresses', 'relates-to'. Deliberately open, not an enum -- matches the fact store's own substrate-agnostic design.",
+            "maxLength": 128
+          },
+          "object": {
+            "type": "string",
+            "description": "The other side of the relation -- same free-text-for-now caveat as subject.",
+            "maxLength": 2000
+          },
+          "confidence": {
+            "type": "integer",
+            "description": "Confidence as a 0-100 integer (percentage). AT Protocol records have no float type, so a 0.0-1.0 float at the application layer becomes Math.round(confidence * 100) on write, and value/100.0 on read.",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "disputed": {
+            "type": "boolean",
+            "description": "Flipped true if a human later rejects this fact. Requires an update (putRecord) to the same rkey, not a new record."
+          },
+          "sourceEvent": {
+            "type": "string",
+            "description": "What triggered this fact -- e.g. the post text or seed paper title that led to it.",
+            "maxLength": 2000
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When this fact was recorded."
+          }
+        }
+      }
+    }
+  }
+}
