@@ -19,6 +19,7 @@ import { Bandit } from "./bandit.mjs";
 import { FactStore } from "./fact-store.mjs";
 import { searchCards } from "./semble-helper.mjs";
 // import { searchUrls } from "./semble-mcp-helper.mjs"; // MCP alternative — see below, needs `npm install` first
+// import { watchPosts } from "./bluesky-firehose.mjs"; // real firehose — see incomingPosts() below
 
 // --- Discourse-graph node-type arms --------------------------------------
 // Chan's three fundamental node types, plus "other" for the (very common)
@@ -70,11 +71,34 @@ function reward(post, chosen) {
   return Math.random() > 0.3;
 }
 
-// STRETCH(station-4): real input, not a scripted array. Swap this generator
-// for a Bluesky firehose subscription (@atproto/api's subscribeRepos)
-// filtered to a research topic or a specific thread's replies. main()'s
-// `for await` loop doesn't need to change.
+// STRETCH(station-4): real input, not a scripted array. Two tiers, same
+// choice as the Semble helpers below -- pick one, main()'s `for await` loop
+// doesn't need to change either way:
+//
+//   (a) Bounded/reliable (recommended default): watch a small, known set of
+//       accounts instead of the open network -- guaranteed to have real
+//       traffic to react to during a live demo, no dependency on organic
+//       engagement happening to match a topic in the room. Uncomment the
+//       import above and the block below; DEMO_DIDS are the memo.dog test
+//       accounts from the earlier load test (loadtest01-10.memo.dog),
+//       already confirmed reaching Jetstream -- see bluesky-firehose.mjs's
+//       own header for the one gotcha (needs an explicit crawl request +
+//       ~1-2 min relay lag, not automatic).
+//   (b) Open/harder: call watchPosts() with no `dids` at all -- the full
+//       public app.bsky.feed.post firehose (real volume, hundreds of
+//       events/sec), pass a `filter` function to match a real research
+//       topic/hashtag or a specific thread's replies. Confirmed: Jetstream
+//       has no server-side content filter, this filtering always happens
+//       client-side regardless of which tier.
+//
+// Harder-still tier, if you're pairing with an AI coding agent: skip
+// bluesky-firehose.mjs and have your agent write the Jetstream subscription
+// from scratch here -- still fully available, not replaced by the helper.
 async function* incomingPosts() {
+  // const DEMO_DIDS = ["did:plc:ucz22wjnvr5pl524drzxu25m"]; // torsten.memo.dog; add loadtest01-10's DIDs too if you want more traffic
+  // for await (const post of watchPosts({ dids: DEMO_DIDS })) yield post;
+  // for await (const post of watchPosts({ filter: (r) => /* your topic check */ true })) yield post; // (b) open tier
+
   const demoThread = [
     { text: "has anyone actually measured retrieval latency under load?" },
     { text: "we ran this on 3 nodes and saw p99 latency double past 50 req/s" },
