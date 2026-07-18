@@ -28,12 +28,10 @@ Pick one (see hacking.tilde.style for the current status of each):
       **Not a permanent service** — workshop duration + a few days, not
       somewhere to keep real data. Your handle will be `you.memo.dog`.
       **If you're doing station 4's real-firehose stretch goal**: memo.dog
-      posts *do* reach the public Jetstream firehose, but only after the
-      instance operator sends an explicit crawl request to the relay —
-      already done for this workshop, but worth knowing if posts from your
-      `memo.dog` handle aren't showing up: it can take 1-2 minutes after your
-      *first* post for the relay to start crawling a brand-new repo, even
-      with the request already in place.
+      posts *do* reach the public Jetstream firehose — the instance operator
+      already sent the one-time crawl request that announces the whole PDS
+      to the relay network, so this is already handled, not something you
+      need to do per account. Nothing else to configure.
 
 Either way, you end up with a **handle** (e.g. `you.pds.rip` or
 `you.memo.dog`) and a **password**. That's all both stations below need.

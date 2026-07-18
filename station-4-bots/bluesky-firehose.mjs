@@ -9,12 +9,15 @@
 //       set of accounts (e.g. memo.dog test accounts) — guaranteed to have
 //       real traffic to react to during a live demo, no dependency on
 //       organic engagement. Confirmed working: memo.dog posts DO reach
-//       Jetstream, but only after an explicit crawl request
+//       Jetstream, once the *PDS itself* (not each account) is announced to
+//       the relay via a one-time crawl request
 //       (POST https://bsky.network/xrpc/com.atproto.sync.requestCrawl,
 //       body {"hostname": "https://memo.dog"}) — cocoon's own
 //       COCOON_RELAYS=https://bsky.network config didn't self-register
-//       reliably. Budget ~1-2 minutes of relay-crawl lag after a fresh post
-//       before it's guaranteed to show up.
+//       reliably, so this was done manually. Already handled for this
+//       workshop's memo.dog instance — nothing per-account to do. (The
+//       ~1-2 min lag observed while testing was the relay catching up on
+//       *that one-time* registration, not a recurring per-post delay.)
 //   (b) open/harder: omit `dids` entirely -- watches the full public
 //       app.bsky.feed.post firehose (real volume, hundreds of events/sec).
 //       Jetstream has no topic/keyword filter server-side, so "watch a
