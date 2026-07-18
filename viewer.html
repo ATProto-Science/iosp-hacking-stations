@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>IOSP workshop — live data, one substrate</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1rem; margin-top: 2rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+  th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; }
+  th { font-weight: 600; }
+  .empty { color: #888; font-style: italic; }
+  .status { font-size: 0.85rem; color: #666; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  @media (max-width: 700px) { .cols { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <h1>IOSP workshop — station 2 + station 4, one substrate</h1>
+  <p class="status">Both stations read/write real ATProto records through the same HappyView AppView — no separate backends.</p>
+
+  <div class="cols">
+    <div>
+      <h2>Station 2 — live sensor readings</h2>
+      <p class="status" id="status-sensors">loading…</p>
+      <table>
+        <thead><tr><th>sensor</th><th>value</th><th>device</th><th>when</th></tr></thead>
+        <tbody id="rows-sensors"></tbody>
+      </table>
+    </div>
+
+    <div>
+      <h2>Station 4 — SAITO agent facts</h2>
+      <p class="status" id="status-facts">loading…</p>
+      <table>
+        <thead><tr><th>subject</th><th>predicate</th><th>object</th><th>conf.</th><th>when</th></tr></thead>
+        <tbody id="rows-facts"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // No build step, no framework — both tables are plain fetch() calls
+    // against the same HappyView instance's XRPC endpoints, same pattern as
+    // HappyView's own Statusphere tutorial. Read-only client key, no OAuth.
+    const HAPPYVIEW_URL = "https://happyview.werk.museum";
+    const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc"; // read-only, rate-limited
+    const POLL_MS = 5000;
+
+    function truncate(s, n) {
+      return s && s.length > n ? s.slice(0, n - 1) + "…" : s;
+    }
+
+    async function fetchRecords(nsid) {
+      const res = await fetch(`${HAPPYVIEW_URL}/xrpc/${nsid}?limit=50`, {
+        headers: { "X-Client-Key": CLIENT_KEY },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return data.records ?? [];
+    }
+
+    async function loadSensors() {
+      const statusEl = document.getElementById("status-sensors");
+      const rowsEl = document.getElementById("rows-sensors");
+      try {
+        const records = await fetchRecords("science.iosp.sensor.listReadings");
+        statusEl.textContent = `${records.length} reading(s)`;
+        rowsEl.innerHTML = records.length
+          ? records
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+              .map(
+                (r) => `<tr>
+                  <td>${r.sensorType}</td>
+                  <td>${(r.value / r.valueScale).toFixed(1)} ${r.unit}</td>
+                  <td>${r.deviceId ?? "—"}</td>
+                  <td>${new Date(r.createdAt).toLocaleTimeString()}</td>
+                </tr>`
+              )
+              .join("")
+          : `<tr><td colspan="4" class="empty">no readings yet</td></tr>`;
+      } catch (err) {
+        statusEl.textContent = `error: ${err.message}`;
+      }
+    }
+
+    async function loadFacts() {
+      const statusEl = document.getElementById("status-facts");
+      const rowsEl = document.getElementById("rows-facts");
+      try {
+        const records = await fetchRecords("run.saito.listFacts");
+        statusEl.textContent = `${records.length} fact(s)`;
+        rowsEl.innerHTML = records.length
+          ? records
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+              .map(
+                (r) => `<tr>
+                  <td>${truncate(r.subject, 40)}</td>
+                  <td>${r.predicate}</td>
+                  <td>${truncate(r.object, 30)}</td>
+                  <td>${r.confidence}%</td>
+                  <td>${new Date(r.createdAt).toLocaleTimeString()}</td>
+                </tr>`
+              )
+              .join("")
+          : `<tr><td colspan="5" class="empty">no facts yet</td></tr>`;
+      } catch (err) {
+        statusEl.textContent = `error: ${err.message}`;
+      }
+    }
+
+    function loadAll() {
+      loadSensors();
+      loadFacts();
+    }
+
+    loadAll();
+    setInterval(loadAll, POLL_MS);
+  </script>
+</body>
+</html>
