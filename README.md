@@ -10,6 +10,10 @@ Full workshop plan: `tracker-vss7` (private planning bean, not in this repo).
 covers both stations plus troubleshooting for the gotchas we already hit
 testing this.
 
+**Need an editor first?** See `GETTING-STARTED.md` — StackBlitz (no
+account, no install, recommended default for station 4), GitHub
+Codespaces, or the self-hosted base station, with current status of each.
+
 ## Station 2 — Live Data Streaming
 
 `station-2-live-data/` — Raspberry Pi + sensor → [Nebra](https://github.com/the-astrosky-ecosystem/nebra)
