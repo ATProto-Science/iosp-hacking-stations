@@ -87,9 +87,6 @@
               <span class="handle-suffix">.memo.dog</span>
             </div>
 
-            <label for="email">Email</label>
-            <input id="email" type="email" required autocomplete="email">
-
             <label for="password">Password</label>
             <input id="password" type="password" required minlength="8" autocomplete="new-password">
 
@@ -132,7 +129,10 @@
 
       const prefix = document.getElementById("prefix").value.trim().toLowerCase();
       const handle = `${prefix}.memo.dog`;
-      const email = document.getElementById("email").value.trim();
+      // memo.dog's cocoon instance has no SMTP configured — no verification
+      // email is ever actually sent, so there's no reason to ask for a real
+      // one. Derived, not typed: satisfies cocoon's required-field check only.
+      const email = `${prefix}@memo.dog`;
       const password = document.getElementById("password").value;
       const inviteCode = document.getElementById("invite").value.trim();
 
