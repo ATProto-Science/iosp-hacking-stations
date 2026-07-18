@@ -1,9 +1,9 @@
 {
-  "_comment": "Bundled fallback copy — canonical source is ~/src/atmospheric-computer/lexicons/computer/atmospheric/saito/fact.json. Keep these in sync; the canonical one owns the NSID authority, this one just means saito-fact-lexicon.mjs works standalone if that sibling repo isn't checked out.",
+  "_comment": "Bundled fallback copy — canonical source is ~/saito.run/lexicons/run/saito/fact.json. Keep these in sync; the canonical one owns the NSID authority, this one just means saito-fact-lexicon.mjs works standalone if that sibling repo isn't checked out.",
   "lexicon": 1,
-  "id": "computer.atmospheric.saito.fact",
+  "id": "run.saito.fact",
   "revision": 1,
-  "description": "A single subject-predicate-object fact recorded by a SAITO-pattern agent (Thompson-sampling bandit + fact store) -- a discourse-graph classification, a proposed connection, a sensor's last reading, etc. Direct wire-format mapping of the FactStore shape used by sail-judge.mjs (haiku.garden, production) and station-4-bots' bandit.mjs/fact-store.mjs (iosp-hacking-stations, workshop) -- the point of this lexicon is that both, and any future implementation in any language, read/write the same records instead of forking each other's code.",
+  "description": "A single subject-predicate-object fact recorded by a SAITO-pattern agent (Thompson-sampling bandit + fact store) -- a discourse-graph classification, a proposed connection, a sensor's last reading, etc. Direct wire-format mapping of the FactStore shape used by sail-judge.mjs (haiku.garden, production) and station-4-bots' bandit.mjs/fact-store.mjs (iosp-hacking-stations, workshop) -- the point of this lexicon is that both, and any future implementation in any language, read/write the same records instead of forking each other's code. Moved here 2026-07-18 from computer.atmospheric.saito.fact (atmospheric.computer's authority) once saito.run was registered as SAITO's own project handle/authority -- the wire format is unchanged, only the NSID's authority moved.",
   "defs": {
     "main": {
       "type": "record",

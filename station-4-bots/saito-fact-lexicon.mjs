@@ -1,7 +1,10 @@
-// Real validation + record-shaping against computer.atmospheric.saito.fact —
-// the shared wire format for SAITO-pattern facts (canonical spec lives in
-// atmospheric.computer's repo, ~/src/atmospheric-computer/lexicons/computer/
-// atmospheric/saito/fact.json; this file is the JS *consumer*, not the spec).
+// Real validation + record-shaping against run.saito.fact — the shared wire
+// format for SAITO-pattern facts (canonical spec lives in saito.run's own
+// repo, ~/saito.run/lexicons/run/saito/fact.json; this file is the JS
+// *consumer*, not the spec). Renamed 2026-07-18 from
+// computer.atmospheric.saito.fact (was borrowing atmospheric.computer's
+// authority) once saito.run was registered as SAITO's own project handle —
+// same wire format, only the NSID's authority moved.
 //
 // Point: bandit.mjs/fact-store.mjs's in-process FactStore stays exactly as it
 // is (nothing here changes their behavior) — this module is the opt-in path
@@ -18,13 +21,13 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { Lexicons } from "@atproto/lexicon";
 
-const NSID = "computer.atmospheric.saito.fact";
+const NSID = "run.saito.fact";
 
-// Falls back to a bundled copy if the sibling atmospheric-computer checkout
-// isn't present (e.g. CI, a participant's laptop without that repo cloned).
+// Falls back to a bundled copy if the sibling saito.run checkout isn't
+// present (e.g. CI, a participant's laptop without that repo cloned).
 const LEXICON_PATHS = [
   process.env.SAITO_FACT_LEXICON_PATH,
-  join(dirname(fileURLToPath(import.meta.url)), "..", "..", "atmospheric-computer", "lexicons", "computer", "atmospheric", "saito", "fact.json"),
+  join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "saito.run", "lexicons", "run", "saito", "fact.json"),
   join(dirname(fileURLToPath(import.meta.url)), "saito-fact-lexicon.schema.json"),
 ].filter(Boolean);
 
