@@ -111,10 +111,13 @@ ask in plain English.)
 `bot-skeleton.mjs` has four (three `STRETCH(station-4)` plus one `STRETCH(bonus)`):
 
 1. **`incomingPosts()`** — an async generator, currently yielding a scripted
-   demo discourse thread. Replace it with a real input source: a Bluesky
-   firehose subscription (`@atproto/api`'s `subscribeRepos`) filtered to a
-   research topic or a specific thread's replies. `main()`'s `for await` loop
-   doesn't need to change.
+   demo discourse thread. Real input via `bluesky-firehose.mjs`
+   (zero-dependency Jetstream consumer): bounded tier (a small known set of
+   accounts, e.g. memo.dog test accounts — reliable, guaranteed traffic for
+   a live demo, verified end-to-end) or open tier (the full public firehose,
+   filtered client-side by topic/thread — Jetstream has no server-side
+   content filter). `main()`'s `for await` loop doesn't need to change either
+   way.
 2. **`queryTool()`** — the recap's brief for this station is "use MCP to query
    Semble data." Here, once a post is classified as evidence, this is where
    you'd look up which prior claim/question it's evidence *for*
@@ -150,6 +153,8 @@ ask in plain English.)
 | `bot-skeleton.mjs` | Discourse-graph node-type classifier (question/claim/evidence/other). Arms, reward logic, and four `STRETCH` markers. |
 | `connections-skeleton.mjs` | Paper-connection proposer. Arms, reward logic, and two `STRETCH` markers. |
 | `semble-helper.mjs` | Real Semble REST calls (search, save URL, read/create connection) — one `SEMBLE_API_KEY`, no MCP server, no other dependency. Zero-dependency default. |
+| `bluesky-firehose.mjs` | Real Jetstream consumer (Node's built-in `WebSocket`, zero-dependency) — bounded (known DIDs) or open (full firehose + client-side filter) tiers. What `bot-skeleton.mjs`'s `incomingPosts()` points at. |
+| `saito-fact-lexicon.mjs` | Real validation against `run.saito.fact` (the shared SAITO wire format, canonical spec in `~/saito.run/`) — needs `@atproto/lexicon`. Converts a FactStore entry into a real, validated ATProto record; opt-in, doesn't change `bandit.mjs`/`fact-store.mjs`'s own behavior. |
 | `semble-mcp-helper.mjs` | Same operations over the real MCP protocol — spawns `~/src/semble-mcp`, talks stdio. Needs `npm install` (`package.json` in this folder). Read tools work anonymously; writes need `SEMBLE_API_KEY` set when the spawned server starts. |
 
 ## SAIL/SAITO lineage
