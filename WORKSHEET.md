@@ -27,6 +27,13 @@ Pick one (see hacking.tilde.style for the current status of each):
       at 10 concurrent accounts writing every 5s with zero errors.
       **Not a permanent service** — workshop duration + a few days, not
       somewhere to keep real data. Your handle will be `you.memo.dog`.
+      **If you're doing station 4's real-firehose stretch goal**: memo.dog
+      posts *do* reach the public Jetstream firehose, but only after the
+      instance operator sends an explicit crawl request to the relay —
+      already done for this workshop, but worth knowing if posts from your
+      `memo.dog` handle aren't showing up: it can take 1-2 minutes after your
+      *first* post for the relay to start crawling a brand-new repo, even
+      with the request already in place.
 
 Either way, you end up with a **handle** (e.g. `you.pds.rip` or
 `you.memo.dog`) and a **password**. That's all both stations below need.
@@ -215,35 +222,59 @@ Each `STRETCH` marker is a named stub function already wired into its
 file's main loop — swapping in a real implementation is a one-function
 change, not a restructure.
 
-`bot-skeleton.mjs` has four:
+`bot-skeleton.mjs` has four — the first two now have pre-built helpers behind
+a one-line uncomment, not a from-scratch build:
 
-- [ ] **Wire in Semble.** Replace `queryTool()`'s stub with a real MCP call
-      (`semble.semantic_search`) — once a post is classified as evidence,
-      find which prior claim/question it's evidence *for*. This is the
-      relation-typing half of a full discourse graph that this skeleton
-      doesn't build.
-- [ ] **Real input, not a scripted array.** `incomingPosts()` is an async
-      generator yielding a scripted demo discourse thread — swap it for an
-      actual live source: a Bluesky firehose subscription (`@atproto/api`'s
-      `subscribeRepos`) filtered to a research topic or a specific thread's
-      replies. `main()`'s `for await` loop doesn't need to change.
+- [ ] **Wire in Semble.** Uncomment one line in `queryTool()`: `searchCards()`
+      from `semble-helper.mjs` (REST, just needs `SEMBLE_API_KEY`, no setup)
+      or `searchUrls()` from `semble-mcp-helper.mjs` (the real MCP protocol,
+      needs `npm install` first). Both are genuinely equivalent for reads.
+      Harder tier, if you're pairing with an AI coding agent: skip both
+      helpers and have it write a real Semble integration from scratch here
+      instead — still fully available, not replaced by the one-liners.
+- [ ] **Real input, not a scripted array.** Uncomment one of two blocks in
+      `incomingPosts()`, both backed by `bluesky-firehose.mjs` (a real
+      Jetstream consumer, zero-dependency, verified working): a bounded set
+      of known accounts (reliable — guaranteed traffic for a live demo,
+      no dependency on organic engagement matching a topic in the room), or
+      the open public firehose with your own topic/thread filter function
+      (Jetstream has no server-side content filter, so this always happens
+      client-side either way). `main()`'s `for await` loop doesn't change.
 - [ ] **Real output, not `console.log`.** `postClassification()` is where
       the classification should actually live — a reply annotating the
-      post, a new PDS record tagging it, a row in a shared discourse-graph
-      view.
+      post, a new PDS record tagging it (see the SAITO lexicon note below),
+      or a row in a shared discourse-graph view.
 - [ ] Bonus: `reward()` is a deliberately crude placeholder (a coin flip).
       Design a better signal — engagement (did the post later get cited as
       evidence for something), or explicit curator feedback in a review
       queue.
 
-`connections-skeleton.mjs` has two:
+`connections-skeleton.mjs` has two — same one-line-uncomment shape:
 
-- [ ] **Wire in Semble.** Replace `findCandidatePair()`'s stub with a real
-      MCP call (`semble.semantic_search` or `semble.get_similar_urls`).
+- [ ] **Wire in Semble.** Uncomment one line in `findCandidatePair()`: same
+      `searchCards()`/`searchUrls()` choice as above.
 - [ ] **A real confirmation step.** Replace `humanVerdict()`'s coin flip with
-      an actual review prompt — Semble's MCP surface only exposes reads as of
-      this writing, so a real deployment stays proposal-only (or writes some
-      other way) until a create-connection call exists.
+      an actual review prompt. Once confirmed, `main()`'s loop already has a
+      real `createConnection()` write wired in (behind `SEMBLE_API_KEY` +
+      real URLs on both sides) — a confirmed proposal can go straight to
+      Semble, not just a FactStore entry. (Correction from an earlier draft
+      of this worksheet: Semble's MCP surface *can* write — `create_connection`
+      exists — it's just gated behind the MCP server itself holding a key,
+      which is why REST is the simpler default here, not because writing is
+      impossible.)
+
+### A real wire format for facts, not just a demo shape
+
+`fact-store.mjs`'s subject/predicate/object/confidence/disputed shape is now
+a real, published ATProto lexicon — `run.saito.fact` (canonical spec at
+`~/saito.run/`, part of Torsten's SAITO training-paradigm framework this
+station's bandit pattern comes from). `saito-fact-lexicon.mjs` validates a
+FactStore entry against it for real (`@atproto/lexicon`) — verified end-to-end
+against two different PDS implementations (a cocoon instance and the official
+reference PDS). Point: if you wire `postClassification()` to actually write a
+record, this is the shape to write it in, so your bot's output is genuinely
+interoperable with any other SAITO-pattern implementation, not just your own
+in-process FactStore array.
 
 ### Outlook — worth discussing, not required
 
@@ -260,18 +291,20 @@ change, not a restructure.
   up), not permanent overflow. Good show-and-tell question: did `other`
   dominate in your run? What would you split it into if you kept classifying
   real data for a week?
-- **Cross-link with station 2 for a real "one substrate" demo, not just an
-  abstract one.** `queryTool()`'s stretch goal is stubbed as a generic Semble
-  search — but station 2 is publishing real `science.iosp.sensor.reading`
-  records at this *same* workshop, on the *same* substrate. If someone posts
-  on Bluesky citing a sensor reading ("check out this temperature spike!"),
-  a bot classifying that post as `evidence` could resolve `queryTool()`'s
-  lookup to an *actual* station-2 record — `com.atproto.repo.listRecords`
-  against a known station-2 handle's collection, not a hypothetical search —
-  and link the resulting fact to that record's real `at://` URI. Worth doing
-  live specifically because both stations are in the same room: a genuine
-  demonstration of two teams leveraging one substrate, not two unrelated
-  demos that happen to share a venue.
+- **Cross-link with station 2 for a real "one substrate" demo — already
+  proven live, not just a hypothetical.** `viewer.html`
+  (`https://code.werk.museum/viewer/`) already shows station 2's sensor
+  readings and station 4's SAITO facts side by side, both served through the
+  same HappyView AppView instance. The remaining stretch is the deeper
+  version: if someone posts on Bluesky citing a sensor reading ("check out
+  this temperature spike!"), a bot classifying that post as `evidence` could
+  resolve `queryTool()`'s lookup to an *actual* station-2 record —
+  `com.atproto.repo.listRecords` against a known station-2 handle's
+  collection, not a Semble search — and link the resulting fact to that
+  record's real `at://` URI. Worth doing live specifically because both
+  stations are in the same room: a genuine demonstration of two teams
+  leveraging one substrate, not two unrelated demos that happen to share a
+  venue.
 
 ---
 
