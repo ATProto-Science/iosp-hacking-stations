@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IOSP 2026 — who's here</title>
+  <link rel="stylesheet" href="site.css">
+  <style>
+    /* Kiosk view is meant for a big screen at the station — everything runs
+       larger than the rest of the site's own type scale. */
+    body.clearing { font-size: 1.15rem; }
+    .kiosk-tracks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    @media (max-width: 900px) { .kiosk-tracks { grid-template-columns: 1fr; } }
+    .track-card h3 { font-size: 1.6rem; }
+    .track-count { font-size: 3rem; line-height: 1; margin: 0.5rem 0; }
+    .codes-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    .code-cell {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 2.25rem; height: 2.25rem; border-radius: 5px;
+      border: 1px solid var(--log); color: var(--smoke); font-size: 1.3rem;
+    }
+    .code-cell.taken { border-color: var(--fire); background-color: var(--night); }
+    .checkin-log { list-style: none; margin: 1rem 0 0; padding: 0; max-height: 60vh; overflow-y: auto; }
+    .checkin-log li {
+      display: flex; align-items: baseline; gap: 0.75rem;
+      padding: 0.5rem 0; border-bottom: 1px solid var(--log);
+      font-size: 1.1rem;
+    }
+    .checkin-log .emoji { font-size: 1.5rem; }
+    .checkin-log .when { color: var(--smoke); font-size: 0.9rem; margin-left: auto; }
+  </style>
+</head>
+<body class="clearing">
+
+  <header class="hearth">
+    <div class="hearth-inner">
+      <h1 class="site-name">Who's here — IOSP 2026</h1>
+      <p class="site-tagline">Live from real ATProto check-in records, no separate backend.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="gathered">
+      <div class="gathered-inner">
+        <div class="kiosk-tracks">
+          <div class="style-card track-card">
+            <h3>🐕 memo.dog</h3>
+            <p class="track-count" id="count-memo.dog">–</p>
+            <p class="smoke-text" id="codes-status">loading…</p>
+            <div class="codes-grid" id="codes-grid"></div>
+          </div>
+          <div class="style-card track-card">
+            <h3>🌸 Aster</h3>
+            <p class="track-count" id="count-aster">–</p>
+            <p class="smoke-text">Checked in by station staff.</p>
+          </div>
+          <div class="style-card track-card">
+            <h3>🌻 Bluesky</h3>
+            <p class="track-count" id="count-bsky">–</p>
+            <p class="smoke-text">Checked in by station staff.</p>
+          </div>
+        </div>
+
+        <div class="style-card" style="margin-top: 1.5rem;">
+          <h3>Just joined</h3>
+          <ul class="checkin-log" id="checkin-log">
+            <li class="smoke-text">loading…</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="embers">
+    <div class="embers-inner">
+      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a></p>
+    </div>
+  </footer>
+
+  <script>
+    const HAPPYVIEW_URL = "https://happyview.werk.museum";
+    const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc";
+    const TOTAL_CODES = 20;
+    const POLL_MS = 4000;
+
+    const TRACK_EMOJI = { "memo.dog": "🐕", "aster": "🌸", "bsky": "🌻" };
+
+    function renderCodesGrid(takenCount) {
+      const cells = [];
+      for (let i = 0; i < TOTAL_CODES; i++) {
+        cells.push(
+          i < takenCount
+            ? '<span class="code-cell taken">🐕</span>'
+            : '<span class="code-cell">·</span>'
+        );
+      }
+      document.getElementById("codes-grid").innerHTML = cells.join("");
+    }
+
+    function renderLog(records) {
+      const logEl = document.getElementById("checkin-log");
+      if (!records.length) {
+        logEl.innerHTML = '<li class="smoke-text">no check-ins yet</li>';
+        return;
+      }
+      logEl.innerHTML = records
+        .slice(0, 30)
+        .map((r) => {
+          const emoji = TRACK_EMOJI[r.track] ?? "❓";
+          const when = new Date(r.createdAt).toLocaleTimeString();
+          return `<li><span class="emoji">${emoji}</span><span>${r.track}</span><span class="when">${when}</span></li>`;
+        })
+        .join("");
+    }
+
+    async function refresh() {
+      try {
+        const res = await fetch(
+          `${HAPPYVIEW_URL}/xrpc/style.tilde.hacking.listCheckins?limit=200`,
+          { headers: { "X-Client-Key": CLIENT_KEY } }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const records = (data.records ?? []).sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        const counts = { "memo.dog": 0, aster: 0, bsky: 0 };
+        for (const r of records) {
+          if (r.track in counts) counts[r.track]++;
+        }
+
+        document.getElementById("count-memo.dog").textContent = counts["memo.dog"];
+        document.getElementById("count-aster").textContent = counts.aster;
+        document.getElementById("count-bsky").textContent = counts.bsky;
+        document.getElementById("codes-status").textContent =
+          `${Math.min(counts["memo.dog"], TOTAL_CODES)} of ${TOTAL_CODES} invite codes claimed`;
+        renderCodesGrid(counts["memo.dog"]);
+        renderLog(records);
+      } catch (err) {
+        document.getElementById("codes-status").textContent = `couldn't load (${err.message})`;
+      }
+    }
+
+    refresh();
+    setInterval(refresh, POLL_MS);
+  </script>
+</body>
+</html>

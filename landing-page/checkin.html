@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff check-in console — IOSP 2026</title>
+  <link rel="stylesheet" href="site.css">
+  <style>
+    /* Staff-only tool, not linked from the public site — plain form styling,
+       same token palette as memo-dog-signup.html. */
+    .login-form, .checkin-buttons { max-width: 30rem; }
+    .login-form label, .login-form input { display: block; width: 100%; }
+    .login-form label { margin-top: 1rem; font-size: 0.875rem; color: var(--smoke); }
+    .login-form input {
+      margin-top: 0.4rem; padding: 0.6rem 0.75rem; background-color: var(--night);
+      border: 1px solid var(--log); border-radius: 4px; color: var(--ash);
+      font-family: var(--font-body); font-size: 1rem;
+    }
+    button.track-btn {
+      display: block; width: 100%; margin-top: 1rem; padding: 1rem;
+      background-color: var(--fire); color: var(--ash); border: none;
+      border-radius: 4px; font-size: 1.1rem; font-family: var(--font-body);
+      cursor: pointer;
+    }
+    button.track-btn:hover { background-color: var(--ember); }
+    button.track-btn:disabled { background-color: var(--log); color: var(--smoke); cursor: not-allowed; }
+    #login-btn { margin-top: 1.5rem; padding: 0.7rem 1.5rem; background-color: var(--fire);
+      color: var(--ash); border: none; border-radius: 4px; font-size: 1rem; cursor: pointer; }
+    .msg { margin-top: 1.25rem; padding: 0.85rem 1rem; border-radius: 4px; font-size: 0.9rem; }
+    .msg.error { background-color: var(--ground); border: 1px solid var(--ember); color: var(--ash); }
+    .msg.success { background-color: var(--ground); border: 1px solid var(--fire); color: var(--ash); }
+    .session-note { color: var(--smoke); font-size: 0.85rem; margin-top: 0.75rem; }
+    .tally { font-size: 1.5rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body class="clearing">
+
+  <header class="hearth">
+    <div class="hearth-inner">
+      <h1 class="site-name">Staff check-in console</h1>
+      <p class="site-tagline">Not linked publicly — for whoever's staffing the station.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="gathered" id="login-section">
+      <div class="gathered-inner">
+        <div class="style-card">
+          <h3>Log in with your own memo.dog account</h3>
+          <p>Your password stays in this browser tab only — never sent anywhere
+          except memo.dog's own <code>createSession</code> call, never written
+          to any file. Each tap below writes one
+          <code>style.tilde.hacking.checkin</code> record to <em>your</em>
+          repo, tagged with the track the arriving participant picked.</p>
+
+          <form id="login-form" class="login-form">
+            <label for="handle">Your handle</label>
+            <input id="handle" placeholder="you.memo.dog" required autocomplete="username">
+            <label for="password">Password</label>
+            <input id="password" type="password" required autocomplete="current-password">
+            <button id="login-btn" type="submit">Log in</button>
+          </form>
+
+          <div id="login-result"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="gathered" id="checkin-section" style="display:none;">
+      <div class="gathered-inner">
+        <div class="style-card">
+          <h3>Log a check-in</h3>
+          <p class="session-note">Logged in as <strong id="who"></strong>.</p>
+          <div class="checkin-buttons">
+            <button class="track-btn" id="btn-aster">🌸 Aster participant arrived</button>
+            <button class="track-btn" id="btn-bsky">🌻 Existing Bluesky participant arrived</button>
+          </div>
+          <p class="tally" id="tally">0 logged this session</p>
+          <div id="checkin-result"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="embers">
+    <div class="embers-inner">
+      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a></p>
+    </div>
+  </footer>
+
+  <script>
+    const PDS_URL = "https://memo.dog";
+    const CHECKIN_COLLECTION = "style.tilde.hacking.checkin";
+
+    // In-memory only — never persisted, never sent anywhere but memo.dog.
+    let session = null;
+    let loggedCount = 0;
+
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const resultEl = document.getElementById("login-result");
+      resultEl.innerHTML = "";
+      const identifier = document.getElementById("handle").value.trim();
+      const password = document.getElementById("password").value;
+      const loginBtn = document.getElementById("login-btn");
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Logging in…";
+
+      try {
+        const res = await fetch(`${PDS_URL}/xrpc/com.atproto.server.createSession`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || data.error || `HTTP ${res.status}`);
+
+        session = { did: data.did, handle: data.handle, accessJwt: data.accessJwt };
+        document.getElementById("who").textContent = session.handle;
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("checkin-section").style.display = "";
+        document.getElementById("password").value = "";
+      } catch (err) {
+        resultEl.innerHTML = `<div class="msg error">Couldn't log in: ${err.message}</div>`;
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Log in";
+      }
+    });
+
+    async function logCheckin(track, btn) {
+      if (!session) return;
+      const resultEl = document.getElementById("checkin-result");
+      const label = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Logging…";
+      try {
+        const res = await fetch(`${PDS_URL}/xrpc/com.atproto.repo.createRecord`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessJwt}`,
+          },
+          body: JSON.stringify({
+            repo: session.did, // cocoon requires the literal DID here, not the handle
+            collection: CHECKIN_COLLECTION,
+            record: {
+              $type: CHECKIN_COLLECTION,
+              track,
+              createdAt: new Date().toISOString(),
+            },
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || data.error || `HTTP ${res.status}`);
+        }
+        loggedCount++;
+        document.getElementById("tally").textContent = `${loggedCount} logged this session`;
+        resultEl.innerHTML = `<div class="msg success">Logged: ${track}</div>`;
+      } catch (err) {
+        resultEl.innerHTML = `<div class="msg error">Couldn't log check-in: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = label;
+      }
+    }
+
+    document.getElementById("btn-aster").addEventListener("click", (e) => logCheckin("aster", e.target));
+    document.getElementById("btn-bsky").addEventListener("click", (e) => logCheckin("bsky", e.target));
+  </script>
+</body>
+</html>

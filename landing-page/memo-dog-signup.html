@@ -59,6 +59,13 @@
     details.fallback summary { cursor: pointer; color: var(--spark); }
     details.fallback ol { padding-left: 1.25em; margin-top: 0.75rem; }
     details.fallback ol li { margin-bottom: 0.5em; }
+    .codes-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+    .code-cell {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 1.75rem; height: 1.75rem; border-radius: 4px;
+      border: 1px solid var(--log); color: var(--smoke); font-size: 1rem;
+    }
+    .code-cell.taken { border-color: var(--fire); background-color: var(--night); }
   </style>
 </head>
 <body class="clearing">
@@ -109,6 +116,14 @@
             </ol>
           </details>
         </div>
+
+        <div class="style-card">
+          <h3>Invite codes claimed</h3>
+          <p class="smoke-text">20 single-use codes total, filled in as they're
+          used — anonymized (order only, not which code), so this never shows
+          the actual codes. <span id="codes-status">loading…</span></p>
+          <div class="codes-grid" id="codes-grid"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -121,6 +136,73 @@
 
   <script>
     const PDS_URL = "https://memo.dog";
+    // Read-only, rate-limited key, same one viewer.html already uses — no new secret.
+    const HAPPYVIEW_URL = "https://happyview.werk.museum";
+    const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc";
+    const CHECKIN_COLLECTION = "style.tilde.hacking.checkin";
+    const TOTAL_CODES = 20;
+
+    function renderCodesGrid(takenCount) {
+      const cells = [];
+      for (let i = 0; i < TOTAL_CODES; i++) {
+        cells.push(
+          i < takenCount
+            ? '<span class="code-cell taken" title="claimed">🐕</span>'
+            : '<span class="code-cell" title="available">·</span>'
+        );
+      }
+      document.getElementById("codes-grid").innerHTML = cells.join("");
+    }
+
+    async function loadCodesProgress() {
+      const statusEl = document.getElementById("codes-status");
+      try {
+        const res = await fetch(
+          `${HAPPYVIEW_URL}/xrpc/style.tilde.hacking.listCheckins?limit=100`,
+          { headers: { "X-Client-Key": CLIENT_KEY } }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const records = data.records ?? [];
+        const takenCount = records.filter((r) => r.track === "memo.dog").length;
+        statusEl.textContent = `${Math.min(takenCount, TOTAL_CODES)} of ${TOTAL_CODES} claimed`;
+        renderCodesGrid(takenCount);
+      } catch (err) {
+        statusEl.textContent = `couldn't load (${err.message})`;
+      }
+    }
+
+    // Best-effort — a failure here never blocks or fails the account creation
+    // above, it just means this one signup won't show up on the kiosk/table.
+    async function recordCheckin(did, accessJwt, track) {
+      try {
+        const res = await fetch(`${PDS_URL}/xrpc/com.atproto.repo.createRecord`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessJwt}`,
+          },
+          body: JSON.stringify({
+            repo: did, // cocoon requires the literal DID here, not the handle
+            collection: CHECKIN_COLLECTION,
+            record: {
+              $type: CHECKIN_COLLECTION,
+              track,
+              createdAt: new Date().toISOString(),
+            },
+          }),
+        });
+        if (!res.ok) {
+          console.warn("checkin record failed:", await res.text());
+        }
+      } catch (err) {
+        console.warn("checkin record failed:", err.message);
+      }
+      loadCodesProgress();
+    }
+
+    loadCodesProgress();
+    setInterval(loadCodesProgress, 5000);
 
     document.getElementById("signup-form").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -159,6 +241,10 @@
           DID: <code>${data.did}</code>
         </div>`;
         e.target.reset();
+
+        if (data.accessJwt) {
+          recordCheckin(data.did, data.accessJwt, "memo.dog");
+        }
       } catch (err) {
         resultEl.innerHTML = `<div class="msg error">Couldn't create the account: ${err.message}</div>`;
       } finally {

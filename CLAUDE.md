@@ -29,6 +29,17 @@ Torsten owns two of the workshop's four self-select hacking stations:
   classification; `connections-skeleton.mjs` — paper-connection proposer), two ways to
   wire in real Semble calls (`semble-helper.mjs` REST, `semble-mcp-helper.mjs` MCP), and
   an explicitly-preserved harder tier for participants pairing with an AI coding agent.
+- **`landing-page/`** — the `hacking.tilde.style` site itself (Cloudflare Pages, no
+  git-integration deploy — pushed by hand via `wrangler pages deploy` from this
+  directory). Merged into this repo via `git subtree` on 2026-07-19 (was a standalone
+  repo at `~/hacking.tilde.style`, now gone — full history preserved under this prefix,
+  `git log -- landing-page` shows it). `index.html` is the front door; `viewer.html`
+  reads station 2/4 records back out through HappyView; `memo-dog-signup.html` is the
+  one-page memo.dog account-creation form; `kiosk.html` is the on-screen check-in
+  display for the station (dog/aster/garden emoji per account track); `checkin.html`
+  is the staff-only console for logging Aster/Bluesky check-ins (no public link — hand
+  the URL to whoever's staffing the desk). All four read/write real ATProto records,
+  no separate backend of their own.
 
 `WORKSHEET.md` (repo root) is the actual participant-facing worksheet — both stations'
 setup instructions, account options, and stretch goals in one place. `README.md` is the
