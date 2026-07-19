@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hacking.tilde.style — IOSP 2026</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body class="clearing">
+
+  <header class="hearth">
+    <div class="hearth-inner">
+      <h1 class="site-name">hacking.tilde.style</h1>
+      <p class="site-tagline">IOSP 2026, Leiden — ATScience workshop, "Resilient Data &amp; Sovereign Infrastructure" track.</p>
+      <nav class="ring" aria-label="Site navigation">
+        <a href="#base" class="spark">Get set up</a>
+        <a href="#stations" class="spark">The 4 stations</a>
+        <a href="#engines" class="spark">Start the engines</a>
+        <a href="#looking" class="spark">Looking around</a>
+        <a href="#code" class="spark">Code</a>
+        <a href="#contact" class="spark">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="gathered" id="base">
+      <div class="gathered-inner">
+        <h2>Get set up</h2>
+        <p>One identity gets you into every station below — pick one:</p>
+        <ol>
+          <li><strong>pds.rip</strong> — a public test PDS, zero commitment. Good if you just want to poke around today. Heads up if you're doing station 2 specifically: it rate-limits at roughly 10 requests/24h per IP, which a continuous producer will hit fast.</li>
+          <li><strong>Aster</strong> — the new science PDS, via invite code. Good if you want this to still exist after today.</li>
+          <li><strong>memo.dog</strong> — our own self-hosted test PDS, invite-code only (ask at the station). Built and load-tested specifically for station 2's continuous-write pattern — not a permanent service, workshop duration + a few days only.
+          <a href="memo-dog-signup.html" class="spark">One-page signup form</a> — same account-creation API the Bluesky app uses, skips its multi-screen flow.</li>
+        </ol>
+        <p class="stones">
+          <span class="stone">Aster signup — coming with the launch</span>
+        </p>
+        <p class="smoke-text">Aster is the ATScience PDS Hosting project, led by Emily Hunt — not something built for this page.
+        The link above goes live once that project launches; check back closer to October if it's not there yet.</p>
+      </div>
+    </section>
+
+    <section class="gathered" id="stations">
+      <div class="gathered-inner">
+        <h2>The 4 stations</h2>
+        <p>Self-select once you're set up. Code and full detail for stations 2 and 4 are linked; 1 and 3 are other co-organizers' territory — listed here for the full picture, not built from this page.</p>
+
+        <div class="style-card">
+          <h3>1. Personal Research Website</h3>
+          <p>Build a personal site on the science PDS. Form-based generator, no code required.</p>
+        </div>
+
+        <div class="style-card">
+          <h3>2. Live Data Streaming</h3>
+          <p>Raspberry Pi + sensor → <a href="https://github.com/ATProto-Science/iosp-hacking-stations/tree/main/station-2-live-data" class="spark">Nebra</a> → an ATProto record → a Matadisco-shaped viewer reading it back out.</p>
+          <p class="stones"><span class="stone">code ready</span></p>
+        </div>
+
+        <div class="style-card">
+          <h3>3. BlueSky for Science</h3>
+          <p>Feeds, lists, and starter packs via HappyView.</p>
+        </div>
+
+        <div class="style-card">
+          <h3>4. AI workflows over ATProto data</h3>
+          <p>A bandit-driven agent that decides <em>how</em> to act, not just that it should — extracted from a real, working production agent. Two starting points: a chat-response bot, and a paper-connection proposer for Semble. <a href="https://github.com/ATProto-Science/iosp-hacking-stations/tree/main/station-4-bots" class="spark">Start here.</a></p>
+          <p class="stones"><span class="stone">code ready</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="gathered" id="engines">
+      <div class="gathered-inner">
+        <h2>Start the engines</h2>
+        <p>Once you know which station and which identity, here's where the
+        code actually runs:</p>
+
+        <div class="style-card">
+          <h3>StackBlitz</h3>
+          <p>Station 4's recommended default — Node runs entirely in your
+          browser, no account, no install, boots in seconds.
+          <a href="https://stackblitz.com/github/ATProto-Science/iosp-hacking-stations/tree/main/station-4-bots" class="spark">Open station 4 in StackBlitz.</a></p>
+          <p class="stones"><span class="stone">live</span> <span class="stone">external tool</span></p>
+        </div>
+
+        <div class="style-card">
+          <h3>GitHub Codespaces</h3>
+          <p>A full Linux VM per person if you want Python too (station 2) or
+          a persistent environment across sessions. Needs a GitHub account;
+          120 free core-hours/month, on your own account, not shared.
+          Open from the repo's Code → Codespaces button, or
+          <code>gh codespace create --repo ATProto-Science/iosp-hacking-stations</code>.</p>
+          <p class="stones"><span class="stone">live</span> <span class="stone">external tool</span></p>
+        </div>
+
+        <p class="smoke-text">Our own PDS (memo.dog) is under "Get set up" above —
+        it's an identity, not a separate engine to start. There used to be a
+        third option here (a self-hosted browser editor) — removed 2026-07-18
+        once StackBlitz/Codespaces covered the same need without the shared
+        box's resource and security tradeoffs.</p>
+      </div>
+    </section>
+
+    <section class="gathered" id="looking">
+      <div class="gathered-inner">
+        <h2>Looking around</h2>
+        <p>Once you've written something, here's how to see it:</p>
+
+        <div class="style-card">
+          <h3>Viewer</h3>
+          <p>Read station 2's live sensor readings and station 4's SAITO
+          facts back out, side by side — plain <code>fetch()</code>
+          against HappyView, no separate backend.
+          <a href="viewer.html" class="spark">Open the viewer.</a></p>
+          <p class="stones"><span class="stone">live</span></p>
+        </div>
+
+        <div class="style-card">
+          <h3>HappyView</h3>
+          <p>The schema-driven AppView the viewer above reads through, and
+          station 3 uses directly for feeds, lists, and starter packs.
+          <a href="https://happyview.werk.museum" class="spark">happyview.werk.museum</a></p>
+          <p class="stones"><span class="stone">live</span></p>
+          <p class="smoke-text">How the viewer's two tables actually get their
+          data: HappyView doesn't expose a list endpoint just because a record
+          lexicon exists. Each collection needed <em>two</em> lexicons
+          registered by hand in HappyView's admin UI — the record schema
+          itself (<code>science.iosp.sensor.reading</code>,
+          <code>run.saito.fact</code>) <em>and</em> a companion query lexicon
+          (<code>science.iosp.sensor.listReadings</code>,
+          <code>run.saito.listFacts</code>) whose <code>target_collection</code>
+          points back at the record NSID — that pairing is what actually
+          creates the <code>/xrpc/&lt;query-nsid&gt;</code> endpoint the viewer
+          calls. If your own station-4 idea writes a new record type, it won't
+          show up anywhere until you register both halves the same way.
+          HappyView also has its own Lua scripting layer for per-lexicon logic
+          beyond a plain list query, if <code>target_collection</code> alone
+          isn't enough for what you're building.</p>
+        </div>
+
+        <div class="style-card">
+          <h3>pdsls</h3>
+          <p>General-purpose ATProto repo browser — inspect any DID's actual
+          records directly on their PDS, not just what HappyView has a query
+          registered for. Useful for checking your own writes landed
+          correctly even before you've wired up a list query. URL pattern:
+          <code>pdsls.dev/at://&lt;your-handle&gt;</code>, or add a collection
+          NSID to see just that one, e.g.
+          <code>pdsls.dev/at://&lt;your-handle&gt;/run.saito.fact</code>.</p>
+          <p class="stones">
+            <a href="https://pdsls.dev" class="spark">pdsls.dev</a>
+            <a href="https://pdsls.dev/at://torsten.memo.dog" class="spark">example repo</a>
+            <a href="https://pdsls.dev/at://torsten.memo.dog/run.saito.fact" class="spark">example: saito facts</a>
+            <a href="https://pdsls.dev/at://torsten.memo.dog/science.iosp.sensor.reading" class="spark">example: sensor readings</a>
+          </p>
+          <p class="stones"><span class="stone">live</span> <span class="stone">external tool</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="gathered" id="code">
+      <div class="gathered-inner">
+        <h2>Code</h2>
+        <p>Primary: <a href="https://github.com/ATProto-Science/iosp-hacking-stations" class="spark">github.com/ATProto-Science/iosp-hacking-stations</a>.
+        Mirrored to Tangled for an ATProto-native git host alongside the legacy one — clone from whichever you already have set up, same content either way.
+        The repo's own <code>GETTING-STARTED.md</code> covers the same StackBlitz/Codespaces choice above, plus current workshop-infra status.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="embers" id="contact">
+    <div class="embers-inner">
+      <p>
+        Torsten Goerke, TU Dresden CODIP —
+        <a href="mailto:torsten.goerke@tu-dresden.de" class="spark">torsten.goerke@tu-dresden.de</a>
+      </p>
+      <p class="smoke-text">
+        Design system shared with <a href="https://tilde.style" class="spark">tilde.style</a>,
+        <a href="https://tilde.cards" class="spark">tilde.cards</a>, and
+        <a href="https://sailing.tilde.style" class="spark">sailing.tilde.style</a>.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

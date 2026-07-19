@@ -1,0 +1,307 @@
+/* tilde.style — Bonfire style v0.1 (shared with sailing.tilde.style) */
+/* DESIGN.md is the design record. Do not edit tokens here without updating it. */
+
+:root {
+  --fire:   #E8651A;
+  --ember:  #C44B10;
+  --spark:  #F5A623;
+  --smoke:  #7A6F65;
+  --night:  #141210;
+  --ground: #221E1A;
+  --log:    #3A3028;
+  --ash:    #EDE8E2;
+
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-body:    system-ui, -apple-system, sans-serif;
+  --font-mono:    'Courier New', Courier, monospace;
+
+  --text-body:    clamp(1rem, 2vw + 0.5rem, 1.125rem);
+  --text-display: clamp(1.75rem, 4vw, 2.75rem);
+  --text-h2:      clamp(1.25rem, 2.5vw, 1.625rem);
+
+  --measure: 68ch;
+  --gap:     clamp(1.5rem, 4vw, 3rem);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 100%;
+  scroll-behavior: smooth;
+}
+
+body.clearing {
+  background-color: var(--night);
+  color: var(--ash);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: 1.65;
+  min-height: 100vh;
+}
+
+/* ── Hearth ─────────────────────────────────────────────── */
+
+.hearth {
+  border-bottom: 1px solid var(--log);
+  padding: var(--gap) 1.5rem calc(var(--gap) * 1.25);
+}
+
+.hearth-inner {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+
+.site-name {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: 400;
+  color: var(--spark);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  margin-bottom: 0.4em;
+}
+
+.site-tagline {
+  color: var(--smoke);
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Ring (nav) ─────────────────────────────────────────── */
+
+.ring {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  list-style: none;
+}
+
+/* ── Sparks (links) ─────────────────────────────────────── */
+
+a.spark,
+.ring a.spark {
+  color: var(--fire);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+a.spark:hover,
+a.spark:focus-visible {
+  color: var(--spark);
+  border-bottom-color: var(--spark);
+  outline: none;
+}
+
+a.spark:focus-visible {
+  outline: 2px solid var(--spark);
+  outline-offset: 2px;
+}
+
+/* ── Gathered (sections) ────────────────────────────────── */
+
+.gathered {
+  padding: var(--gap) 1.5rem;
+  border-bottom: 1px solid var(--log);
+}
+
+.gathered-inner {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+
+.gathered h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 400;
+  color: var(--ash);
+  margin-bottom: 1rem;
+}
+
+.gathered p {
+  margin-bottom: 1em;
+  max-width: var(--measure);
+}
+
+.gathered p:last-child {
+  margin-bottom: 0;
+}
+
+.gathered ol {
+  padding-left: 1.25em;
+  margin-bottom: 1em;
+}
+
+.gathered ol li {
+  margin-bottom: 0.4em;
+}
+
+/* ── Blockquote ─────────────────────────────────────────── */
+
+blockquote {
+  border-left: 3px solid var(--fire);
+  padding: 0.75rem 1.25rem;
+  margin: 1.5rem 0;
+  background-color: var(--ground);
+  border-radius: 0 4px 4px 0;
+}
+
+blockquote p {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+  color: var(--ash);
+  font-style: italic;
+  margin-bottom: 0 !important;
+}
+
+/* ── Kindling (code) ────────────────────────────────────── */
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  color: var(--spark);
+  background-color: var(--ground);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+pre.kindling {
+  background-color: var(--ground);
+  border: 1px solid var(--log);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+pre.kindling code {
+  background: none;
+  padding: 0;
+  color: var(--ash);
+  font-size: 0.9rem;
+  white-space: pre;
+}
+
+/* ── Kindling table (commands) ──────────────────────────── */
+
+.kindling-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.9375rem;
+}
+
+.kindling-table th {
+  text-align: left;
+  color: var(--smoke);
+  font-weight: 400;
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  border-bottom: 1px solid var(--log);
+}
+
+.kindling-table td {
+  padding: 0.6rem 0.75rem 0.6rem 0;
+  border-bottom: 1px solid var(--log);
+  vertical-align: top;
+}
+
+.kindling-table td:first-child {
+  white-space: nowrap;
+}
+
+.kindling-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Style cards ────────────────────────────────────────── */
+
+.style-card {
+  background-color: var(--ground);
+  border: 1px solid var(--log);
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
+  margin: 1.25rem 0;
+}
+
+.style-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 400;
+  color: var(--spark);
+  margin-bottom: 0.75rem;
+}
+
+.style-card.contribute h3 {
+  color: var(--ash);
+}
+
+/* ── Stones (tags) ──────────────────────────────────────── */
+
+.stones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0 !important;
+}
+
+.stone {
+  display: inline-block;
+  font-size: 0.8125rem;
+  color: var(--smoke);
+  border: 1px solid var(--log);
+  border-radius: 2px;
+  padding: 0.2em 0.6em;
+  font-family: var(--font-mono);
+}
+
+/* ── Smoke text ─────────────────────────────────────────── */
+
+.smoke-text {
+  color: var(--smoke);
+  font-size: 0.9375rem;
+}
+
+/* ── Embers (footer) ────────────────────────────────────── */
+
+.embers {
+  padding: var(--gap) 1.5rem;
+}
+
+.embers-inner {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+
+.embers p {
+  color: var(--smoke);
+  font-size: 0.9rem;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+}
+
+.embers p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Reduced motion ─────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  a.spark { transition: none; }
+}
+
+/* ── Narrow viewports ───────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .kindling-table td:first-child {
+    white-space: normal;
+  }
+}

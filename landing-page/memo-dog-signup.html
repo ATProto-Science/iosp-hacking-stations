@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create a memo.dog account — IOSP 2026</title>
+  <link rel="stylesheet" href="site.css">
+  <style>
+    /* Form elements aren't part of site.css yet — scoped here, same token palette. */
+    .signup-form { max-width: 30rem; }
+    .signup-form label {
+      display: block;
+      margin-top: 1.25rem;
+      font-size: 0.875rem;
+      color: var(--smoke);
+      letter-spacing: 0.02em;
+    }
+    .signup-form input {
+      width: 100%;
+      margin-top: 0.4rem;
+      padding: 0.6rem 0.75rem;
+      background-color: var(--night);
+      border: 1px solid var(--log);
+      border-radius: 4px;
+      color: var(--ash);
+      font-family: var(--font-body);
+      font-size: 1rem;
+    }
+    .signup-form input:focus {
+      outline: none;
+      border-color: var(--fire);
+    }
+    .handle-row { display: flex; align-items: center; gap: 0.5rem; }
+    .handle-row input { flex: 1; margin-top: 0.4rem; }
+    .handle-suffix { color: var(--smoke); white-space: nowrap; padding-top: 0.4rem; }
+    .signup-form button {
+      margin-top: 1.5rem;
+      padding: 0.7rem 1.5rem;
+      background-color: var(--fire);
+      color: var(--ash);
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-family: var(--font-body);
+      cursor: pointer;
+    }
+    .signup-form button:hover { background-color: var(--ember); }
+    .signup-form button:disabled { background-color: var(--log); color: var(--smoke); cursor: not-allowed; }
+    .msg {
+      margin-top: 1.25rem;
+      padding: 0.85rem 1rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .msg.error { background-color: var(--ground); border: 1px solid var(--ember); color: var(--ash); }
+    .msg.success { background-color: var(--ground); border: 1px solid var(--fire); color: var(--ash); }
+    .msg code { display: block; margin-top: 0.5rem; word-break: break-all; }
+    details.fallback { margin-top: 1.5rem; color: var(--smoke); font-size: 0.9rem; }
+    details.fallback summary { cursor: pointer; color: var(--spark); }
+    details.fallback ol { padding-left: 1.25em; margin-top: 0.75rem; }
+    details.fallback ol li { margin-bottom: 0.5em; }
+  </style>
+</head>
+<body class="clearing">
+
+  <header class="hearth">
+    <div class="hearth-inner">
+      <h1 class="site-name">Create your memo.dog account</h1>
+      <p class="site-tagline">One form, no app-switching — IOSP 2026 workshop.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="gathered" id="signup">
+      <div class="gathered-inner">
+        <div class="style-card">
+          <h3>Account details</h3>
+          <p>Needs a single-use invite code from the station — ask if you
+          don't have one yet. This talks directly to memo.dog's PDS
+          (<code>com.atproto.server.createAccount</code>), the same API the
+          Bluesky app itself uses, just without its multi-screen flow.</p>
+
+          <form id="signup-form" class="signup-form">
+            <label for="prefix">Handle</label>
+            <div class="handle-row">
+              <input id="prefix" placeholder="yourname" required pattern="[a-zA-Z0-9-]+" autocomplete="username">
+              <span class="handle-suffix">.memo.dog</span>
+            </div>
+
+            <label for="password">Password</label>
+            <input id="password" type="password" required minlength="8" autocomplete="new-password">
+
+            <label for="invite">Invite code</label>
+            <input id="invite" placeholder="XXXXXXXX-XXXXXXXX" required>
+
+            <button type="submit">Create account</button>
+          </form>
+
+          <div id="result"></div>
+
+          <details class="fallback">
+            <summary>Form not working? Use the Bluesky app manually</summary>
+            <ol>
+              <li>Open the Bluesky app (or bsky.app), start account creation.</li>
+              <li>You'll see a line: <em>"You are creating an account on Bluesky Social"</em>
+                — this looks like a label, but it's actually tappable. Tap it.</li>
+              <li>Choose "Custom" and enter <code>memo.dog</code> as the hosting provider.</li>
+              <li>Continue with handle, email, password, and the invite code as normal.</li>
+            </ol>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="embers">
+    <div class="embers-inner">
+      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a></p>
+    </div>
+  </footer>
+
+  <script>
+    const PDS_URL = "https://memo.dog";
+
+    document.getElementById("signup-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const resultEl = document.getElementById("result");
+      resultEl.innerHTML = "";
+
+      const prefix = document.getElementById("prefix").value.trim().toLowerCase();
+      const handle = `${prefix}.memo.dog`;
+      // memo.dog's cocoon instance has no SMTP configured — no verification
+      // email is ever actually sent, so there's no reason to ask for a real
+      // one. Derived, not typed: satisfies cocoon's required-field check only.
+      const email = `${prefix}@memo.dog`;
+      const password = document.getElementById("password").value;
+      const inviteCode = document.getElementById("invite").value.trim();
+
+      const submitBtn = e.target.querySelector("button");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Creating…";
+
+      try {
+        const res = await fetch(`${PDS_URL}/xrpc/com.atproto.server.createAccount`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ handle, email, password, inviteCode }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || data.error || `HTTP ${res.status}`);
+        }
+
+        resultEl.innerHTML = `<div class="msg success">
+          Account created — <strong>${data.handle}</strong>.<br>
+          Save your password somewhere; there's no recovery flow for a
+          workshop-duration test account.<br>
+          DID: <code>${data.did}</code>
+        </div>`;
+        e.target.reset();
+      } catch (err) {
+        resultEl.innerHTML = `<div class="msg error">Couldn't create the account: ${err.message}</div>`;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Create account";
+      }
+    });
+  </script>
+</body>
+</html>
