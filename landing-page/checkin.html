@@ -74,6 +74,7 @@
           <div class="checkin-buttons">
             <button class="track-btn" id="btn-aster">🌸 Aster participant arrived</button>
             <button class="track-btn" id="btn-bsky">🌻 Existing Bluesky participant arrived</button>
+            <button class="track-btn" id="btn-selfhosted">🏠 Self-hosted PDS participant arrived</button>
           </div>
           <p class="tally" id="tally">0 logged this session</p>
           <div id="checkin-result"></div>
@@ -168,6 +169,7 @@
 
     document.getElementById("btn-aster").addEventListener("click", (e) => logCheckin("aster", e.target));
     document.getElementById("btn-bsky").addEventListener("click", (e) => logCheckin("bsky", e.target));
+    document.getElementById("btn-selfhosted").addEventListener("click", (e) => logCheckin("selfhosted", e.target));
   </script>
 </body>
 </html>

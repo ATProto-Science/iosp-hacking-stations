@@ -9,8 +9,9 @@
     /* Kiosk view is meant for a big screen at the station — everything runs
        larger than the rest of the site's own type scale. */
     body.clearing { font-size: 1.15rem; }
-    .kiosk-tracks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
-    @media (max-width: 900px) { .kiosk-tracks { grid-template-columns: 1fr; } }
+    .kiosk-tracks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+    @media (max-width: 1100px) { .kiosk-tracks { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .kiosk-tracks { grid-template-columns: 1fr; } }
     .track-card h3 { font-size: 1.6rem; }
     .track-count { font-size: 3rem; line-height: 1; margin: 0.5rem 0; }
     .codes-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
@@ -59,6 +60,11 @@
             <p class="track-count" id="count-bsky">–</p>
             <p class="smoke-text">Checked in by station staff.</p>
           </div>
+          <div class="style-card track-card">
+            <h3>🏠 Self-hosted</h3>
+            <p class="track-count" id="count-selfhosted">–</p>
+            <p class="smoke-text">Checked in by station staff.</p>
+          </div>
         </div>
 
         <div class="style-card" style="margin-top: 1.5rem;">
@@ -83,7 +89,7 @@
     const TOTAL_CODES = 20;
     const POLL_MS = 4000;
 
-    const TRACK_EMOJI = { "memo.dog": "🐕", "aster": "🌸", "bsky": "🌻" };
+    const TRACK_EMOJI = { "memo.dog": "🐕", "aster": "🌸", "bsky": "🌻", "selfhosted": "🏠" };
 
     function renderCodesGrid(takenCount) {
       const cells = [];
@@ -125,7 +131,7 @@
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
 
-        const counts = { "memo.dog": 0, aster: 0, bsky: 0 };
+        const counts = { "memo.dog": 0, aster: 0, bsky: 0, selfhosted: 0 };
         for (const r of records) {
           if (r.track in counts) counts[r.track]++;
         }
@@ -133,6 +139,7 @@
         document.getElementById("count-memo.dog").textContent = counts["memo.dog"];
         document.getElementById("count-aster").textContent = counts.aster;
         document.getElementById("count-bsky").textContent = counts.bsky;
+        document.getElementById("count-selfhosted").textContent = counts.selfhosted;
         document.getElementById("codes-status").textContent =
           `${Math.min(counts["memo.dog"], TOTAL_CODES)} of ${TOTAL_CODES} invite codes claimed`;
         renderCodesGrid(counts["memo.dog"]);
