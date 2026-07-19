@@ -1,51 +1,63 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>IOSP workshop — live data, one substrate</title>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-  h1 { font-size: 1.25rem; }
-  h2 { font-size: 1rem; margin-top: 2rem; }
-  table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
-  th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; }
-  th { font-weight: 600; }
-  .empty { color: #888; font-style: italic; }
-  .status { font-size: 0.85rem; color: #666; }
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-  @media (max-width: 700px) { .cols { grid-template-columns: 1fr; } }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IOSP workshop — live data, one substrate</title>
+  <link rel="stylesheet" href="site.css">
+  <style>
+    /* .kindling-table/.style-card/.smoke-text already cover everything this
+       page needs — no new component, just the empty-state color. */
+    .empty { color: var(--smoke); font-style: italic; }
+  </style>
 </head>
-<body>
-  <h1>IOSP workshop — station 2 + station 4, one substrate</h1>
-  <p class="status">Both stations read/write real ATProto records through the same HappyView AppView — no separate backends.</p>
+<body class="clearing">
 
-  <div class="cols">
-    <div>
-      <h2>Station 2 — live sensor readings</h2>
-      <p class="status" id="status-sensors">loading…</p>
-      <table>
-        <thead><tr><th>sensor</th><th>value</th><th>device</th><th>when</th></tr></thead>
-        <tbody id="rows-sensors"></tbody>
-      </table>
+  <header class="hearth">
+    <div class="hearth-inner">
+      <h1 class="site-name">Station 2 + station 4, one substrate</h1>
+      <p class="site-tagline">Both stations read/write real ATProto records through the same HappyView AppView — no separate backends.</p>
     </div>
+  </header>
 
-    <div>
-      <h2>Station 4 — SAITO agent facts</h2>
-      <p class="status" id="status-facts">loading…</p>
-      <table>
-        <thead><tr><th>subject</th><th>predicate</th><th>object</th><th>conf.</th><th>when</th></tr></thead>
-        <tbody id="rows-facts"></tbody>
-      </table>
+  <main>
+    <section class="gathered">
+      <div class="gathered-inner">
+        <div class="style-card">
+          <h3>Station 2 — live sensor readings</h3>
+          <p class="smoke-text" id="status-sensors">loading…</p>
+          <table class="kindling-table">
+            <thead><tr><th>sensor</th><th>value</th><th>device</th><th>when</th></tr></thead>
+            <tbody id="rows-sensors"></tbody>
+          </table>
+        </div>
+
+        <div class="style-card">
+          <h3>Station 4 — SAITO agent facts</h3>
+          <p class="smoke-text" id="status-facts">loading…</p>
+          <table class="kindling-table">
+            <thead><tr><th>subject</th><th>predicate</th><th>object</th><th>conf.</th><th>when</th></tr></thead>
+            <tbody id="rows-facts"></tbody>
+          </table>
+        </div>
+
+        <div class="style-card">
+          <h3>Who's checked in — memo.dog / Aster / Bluesky / self-hosted</h3>
+          <p class="smoke-text" id="status-checkins">loading…</p>
+          <table class="kindling-table">
+            <thead><tr><th>track</th><th>repo</th><th>when</th></tr></thead>
+            <tbody id="rows-checkins"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="embers">
+    <div class="embers-inner">
+      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a></p>
     </div>
-  </div>
-
-  <h2>Who's checked in — memo.dog / Aster / Bluesky / self-hosted</h2>
-  <p class="status" id="status-checkins">loading…</p>
-  <table>
-    <thead><tr><th>track</th><th>repo</th><th>when</th></tr></thead>
-    <tbody id="rows-checkins"></tbody>
-  </table>
+  </footer>
 
   <script>
     // No build step, no framework — both tables are plain fetch() calls
@@ -133,7 +145,7 @@
                 const emoji = TRACK_EMOJI[r.track] ?? "❓";
                 return `<tr>
                   <td>${emoji} ${r.track}</td>
-                  <td><a href="https://pdsls.dev/at://${did}">${truncate(did, 24)}</a></td>
+                  <td><a href="https://pdsls.dev/at://${did}" class="spark">${truncate(did, 24)}</a></td>
                   <td>${new Date(r.createdAt).toLocaleTimeString()}</td>
                 </tr>`;
               })
