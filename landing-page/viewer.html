@@ -40,6 +40,13 @@
     </div>
   </div>
 
+  <h2>Who's checked in — memo.dog / Aster / Bluesky / self-hosted</h2>
+  <p class="status" id="status-checkins">loading…</p>
+  <table>
+    <thead><tr><th>track</th><th>repo</th><th>when</th></tr></thead>
+    <tbody id="rows-checkins"></tbody>
+  </table>
+
   <script>
     // No build step, no framework — both tables are plain fetch() calls
     // against the same HappyView instance's XRPC endpoints, same pattern as
@@ -110,9 +117,37 @@
       }
     }
 
+    const TRACK_EMOJI = { "memo.dog": "🐕", aster: "🌸", bsky: "🌻", selfhosted: "🏠" };
+
+    async function loadCheckins() {
+      const statusEl = document.getElementById("status-checkins");
+      const rowsEl = document.getElementById("rows-checkins");
+      try {
+        const records = await fetchRecords("style.tilde.hacking.listCheckins");
+        statusEl.textContent = `${records.length} check-in(s)`;
+        rowsEl.innerHTML = records.length
+          ? records
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+              .map((r) => {
+                const did = r.uri.split("/")[2];
+                const emoji = TRACK_EMOJI[r.track] ?? "❓";
+                return `<tr>
+                  <td>${emoji} ${r.track}</td>
+                  <td><a href="https://pdsls.dev/at://${did}">${truncate(did, 24)}</a></td>
+                  <td>${new Date(r.createdAt).toLocaleTimeString()}</td>
+                </tr>`;
+              })
+              .join("")
+          : `<tr><td colspan="3" class="empty">no check-ins yet</td></tr>`;
+      } catch (err) {
+        statusEl.textContent = `error: ${err.message}`;
+      }
+    }
+
     function loadAll() {
       loadSensors();
       loadFacts();
+      loadCheckins();
     }
 
     loadAll();
