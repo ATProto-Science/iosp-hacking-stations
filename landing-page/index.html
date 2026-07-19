@@ -111,8 +111,8 @@
 
         <div class="style-card">
           <h3>Viewer</h3>
-          <p>Read station 2's live sensor readings and station 4's SAITO
-          facts back out, side by side — plain <code>fetch()</code>
+          <p>Read station 2's live sensor readings, station 4's SAITO facts,
+          and who's checked in, side by side — plain <code>fetch()</code>
           against HappyView, no separate backend.
           <a href="viewer.html" class="spark">Open the viewer.</a></p>
           <p class="stones"><span class="stone">live</span></p>
@@ -120,8 +120,9 @@
 
         <div class="style-card">
           <h3>Who's here</h3>
-          <p>Live check-in board for the room — dog/aster/garden emoji per
-          account track, same no-separate-backend pattern as the viewer above.
+          <p>Live check-in board for the room — 🐕 memo.dog / 🌸 Aster /
+          🌻 Bluesky / 🏠 self-hosted, one emoji per account track, same
+          no-separate-backend pattern as the viewer above.
           <a href="kiosk.html" class="spark">Open the kiosk view.</a></p>
           <p class="stones"><span class="stone">live</span></p>
         </div>
@@ -132,17 +133,22 @@
           station 3 uses directly for feeds, lists, and starter packs.
           <a href="https://happyview.werk.museum" class="spark">happyview.werk.museum</a></p>
           <p class="stones"><span class="stone">live</span></p>
-          <p class="smoke-text">How the viewer's two tables actually get their
+          <p class="smoke-text">How the viewer's tables actually get their
           data: HappyView doesn't expose a list endpoint just because a record
           lexicon exists. Each collection needed <em>two</em> lexicons
-          registered by hand in HappyView's admin UI — the record schema
+          registered by hand in HappyView's admin UI (or its Admin API —
+          that's how the check-in lexicons below were actually registered
+          this time, no dashboard clicking needed) — the record schema
           itself (<code>science.iosp.sensor.reading</code>,
-          <code>run.saito.fact</code>) <em>and</em> a companion query lexicon
+          <code>run.saito.fact</code>, <code>style.tilde.hacking.checkin</code>)
+          <em>and</em> a companion query lexicon
           (<code>science.iosp.sensor.listReadings</code>,
-          <code>run.saito.listFacts</code>) whose <code>target_collection</code>
-          points back at the record NSID — that pairing is what actually
-          creates the <code>/xrpc/&lt;query-nsid&gt;</code> endpoint the viewer
-          calls. If your own station-4 idea writes a new record type, it won't
+          <code>run.saito.listFacts</code>,
+          <code>style.tilde.hacking.listCheckins</code>) whose
+          <code>target_collection</code> points back at the record NSID —
+          that pairing is what actually creates the
+          <code>/xrpc/&lt;query-nsid&gt;</code> endpoint the viewer calls.
+          If your own station-4 idea writes a new record type, it won't
           show up anywhere until you register both halves the same way.
           HappyView also has its own Lua scripting layer for per-lexicon logic
           beyond a plain list query, if <code>target_collection</code> alone
