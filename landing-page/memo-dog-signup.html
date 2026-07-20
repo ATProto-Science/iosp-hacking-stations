@@ -142,16 +142,42 @@
     const CHECKIN_COLLECTION = "style.tilde.hacking.checkin";
     const TOTAL_CODES = 20;
 
-    function renderCodesGrid(takenCount) {
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      })[c]);
+    }
+
+    function renderCodesGrid(titles) {
       const cells = [];
       for (let i = 0; i < TOTAL_CODES; i++) {
         cells.push(
-          i < takenCount
-            ? '<span class="code-cell taken" title="claimed">🐕</span>'
+          i < titles.length
+            ? `<span class="code-cell taken" title="${escapeHtml(titles[i])}">🐕</span>`
             : '<span class="code-cell" title="available">·</span>'
         );
       }
       document.getElementById("codes-grid").innerHTML = cells.join("");
+    }
+
+    // did -> handle, resolved lazily via memo.dog itself (single PDS, so
+    // every memo.dog checkin's DID lives there) and kept warm across the
+    // 5s poll so we're not re-resolving the same handles over and over.
+    const handleCache = new Map();
+
+    async function resolveHandle(did) {
+      if (handleCache.has(did)) return handleCache.get(did);
+      try {
+        const res = await fetch(
+          `${PDS_URL}/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}`
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        handleCache.set(did, data.handle);
+        return data.handle;
+      } catch {
+        return did; // fall back to the DID if handle resolution fails
+      }
     }
 
     async function loadCodesProgress() {
@@ -164,9 +190,14 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const records = data.records ?? [];
-        const takenCount = records.filter((r) => r.track === "memo.dog").length;
-        statusEl.textContent = `${Math.min(takenCount, TOTAL_CODES)} of ${TOTAL_CODES} claimed`;
-        renderCodesGrid(takenCount);
+        const taken = records
+          .filter((r) => r.track === "memo.dog")
+          .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        statusEl.textContent = `${Math.min(taken.length, TOTAL_CODES)} of ${TOTAL_CODES} claimed`;
+        const titles = await Promise.all(
+          taken.map((r) => resolveHandle(r.uri.split("/")[2]))
+        );
+        renderCodesGrid(titles);
       } catch (err) {
         statusEl.textContent = `couldn't load (${err.message})`;
       }
