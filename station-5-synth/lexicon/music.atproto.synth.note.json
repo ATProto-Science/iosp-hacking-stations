@@ -1,0 +1,61 @@
+{
+  "lexicon": 1,
+  "id": "music.atproto.synth.note",
+  "_comment": "NSID authority: atproto.music (owned, per Torsten — 2026-09-01). One record per note-on event, published by whichever device/app played it — hardware synth (ESP8266/ESP32 WiFi-native, or Arduino UNO via an OpenWrt tty<>net bridge) or the on-screen-keyboard web app, all through station-5-synth/relay/synth_relay.py. Modeled on station-2's science.iosp.sensor.reading.json — same no-floats rule (AT Protocol's on-wire record model has no floating-point type; every fx amount here is an integer 0-100, not a fraction).",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A single note-on event from a Mozzi-based synth or the web on-screen keyboard, shared live across the network.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["note", "velocity", "deviceId", "synthType", "createdAt"],
+        "properties": {
+          "note": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 127,
+            "description": "MIDI note number (60 = middle C)."
+          },
+          "velocity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 127,
+            "description": "MIDI-style velocity/loudness for this note-on."
+          },
+          "deviceId": {
+            "type": "string",
+            "maxLength": 128,
+            "description": "Free-form identifier for the physical device or app instance that played this, e.g. 'esp32-a', 'uno-bridge-1', 'webkeys-torsten'."
+          },
+          "synthType": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "Which synth patch/hardware variant produced this, e.g. 'mozzi-esp32-fm', 'mozzi-uno-am', 'webaudio-keys'."
+          },
+          "fxType": {
+            "type": "string",
+            "maxLength": 32,
+            "description": "Optional Mozzi effect active on this note, e.g. 'tremolo', 'reverb', 'delay', 'none'."
+          },
+          "fxAmount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Effect intensity as a percentage (no floats on the wire — see _comment)."
+          },
+          "cutoffHz": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Optional filter cutoff frequency in Hz, if the patch exposes a filter control."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "ATProto-compatible UTC timestamp — use nebra.get_atproto_utc_time()."
+          }
+        }
+      }
+    }
+  }
+}

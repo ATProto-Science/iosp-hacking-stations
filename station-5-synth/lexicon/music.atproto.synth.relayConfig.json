@@ -1,0 +1,49 @@
+{
+  "lexicon": 1,
+  "id": "music.atproto.synth.relayConfig",
+  "_comment": "NSID authority: atproto.music (same as music.atproto.synth.note). Solves a real problem hit live during the 2026-09-01 hardware session: relay_host was a hardcoded compile-time constant in every ESP8266 sketch, meaning every time the relay's IP changed (new WiFi network, DHCP renewal, swapping which laptop runs it) every board needed a firmware reflash. Instead, devices fetch the current relay location from ATProto at boot — the location can change without ever touching firmware. One record per relay instance; devices use the most recent one (sorted by createdAt) rather than assuming a singleton, since a workshop could run more than one relay.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Where to currently find a station-5-synth relay (synth_relay.py / wifi_sensor_relay.py) on the local network — published/updated by whoever's running it, read by every WiFi device at boot instead of a hardcoded IP.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["relayHost", "createdAt"],
+        "properties": {
+          "relayHost": {
+            "type": "string",
+            "maxLength": 128,
+            "description": "IP address or hostname of the machine running the relay, e.g. '192.168.1.15'."
+          },
+          "synthTcpPort": {
+            "type": "integer",
+            "description": "synth_relay.py's SYNTH_TCP_PORT (uplink line port), if this relay instance runs it. Default 8477 if omitted."
+          },
+          "synthHttpPort": {
+            "type": "integer",
+            "description": "synth_relay.py's SYNTH_HTTP_PORT (webapp POST /note), if this relay instance runs it. Default 8478 if omitted."
+          },
+          "synthBroadcastPort": {
+            "type": "integer",
+            "description": "synth_relay.py's SYNTH_BROADCAST_PORT (downlink), if this relay instance runs it. Default 8479 if omitted."
+          },
+          "sensorTcpPort": {
+            "type": "integer",
+            "description": "wifi_sensor_relay.py's SENSOR_TCP_PORT, if this relay instance runs it. Default 8480 if omitted."
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "Free-form human label for which physical relay this is, e.g. 'torsten-laptop', useful when more than one is running."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "ATProto-compatible UTC timestamp — use nebra.get_atproto_utc_time(). Devices use the most recent relayConfig record, not a single fixed one."
+          }
+        }
+      }
+    }
+  }
+}

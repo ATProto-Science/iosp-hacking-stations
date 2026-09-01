@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Station 5 — synth keys</title>
+  <style>
+    :root {
+      --fire: #E8651A; --ember: #C44B10; --spark: #F5A623;
+      --smoke: #7A6F65; --night: #141210; --ground: #221E1A;
+      --log: #3A3028; --ash: #EDE8E2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--night); color: var(--ash);
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 720px; margin: 0 auto; padding: 1.5rem;
+    }
+    h1 { color: var(--spark); font-weight: 400; margin-bottom: 0.2em; }
+    .sub { color: var(--smoke); margin-bottom: 1.5rem; font-size: 0.95rem; }
+    fieldset {
+      border: 1px solid var(--log); border-radius: 6px;
+      padding: 0.75rem 1rem; margin-bottom: 1.25rem;
+    }
+    legend { color: var(--smoke); padding: 0 0.4em; font-size: 0.85rem; }
+    label { display: block; font-size: 0.85rem; color: var(--smoke); margin-top: 0.5rem; }
+    input, select {
+      background: var(--ground); color: var(--ash); border: 1px solid var(--log);
+      border-radius: 4px; padding: 0.35rem 0.5rem; width: 100%; font-size: 0.9rem;
+    }
+    #keys {
+      display: flex; gap: 4px; margin-bottom: 1.25rem; user-select: none;
+    }
+    .key {
+      flex: 1; background: var(--ground); border: 1px solid var(--log);
+      color: var(--ash); border-radius: 4px; padding: 1.5rem 0.25rem;
+      text-align: center; cursor: pointer; font-family: monospace;
+    }
+    .key:active, .key.playing { background: var(--fire); border-color: var(--ember); }
+    #status { color: var(--smoke); font-size: 0.85rem; margin-bottom: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--log); }
+    th { color: var(--smoke); font-weight: 400; }
+    .empty { color: var(--smoke); font-style: italic; }
+  </style>
+</head>
+<body>
+
+  <h1>Station 5 — synth keys</h1>
+  <p class="sub">
+    Plays a local tone (Web Audio) and publishes each note-on as a
+    <code>music.atproto.synth.note</code> ATProto record via the relay —
+    same wire event the Mozzi hardware (ESP8266/ESP32, or Arduino UNO
+    through the OpenWrt bridge) sends. Everyone's notes, from every
+    device, land in the shared feed below.
+  </p>
+
+  <fieldset>
+    <legend>connection</legend>
+    <label for="relayUrl">relay HTTP base URL (e.g. http://192.168.1.50:8478 — the box running synth_relay.py)</label>
+    <input id="relayUrl" placeholder="http://localhost:8478">
+
+    <label for="deviceId">deviceId</label>
+    <input id="deviceId" value="webkeys-anon">
+
+    <label for="fxType">fx</label>
+    <select id="fxType">
+      <option value="">none</option>
+      <option value="tremolo">tremolo</option>
+      <option value="reverb">reverb</option>
+      <option value="delay">delay</option>
+    </select>
+  </fieldset>
+
+  <div id="keys"></div>
+  <p id="status">not yet played anything</p>
+
+  <fieldset>
+    <legend>live feed — everyone's notes (music.atproto.synth.note, via HappyView)</legend>
+    <table>
+      <thead><tr><th>device</th><th>synth</th><th>note</th><th>vel</th><th>fx</th><th>when</th></tr></thead>
+      <tbody id="rows-notes"></tbody>
+    </table>
+  </fieldset>
+
+  <script>
+    // Same no-build, plain-fetch pattern as landing-page/viewer.html — one
+    // read-only client key against HappyView, no separate backend for reads.
+    const HAPPYVIEW_URL = "https://happyview.werk.museum";
+    const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc"; // read-only, rate-limited
+    const NSID_LIST = "music.atproto.synth.listNotes"; // TODO(station-5): confirm exact HappyView list-endpoint name once registered, mirrors science.iosp.sensor.listReadings's shape
+    const POLL_MS = 3000;
+
+    // One octave, C4-C5, MIDI 60-72 — deliberately small, this is a demo
+    // keyboard not a full synth UI.
+    const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B","C"];
+    const BASE_NOTE = 60;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const keysEl = document.getElementById("keys");
+    const statusEl = document.getElementById("status");
+
+    NOTE_NAMES.forEach((name, i) => {
+      const btn = document.createElement("div");
+      btn.className = "key";
+      btn.textContent = name;
+      btn.dataset.note = BASE_NOTE + i;
+      btn.addEventListener("pointerdown", () => playNote(BASE_NOTE + i, btn));
+      keysEl.appendChild(btn);
+    });
+
+    function midiToFreq(note) {
+      return 440 * Math.pow(2, (note - 69) / 12);
+    }
+
+    function soundLocally(note) {
+      // Immediate audio feedback so playing feels responsive even though
+      // the ATProto round-trip (publish, then read back via HappyView's
+      // poll) is seconds slower than the actual keypress.
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.value = midiToFreq(note);
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.4);
+    }
+
+    async function publishNote(note) {
+      const relayUrl = document.getElementById("relayUrl").value.trim();
+      if (!relayUrl) {
+        statusEl.textContent = "set a relay URL above to publish to ATProto (still plays locally)";
+        return;
+      }
+      const body = {
+        note,
+        velocity: 100,
+        deviceId: document.getElementById("deviceId").value || "webkeys-anon",
+        synthType: "webaudio-keys",
+      };
+      const fxType = document.getElementById("fxType").value;
+      if (fxType) {
+        body.fxType = fxType;
+        body.fxAmount = 50;
+      }
+      try {
+        const res = await fetch(`${relayUrl}/note`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        statusEl.textContent = res.ok
+          ? `published note=${note}`
+          : `relay error: HTTP ${res.status}`;
+      } catch (err) {
+        statusEl.textContent = `couldn't reach relay: ${err.message}`;
+      }
+    }
+
+    function playNote(note, btn) {
+      soundLocally(note);
+      publishNote(note);
+      btn.classList.add("playing");
+      setTimeout(() => btn.classList.remove("playing"), 150);
+    }
+
+    async function loadFeed() {
+      const rowsEl = document.getElementById("rows-notes");
+      try {
+        const res = await fetch(`${HAPPYVIEW_URL}/xrpc/${NSID_LIST}?limit=30`, {
+          headers: { "X-Client-Key": CLIENT_KEY },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const records = data.records ?? [];
+        rowsEl.innerHTML = records.length
+          ? records
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+              .map(
+                (r) => `<tr>
+                  <td>${r.deviceId ?? "—"}</td>
+                  <td>${r.synthType ?? "—"}</td>
+                  <td>${r.note}</td>
+                  <td>${r.velocity}</td>
+                  <td>${r.fxType ? `${r.fxType}@${r.fxAmount}%` : "—"}</td>
+                  <td>${new Date(r.createdAt).toLocaleTimeString()}</td>
+                </tr>`
+              )
+              .join("")
+          : `<tr><td colspan="6" class="empty">no notes yet</td></tr>`;
+      } catch (err) {
+        rowsEl.innerHTML = `<tr><td colspan="6" class="empty">feed unavailable: ${err.message} — HappyView listing for this NSID may not be registered yet</td></tr>`;
+      }
+    }
+
+    loadFeed();
+    setInterval(loadFeed, POLL_MS);
+  </script>
+</body>
+</html>
