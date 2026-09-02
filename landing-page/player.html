@@ -26,6 +26,63 @@
       text-align: center; cursor: pointer; font-family: var(--font-mono);
     }
     .key:active, .key.playing { background: var(--fire); border-color: var(--ember); }
+
+    /* Scrub/wavefold sliders — same bonfire palette as .key, styled as a
+       thumb ember running along a log-colored track. */
+    input[type="range"] {
+      appearance: none; width: 100%; height: 6px; background: var(--log);
+      border-radius: 3px; margin: 0.6rem 0 0.2rem;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--fire); border: 2px solid var(--ember); cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--fire); border: 2px solid var(--ember); cursor: pointer;
+    }
+    .range-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .range-row output { font-family: var(--font-mono); color: var(--spark); font-size: 0.85rem; }
+
+    .rick-egg {
+      color: var(--log); text-decoration: none; font-size: 0.9rem;
+      cursor: pointer; transition: color 0.3s;
+    }
+    .rick-egg:hover { color: var(--spark); }
+
+    /* XY pad — bounded drag surface shared by Wavefold/Filter/FM. Same
+       night-on-log palette as the range track, with a fire-colored puck. */
+    .xy-pad {
+      position: relative; width: 100%; height: 180px; margin: 0.6rem 0 0.2rem;
+      background: var(--night); border: 1px solid var(--log); border-radius: 6px;
+      touch-action: none; cursor: crosshair;
+    }
+    .xy-puck {
+      position: absolute; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--fire); border: 2px solid var(--ember);
+      transform: translate(-50%, -50%); pointer-events: none;
+      left: 50%; top: 50%;
+    }
+    .xy-coord { font-family: var(--font-mono); color: var(--spark); font-size: 0.85rem; }
+
+    /* Knob — same conic-gradient-as-arc idea as the range track, but round.
+       --knob-fill is a percentage of the full circle (0-75%, a 270deg sweep
+       from 7:30 to 4:30) set from JS as the value changes. */
+    .knob {
+      --knob-fill: 0%;
+      width: 64px; height: 64px; border-radius: 50%; margin: 0.6rem auto 0.2rem;
+      position: relative; cursor: grab; touch-action: none;
+      background: conic-gradient(from -135deg, var(--fire) 0% var(--knob-fill),
+        var(--log) var(--knob-fill) 75%, transparent 75% 100%);
+    }
+    .knob::after {
+      content: ""; position: absolute; inset: 10px; border-radius: 50%;
+      background: var(--night); border: 1px solid var(--log);
+    }
+
+    .toggle-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem; }
+    .toggle-row input[type="checkbox"] { width: auto; }
+    .toggle-row label { margin-top: 0; }
   </style>
 </head>
 <body class="clearing">
@@ -55,12 +112,60 @@
             <option value="reverb">reverb</option>
             <option value="delay">delay</option>
           </select>
+
+          <p class="smoke-text" id="gamepadStatus">gamepad: not connected — the left stick drives whichever XY pad you touched last, once one's plugged in</p>
         </div>
 
         <div class="style-card">
           <h3>Keys</h3>
           <div id="keys"></div>
+          <div class="toggle-row">
+            <input type="checkbox" id="pluckMode">
+            <label for="pluckMode" style="display:inline;">pluck (Mozzi <code>Ead</code> envelope instead of a plain tone)</label>
+          </div>
           <p class="smoke-text" id="status">not yet played anything</p>
+        </div>
+
+        <div class="style-card">
+          <h3>Sample scrub</h3>
+          <p class="smoke-text">Mozzi scrubbing through a real wavetable on
+          whichever board is listening — no local preview, the only place
+          this actually sounds is out there.</p>
+          <label for="sampleId">sample</label>
+          <select id="sampleId">
+            <option value="bamboo00">bamboo 00</option>
+            <option value="bamboo01">bamboo 01</option>
+            <option value="raven">raven</option>
+          </select>
+          <div class="range-row">
+            <label for="scrubKnob">scrub position</label>
+            <output id="scrubPosOut">64</output>
+          </div>
+          <div class="knob" id="scrubKnob"></div>
+        </div>
+
+        <div class="style-card">
+          <h3>Wavefold</h3>
+          <p class="smoke-text">A Mozzi <code>WaveFolder</code> on a plain
+          tone — drag the pad, release to send a note. X = fold gain, Y = fold bias.</p>
+          <div class="xy-pad" id="foldPad"><div class="xy-puck"></div></div>
+          <p class="xy-coord" id="foldCoord">gain 64 · bias 64</p>
+        </div>
+
+        <div class="style-card">
+          <h3>Filter</h3>
+          <p class="smoke-text">A resonant lowpass on a sawtooth, gated by
+          the last note you played on Keys (default C4). X = cutoff, Y = resonance.</p>
+          <div class="xy-pad" id="filterPad"><div class="xy-puck"></div></div>
+          <p class="xy-coord" id="filterCoord">cutoff 1550Hz · resonance 64</p>
+        </div>
+
+        <div class="style-card">
+          <h3>FM</h3>
+          <p class="smoke-text">Frequency modulation, gated by the last
+          note you played on Keys. X = FM index, Y = FM ratio.</p>
+          <div class="xy-pad" id="fmPad"><div class="xy-puck"></div></div>
+          <p class="xy-coord" id="fmCoord">index 64 · ratio 64</p>
         </div>
 
         <div class="style-card">
@@ -77,7 +182,7 @@
 
   <footer class="embers">
     <div class="embers-inner">
-      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a> · <a href="viewer.html" class="spark">Viewer</a></p>
+      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a> · <a href="viewer.html" class="spark">Viewer</a> · <span class="rick-egg" id="rickEgg" title="you know the rules">♪</span></p>
     </div>
   </footer>
 
@@ -125,43 +230,306 @@
       osc.stop(audioCtx.currentTime + 0.4);
     }
 
-    async function publishNote(note) {
+    // Shared by every widget on this page — the "Sample scrub"/"Wavefold"
+    // cards and the rickroll egg all publish through this same helper,
+    // same relayUrl field, same status line.
+    async function publishRecord(body, label) {
       const relayUrl = document.getElementById("relayUrl").value.trim();
       if (!relayUrl) {
         statusEl.textContent = "set a relay URL above to publish to ATProto (still plays locally)";
         return;
       }
-      const body = {
-        note,
-        velocity: 100,
-        deviceId: document.getElementById("deviceId").value || "webkeys-anon",
-        synthType: "webaudio-keys",
-      };
-      const fxType = document.getElementById("fxType").value;
-      if (fxType) {
-        body.fxType = fxType;
-        body.fxAmount = 50;
-      }
+      body.deviceId = body.deviceId || document.getElementById("deviceId").value || "webkeys-anon";
+      body.velocity = body.velocity ?? 100;
       try {
         const res = await fetch(`${relayUrl}/note`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        statusEl.textContent = res.ok
-          ? `published note=${note}`
-          : `relay error: HTTP ${res.status}`;
+        statusEl.textContent = res.ok ? `published ${label}` : `relay error: HTTP ${res.status}`;
       } catch (err) {
         statusEl.textContent = `couldn't reach relay: ${err.message}`;
       }
     }
 
+    // Last note played on Keys, reused as the base pitch for the Filter/FM
+    // pads (their firmware modes need a note to set an oscillator frequency,
+    // same as Wavefold's fixed note=60 — Keys just makes it playable-by-ear).
+    let lastNote = 60;
+
+    async function publishNote(note) {
+      const body = { note, synthType: "webaudio-keys" };
+      if (document.getElementById("pluckMode").checked) {
+        body.mode = "pluck";
+      } else {
+        const fxType = document.getElementById("fxType").value;
+        if (fxType) {
+          body.fxType = fxType;
+          body.fxAmount = 50;
+        }
+      }
+      await publishRecord(body, `note=${note}`);
+    }
+
     function playNote(note, btn) {
+      lastNote = note;
       soundLocally(note);
       publishNote(note);
       btn.classList.add("playing");
       setTimeout(() => btn.classList.remove("playing"), 150);
     }
+
+    // ---- Knob component — pointerdown-drag-to-value control, 0-127.
+    // Vertical drag distance maps 1px = 1 unit (up increases); drawn as a
+    // conic-gradient fill arc via the --knob-fill CSS var (site.css/this
+    // page's own <style> owns the visuals, this just sets the var + value).
+    function createKnob(knobEl, initial, onChange) {
+      let value = initial;
+      let dragging = false, startY = 0, startValue = 0;
+
+      function render() {
+        knobEl.style.setProperty("--knob-fill", `${(value / 127) * 75}%`);
+      }
+      function setValue(v, fire = true) {
+        value = Math.min(127, Math.max(0, Math.round(v)));
+        render();
+        if (fire) onChange(value);
+      }
+      knobEl.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        startY = e.clientY;
+        startValue = value;
+        knobEl.setPointerCapture(e.pointerId);
+      });
+      knobEl.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        setValue(startValue + (startY - e.clientY));
+      });
+      knobEl.addEventListener("pointerup", () => { dragging = false; });
+      render();
+      return { setValue, getValue: () => value };
+    }
+
+    // ---- XY pad component — bounded pointer-drag surface shared by the
+    // Wavefold/Filter/FM cards. Clamps to the pad's own bounding rect and
+    // normalizes to 0-127 on each axis (x: left->right, y: bottom->top, so
+    // "up" reads as "more", matching the knob). setPointerCapture keeps the
+    // drag tracking even if the pointer leaves the pad's bounds mid-drag.
+    function createXYPad(padEl, puckEl, onChange, initial = { x: 64, y: 64 }) {
+      function place(x, y) {
+        puckEl.style.left = `${(x / 127) * 100}%`;
+        puckEl.style.top = `${(1 - y / 127) * 100}%`;
+      }
+      function setFromClient(clientX, clientY) {
+        const rect = padEl.getBoundingClientRect();
+        const nx = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+        const ny = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+        const x = Math.round(nx * 127);
+        const y = Math.round((1 - ny) * 127);
+        place(x, y);
+        onChange(x, y);
+      }
+      padEl.addEventListener("pointerdown", (e) => {
+        padEl.setPointerCapture(e.pointerId);
+        setFromClient(e.clientX, e.clientY);
+      });
+      padEl.addEventListener("pointermove", (e) => {
+        if (e.buttons === 0) return; // captured but not actually held down
+        setFromClient(e.clientX, e.clientY);
+      });
+      place(initial.x, initial.y);
+      return {
+        setValue(x, y) {
+          place(x, y);
+          onChange(x, y);
+        },
+      };
+    }
+
+    // ---- Sample scrub — network-only, no local preview (see the card's
+    // own note: there's no sample data loaded in the browser to scrub). ----
+    let lastScrubSentAt = 0;
+    let scrubPosValue = 64;
+    function publishScrub() {
+      const now = Date.now();
+      if (now - lastScrubSentAt < 100) return; // light throttle while dragging
+      lastScrubSentAt = now;
+      publishRecord({
+        note: 0,
+        mode: "scrub",
+        sampleId: document.getElementById("sampleId").value,
+        scrubPos: scrubPosValue,
+        synthType: "webaudio-scrub",
+      }, "scrub");
+    }
+
+    const scrubKnob = createKnob(document.getElementById("scrubKnob"), 64, (value) => {
+      scrubPosValue = value;
+      document.getElementById("scrubPosOut").textContent = value;
+      publishScrub();
+    });
+    document.getElementById("sampleId").addEventListener("change", publishScrub);
+
+    // ---- Wavefold — a real Web Audio WaveShaperNode gives instant local
+    // feedback while dragging; the network POST (one real note) is
+    // throttled to roughly one every 100ms, same pattern as scrub above. ----
+    function foldCurve(foldGain, foldBias, n = 1024) {
+      const curve = new Float32Array(n);
+      const k = 1 + (foldGain / 127) * 8;
+      const biasNorm = (foldBias - 64) / 64;
+      for (let i = 0; i < n; i++) {
+        const x = (i / (n - 1)) * 2 - 1;
+        curve[i] = Math.sin((x + biasNorm) * k * Math.PI);
+      }
+      return curve;
+    }
+
+    function previewFold(foldGain, foldBias) {
+      const osc = audioCtx.createOscillator();
+      const shaper = audioCtx.createWaveShaper();
+      const gain = audioCtx.createGain();
+      osc.frequency.value = midiToFreq(60);
+      osc.type = "sine";
+      shaper.curve = foldCurve(foldGain, foldBias);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc.connect(shaper).connect(gain).connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    let lastFoldSentAt = 0;
+    const foldPadCtl = createXYPad(
+      document.getElementById("foldPad"),
+      document.getElementById("foldPad").querySelector(".xy-puck"),
+      (foldGain, foldBias) => {
+        document.getElementById("foldCoord").textContent = `gain ${foldGain} · bias ${foldBias}`;
+        previewFold(foldGain, foldBias);
+        const now = Date.now();
+        if (now - lastFoldSentAt < 100) return;
+        lastFoldSentAt = now;
+        publishRecord({
+          note: 60,
+          mode: "fold",
+          foldGain,
+          foldBias,
+          synthType: "webaudio-fold",
+        }, "fold");
+      }
+    );
+
+    // ---- Filter — network-only (no local Web Audio filter node), same
+    // "the only place this actually sounds is out there" pattern as scrub.
+    // X maps to a musically useful Hz range; the firmware maps that (and Y,
+    // 0-127) onto its filter's own 0-255 cutoff/resonance bytes.
+    function padXToHz(x) {
+      return Math.round(100 + (x / 127) * (3000 - 100));
+    }
+
+    let lastFilterSentAt = 0;
+    const filterPadCtl = createXYPad(
+      document.getElementById("filterPad"),
+      document.getElementById("filterPad").querySelector(".xy-puck"),
+      (x, resonance) => {
+        const cutoffHz = padXToHz(x);
+        document.getElementById("filterCoord").textContent = `cutoff ${cutoffHz}Hz · resonance ${resonance}`;
+        const now = Date.now();
+        if (now - lastFilterSentAt < 100) return;
+        lastFilterSentAt = now;
+        publishRecord({
+          note: lastNote,
+          mode: "filter",
+          cutoffHz,
+          resonance,
+          synthType: "webaudio-filter",
+        }, "filter");
+      }
+    );
+
+    // ---- FM — network-only. The firmware's fm mode reuses foldGain/
+    // foldBias's wire fields as fmIndex/fmRatio (see esp_multi_synth.ino's
+    // applyLine()), so we send those exact field names here, not new ones.
+    let lastFmSentAt = 0;
+    const fmPadCtl = createXYPad(
+      document.getElementById("fmPad"),
+      document.getElementById("fmPad").querySelector(".xy-puck"),
+      (foldGain, foldBias) => {
+        document.getElementById("fmCoord").textContent = `index ${foldGain} · ratio ${foldBias}`;
+        const now = Date.now();
+        if (now - lastFmSentAt < 100) return;
+        lastFmSentAt = now;
+        publishRecord({
+          note: lastNote,
+          mode: "fm",
+          foldGain,
+          foldBias,
+          synthType: "webaudio-fm",
+        }, "fm");
+      }
+    );
+
+    // ---- Gamepad — a connected controller's left stick drives whichever
+    // XY pad the user most recently touched. No library: getGamepads() is
+    // a native browser API, polled once per animation frame since Chrome
+    // doesn't fire input events for stick movement.
+    const gamepadStatusEl = document.getElementById("gamepadStatus");
+    const xyPads = { fold: foldPadCtl, filter: filterPadCtl, fm: fmPadCtl };
+    let activePad = "fold";
+    let gamepadIndex = null;
+
+    function renderGamepadStatus(gamepadId) {
+      gamepadStatusEl.textContent = gamepadId
+        ? `gamepad: ${gamepadId} — left stick drives the last XY pad you touched (${activePad})`
+        : "gamepad: not connected";
+    }
+
+    let connectedGamepadId = null;
+    ["fold", "filter", "fm"].forEach((key) => {
+      document.getElementById(`${key}Pad`).addEventListener("pointerdown", () => {
+        activePad = key;
+        renderGamepadStatus(connectedGamepadId);
+      });
+    });
+
+    window.addEventListener("gamepadconnected", (e) => {
+      gamepadIndex = e.gamepad.index;
+      connectedGamepadId = e.gamepad.id;
+      renderGamepadStatus(connectedGamepadId);
+    });
+    window.addEventListener("gamepaddisconnected", () => {
+      gamepadIndex = null;
+      connectedGamepadId = null;
+      renderGamepadStatus(null);
+    });
+
+    let lastGamepadX = null, lastGamepadY = null;
+    function pollGamepad() {
+      if (gamepadIndex !== null) {
+        const gp = navigator.getGamepads()[gamepadIndex];
+        const deadzone = 0.12;
+        if (gp) {
+          const ax = gp.axes[0] ?? 0;
+          const ay = gp.axes[1] ?? 0;
+          if (Math.abs(ax) > deadzone || Math.abs(ay) > deadzone) {
+            const x = Math.round(((ax + 1) / 2) * 127);
+            const y = Math.round((1 - (ay + 1) / 2) * 127); // stick up (-1) => high value
+            if (x !== lastGamepadX || y !== lastGamepadY) {
+              lastGamepadX = x;
+              lastGamepadY = y;
+              xyPads[activePad].setValue(x, y);
+            }
+          }
+        }
+      }
+      requestAnimationFrame(pollGamepad);
+    }
+    requestAnimationFrame(pollGamepad);
+
+    // ---- rickroll easter egg — no visible label, just the footer glyph ----
+    document.getElementById("rickEgg").addEventListener("click", () => {
+      publishRecord({ note: 0, synthType: "rickroll-easteregg" }, "♪");
+    });
 
     async function fetchRecords(nsid) {
       const res = await fetch(`${HAPPYVIEW_URL}/xrpc/${nsid}?limit=30`, {
