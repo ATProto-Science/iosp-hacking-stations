@@ -58,15 +58,15 @@
           scrub  "SCRB b0:64"      (sample abbrev b0/b1/rv + scrubPos)
         Filter/fm/pluck/scrub weren't shown at all in esp_note_player.ino
         (it predates every mode but tone) — these formats are new.
-      - The waveform's frequency/amplitude mapping (noteToVisualFreq() +
-        the exponential decay envelope) now drives off *any* mode with a
-        note (tone/fold/filter/fm/pluck) via the shared lastNote/
-        noteStartAt state, updated by applyLine() on every one of those
-        modes' note-ons — not just tone. Scrub has no single "note", so it
-        gets its own scrubToVisualFreq(scrubPos) mapping instead, and still
-        re-triggers the same decay envelope on every scrub update (so the
-        wave still visibly "pulses" as scrub messages arrive, instead of
-        going flat).
+      - The waveform band is mode-specific (drawWaveBand(), added
+        2026-09-03 once pitch+display were both confirmed working
+        together) — scrub gets a literal scanning read-head over a
+        wavetable track, fold actually folds the drawn sine past a
+        foldGain-driven threshold, filter draws a real resonance peak at
+        the actual cutoffHz position, fm layers a fmRatioNorm/fmIndexNorm-
+        driven ripple on the carrier — not just palette-swapped copies of
+        one generic waveform. tone/pluck keep the original decaying-
+        envelope sine, still the right shape for "a note was struck."
       - The rickroll easter egg gets a distinct visual beat instead of
         reading as an ordinary note: the info line inverts (white-on-black
         via a filled rect) and flashes "RICKROLL!" at ~2Hz, and the footer
@@ -276,13 +276,6 @@ float midiToFreq(int note) {
 // esp_note_player.ino.
 float noteToVisualFreq(int note) {
   return 0.05 + (constrain(note, 36, 84) - 36) / 48.0 * 0.35;
-}
-
-// Scrub's fallback visual mapping — scrub has no single "note" the way the
-// other modes do, so its scrubPos (0-127, same range note-ish values get
-// constrained to above) drives the same visual-frequency curve instead.
-float scrubToVisualFreq(int scrubPos) {
-  return 0.05 + constrain(scrubPos, 0, 127) / 127.0 * 0.35;
 }
 
 // "C4" style name — MIDI note 60 is C4 by the standard convention this
@@ -625,6 +618,113 @@ void pollDownlink() {
   }
 }
 
+// Mode-specific waveform-band visuals, added 2026-09-03 once pitch+display
+// were both confirmed working together. Each one is a genuine (if
+// necessarily simplified, on a 64x28px mono display) depiction of what
+// that mode's Mozzi technique actually does, driven by the same live
+// parameters buildInfoLine() shows as text — not just a palette-swapped
+// copy of the original decaying sine.
+
+// tone/pluck/rickroll: the original decaying-envelope sine — unchanged,
+// still the right shape for "a note was struck and is ringing out."
+void drawDecayingSineWave() {
+  float elapsed = millis() - noteStartAt;
+  float amplitude = IDLE_AMPLITUDE + (PEAK_AMPLITUDE - IDLE_AMPLITUDE) * exp(-elapsed / DECAY_TAU_MS);
+  float freq = noteToVisualFreq(lastNote);
+
+  int prevY = -1;
+  for (int x = 0; x < W; x++) {
+    float y = WAVE_MID + amplitude * sin(2.0 * PI * freq * x + phase);
+    int yi = constrain((int)y, WAVE_TOP, WAVE_TOP + WAVE_HEIGHT - 1);
+    if (prevY >= 0) display.drawLine(x - 1, prevY, x, yi, WHITE);
+    else display.drawPixel(x, yi, WHITE);
+    prevY = yi;
+  }
+}
+
+// scrub: a read head sweeping a wavetable track — a static centerline (the
+// table) plus a bright vertical tick at the current scrub position, per
+// your "scrub could be a scanning line" note. Deliberately abstract rather
+// than the real sample's shape — the OLED sketch has no access to the
+// actual wavetable data, just scrubPos.
+void drawScrubScan() {
+  display.drawFastHLine(0, WAVE_MID, W, WHITE);
+  int scanX = map(constrain(lastScrubPos, 0, 127), 0, 127, 0, W - 1);
+  display.drawFastVLine(scanX, WAVE_TOP, WAVE_HEIGHT, WHITE);
+  display.drawFastVLine(constrain(scanX - 1, 0, W - 1), WAVE_TOP + 2, WAVE_HEIGHT - 4, WHITE);
+}
+
+// fold: the same sine, but actually folded back on itself past a threshold
+// set by foldGain (higher gain = more aggressive fold = lower threshold,
+// same direction as the real WaveFolder<> effect) and recentered by
+// foldBias — this is a real fold operation on the drawn values, not just a
+// different-looking waveform.
+void drawFoldedWave() {
+  float freq = noteToVisualFreq(lastNote);
+  float threshold = (WAVE_HEIGHT / 2.0 - 2.0) * (1.0 - (foldGain / 127.0) * 0.7);
+  if (threshold < 2.0) threshold = 2.0;
+  float driveGain = 1.0 + foldGain / 24.0; // pushes the raw sine past the threshold so folding is visible
+  float biasOffset = (foldBias - 64) / 10.0;
+
+  int prevY = -1;
+  for (int x = 0; x < W; x++) {
+    float raw = (PEAK_AMPLITUDE * 0.8) * driveGain * sin(2.0 * PI * freq * x + phase);
+    for (int i = 0; i < 5 && (raw > threshold || raw < -threshold); i++) {
+      if (raw > threshold) raw = 2.0 * threshold - raw;
+      if (raw < -threshold) raw = -2.0 * threshold - raw;
+    }
+    int yi = constrain((int)(WAVE_MID + raw + biasOffset), WAVE_TOP, WAVE_TOP + WAVE_HEIGHT - 1);
+    if (prevY >= 0) display.drawLine(x - 1, prevY, x, yi, WHITE);
+    else display.drawPixel(x, yi, WHITE);
+    prevY = yi;
+  }
+}
+
+// filter: a resonance peak on a frequency axis — X position is the actual
+// cutoffHz mapped across the band, peak height is the actual resonance.
+// Reads like a synth's filter-sweep display, not a generic waveform.
+void drawFilterSweep() {
+  int baseline = WAVE_TOP + WAVE_HEIGHT - 1;
+  display.drawFastHLine(0, baseline, W, WHITE);
+  int peakX = map(constrain(lastCutoffHz, 0, 4000), 0, 4000, 0, W - 1);
+  int peakHeight = map(constrain(lastResonance, 0, 127), 0, 127, 3, WAVE_HEIGHT - 2);
+  int slopeWidth = 10;
+  for (int dx = -slopeWidth; dx <= slopeWidth; dx++) {
+    int x = peakX + dx;
+    if (x < 0 || x >= W) continue;
+    float falloff = 1.0 - (float)abs(dx) / slopeWidth;
+    int y = baseline - (int)(peakHeight * falloff * falloff);
+    display.drawFastVLine(x, constrain(y, WAVE_TOP, baseline), baseline - constrain(y, WAVE_TOP, baseline) + 1, WHITE);
+  }
+}
+
+// fm: carrier sine plus a faster ripple riding on it — ripple frequency
+// tracks fmRatioNorm (the actual modulator:carrier ratio), ripple amplitude
+// tracks fmIndexNorm (the actual modulation depth), so a bigger/faster
+// squiggle really does mean a more aggressive FM setting.
+void drawFmRipple() {
+  float freq = noteToVisualFreq(lastNote);
+  int prevY = -1;
+  for (int x = 0; x < W; x++) {
+    float carrier = (PEAK_AMPLITUDE * 0.7) * sin(2.0 * PI * freq * x + phase);
+    float ripple = (fmIndexNorm * 3.0) * sin(2.0 * PI * freq * fmRatioNorm * 2.0 * x + phase * 3.0);
+    int yi = constrain((int)(WAVE_MID + carrier + ripple), WAVE_TOP, WAVE_TOP + WAVE_HEIGHT - 1);
+    if (prevY >= 0) display.drawLine(x - 1, prevY, x, yi, WHITE);
+    else display.drawPixel(x, yi, WHITE);
+    prevY = yi;
+  }
+}
+
+void drawWaveBand() {
+  switch (currentMode) {
+    case MODE_SCRUB:  drawScrubScan(); break;
+    case MODE_FOLD:   drawFoldedWave(); break;
+    case MODE_FILTER: drawFilterSweep(); break;
+    case MODE_FM:     drawFmRipple(); break;
+    default:          drawDecayingSineWave(); break; // tone, pluck, rickroll
+  }
+}
+
 void drawWaveform() {
   display.clearDisplay();
 
@@ -644,29 +744,9 @@ void drawWaveform() {
   display.setCursor(0, 0);
   display.print(rickrolling ? "RICKROLL!" : buildInfoLine());
 
-  // --- waveform, decaying envelope (y WAVE_TOP..WAVE_TOP+WAVE_HEIGHT) ---
-  // Driven by lastNote for every mode that has one (tone/fold/filter/fm/
-  // pluck/rickroll); scrub has no single "note" so it falls back to
-  // scrubPos instead. Same decay-envelope shape either way, re-triggered
-  // by noteStartAt on every mode's update (see applyLine()).
-  float elapsed = millis() - noteStartAt;
-  float amplitude = IDLE_AMPLITUDE + (PEAK_AMPLITUDE - IDLE_AMPLITUDE) * exp(-elapsed / DECAY_TAU_MS);
-  float freq = (currentMode == MODE_SCRUB) ? scrubToVisualFreq(lastScrubPos) : noteToVisualFreq(lastNote);
-
-  int prevY = -1;
-  for (int x = 0; x < W; x++) {
-    float y = WAVE_MID + amplitude * sin(2.0 * PI * freq * x + phase);
-    int yi = (int)y;
-    if (yi < WAVE_TOP) yi = WAVE_TOP;
-    if (yi >= WAVE_TOP + WAVE_HEIGHT) yi = WAVE_TOP + WAVE_HEIGHT - 1;
-
-    if (prevY >= 0) {
-      display.drawLine(x - 1, prevY, x, yi, WHITE);
-    } else {
-      display.drawPixel(x, yi, WHITE);
-    }
-    prevY = yi;
-  }
+  // --- waveform band (y WAVE_TOP..WAVE_TOP+WAVE_HEIGHT) — mode-specific,
+  // see drawWaveBand() below for what each mode actually draws and why.
+  drawWaveBand();
 
   // --- footer marquee (y 40-47) ---
   const char *footerText = rickrolling ? RICKROLL_FOOTER_TEXT : FOOTER_TEXT;
