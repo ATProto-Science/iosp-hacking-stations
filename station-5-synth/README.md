@@ -311,6 +311,31 @@ board never enumerates at all — see this repo's own memory) rather than a
 dead board or driver problem; the script prints that exact hint if its
 port-wait times out.
 
+## Workshop network topology (2026-09-03 plan)
+
+`noizetoyz` (the boards' WiFi network, `synthbeep`) is a lab router with no
+internet of its own — a real problem, since `landing-page/player.html` is
+hosted on the internet (Cloudflare Pages) and its live feed polls
+HappyView over the internet too, so a participant connected *only* to
+`noizetoyz` can't load the page at all, let alone see the feed update.
+
+**Primary plan**: bring the "bastl" Raspberry Pi, wire it into the
+`noizetoyz` router's LAN, and run `synth_relay.py` there instead of on a
+laptop — the Pi is always on that LAN, no dual-homing needed at all.
+Bridge `noizetoyz` itself to the venue's WiFi via an OpenWrt wireless
+bridge/repeater, so the same network that reaches the Pi/boards also has
+real internet — participants can join `noizetoyz` by LAN cable (if a port
+is free) or WiFi and reach `player.html` either way, no separate
+"how do I get online" step for anyone.
+
+**Fallback**: run the relay on a laptop instead, dual-homed exactly as
+verified end-to-end on 2026-09-02 — WiFi on a network with internet,
+Ethernet straight into the `noizetoyz` router for the boards' LAN. The one
+gotcha, already documented in `relay/publish_relay_config.py`'s own
+docstring: in this dual-homed setup, always run it with an explicit
+`--host <ethernet-ip>` — auto-detect will grab the WiFi (internet-facing)
+address instead, which the boards can't reach at all.
+
 ## Open questions / not yet decided
 
 - Whether this becomes a full 5th self-select station at the workshop, or
