@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Make noise — Station 5</title>
+  <link rel="stylesheet" href="site.css">
+  <style>
+    .diag-list { list-style: none; margin: 0.8rem 0 0; padding: 0; }
+    .diag-list li { margin-bottom: 1rem; padding-left: 1.4rem; position: relative; }
+    .diag-list li::before { content: "→"; position: absolute; left: 0; color: var(--fire); }
+    .diag-list strong { color: var(--ash); }
+  </style>
+</head>
+<body class="clearing">
+
+  <header class="hearth">
+    <div class="hearth-inner">
+      <h1 class="site-name">Make noise</h1>
+      <p class="site-tagline">Station 5 — an ATProto-networked Mozzi synth. Every note, scrub, fold, or filter sweep you send is a real record on the network, played back live on real hardware in the room.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="gathered">
+      <div class="gathered-inner">
+
+        <div class="style-card">
+          <h3>What it does</h3>
+          <p>A small <a href="https://sensorium.github.io/Mozzi/" class="spark">Mozzi</a>-based
+          synth anyone in the room can play from a browser — no hardware of your own needed.
+          Every interaction publishes a real <code>music.atproto.noizetoyz.synth.note</code>
+          record, which a relay writes to a real PDS and re-broadcasts to
+          whichever Wemos/ESP8266 boards are listening — they play it out
+          loud on a real speaker, live, the moment you send it.</p>
+          <p>Six sound-generation modes, all real Mozzi library techniques,
+          not custom DSP:</p>
+          <ul>
+            <li><strong>tone</strong> — a plain note, optionally with tremolo, delay, or reverb</li>
+            <li><strong>scrub</strong> — scrubbing through a real sampled wavetable</li>
+            <li><strong>fold</strong> — wavefolding distortion on a tone</li>
+            <li><strong>filter</strong> — a resonant lowpass sweep on a sawtooth</li>
+            <li><strong>fm</strong> — two-operator frequency modulation</li>
+            <li><strong>pluck</strong> — a plucked, decaying envelope</li>
+          </ul>
+          <p class="smoke-text">Plus one hidden easter egg, if you know where to look.</p>
+        </div>
+
+        <div class="style-card">
+          <h3>How to connect &amp; play</h3>
+          <ol>
+            <li>Join the <strong>noizetoyz</strong> WiFi network (password <code>synthbeep</code>) — this is what the physical boards listen on too.</li>
+            <li>Open <a href="player.html" class="spark">player.html</a> and fill in the <strong>relay HTTP base URL</strong> at the top — ask at the station for today's address, it changes between setups.</li>
+            <li><strong>Keys</strong> — an on-screen keyboard. Check the <em>pluck</em> box to play the Ead-envelope voice instead of a plain tone.</li>
+            <li><strong>Sample scrub</strong> — pick a sample, drag the knob to scrub through it.</li>
+            <li><strong>Wavefold / Filter / FM</strong> — drag the XY pad on each card (X/Y control two parameters at once), or plug in a gamepad and use the left stick — it drives whichever pad you touched last.</li>
+            <li>The small <strong>♪</strong> in the footer isn't decoration.</li>
+          </ol>
+          <p class="stones"><a href="player.html" class="spark">Open the player</a></p>
+        </div>
+
+        <div class="style-card">
+          <h3>How to diagnose</h3>
+          <ul class="diag-list">
+            <li><strong>Nothing plays when you press a key</strong> — check the relay URL field is actually filled in (the status line under Keys says so if it's empty); check you're really on the <code>noizetoyz</code> network, not still on your phone's own data.</li>
+            <li><strong>You hear a local click but nothing from the room speakers</strong> — that's expected for scrub/fm/filter (no local preview, only the real board plays those); for tone/fold/wavefold, that's the instant local Web Audio preview working correctly even before the network round-trip lands — give it a second.</li>
+            <li><strong>Want to see your notes actually landing on the network</strong>, not just hear them — open the <a href="viewer.html" class="spark">Viewer</a> for the last-played-note card, same live feed <code>player.html</code>'s own table reads.</li>
+            <li><strong>Comfortable at a terminal and want the real firehose</strong> — the station's own <a href="https://github.com/ATProto-Science/iosp-hacking-stations/blob/main/station-5-synth/OPS.md" class="spark">OPS.md</a> covers watching every event live (a mode-aware console viewer, or the raw ATProto firehose via <code>goat</code>) and the usual "no sound" causes (wrong network, stale relay address) in more depth than this page needs to.</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="embers">
+    <div class="embers-inner">
+      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a> · <a href="player.html" class="spark">Player</a> · <a href="viewer.html" class="spark">Viewer</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>
