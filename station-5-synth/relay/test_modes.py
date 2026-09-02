@@ -40,6 +40,14 @@ _comment:
 
 Usage:
     python3 test_modes.py [--relay-url http://localhost:8478]
+    python3 test_modes.py --audition [--pace 2.5]
+
+By default this runs as fast as the ATProto/HappyView round-trip allows —
+correctness, not listening. Pass --audition to pace it for a human at a
+connected board's speaker instead: prints "Now playing: ..." before each
+case and pauses after it (longer for the rickroll case, since that's a
+~17s melody, not a ~400ms note) — same test cases, same pass/fail logic,
+just slowed down and narrated.
 
 Exits non-zero if any test case failed.
 """
@@ -246,13 +254,28 @@ def main():
         default=os.environ.get("RELAY_URL", "http://localhost:8478"),
         help="Base URL of the running synth_relay.py HTTP listener (default: %(default)s)",
     )
+    parser.add_argument(
+        "--audition", action="store_true",
+        help="Pace and narrate each case for a human listening at a connected board's speaker, instead of running as fast as possible",
+    )
+    parser.add_argument(
+        "--pace", type=float, default=2.5,
+        help="Seconds to pause after each case in --audition mode (default: %(default)s); the rickroll case always gets longer, it's a ~17s melody",
+    )
     args = parser.parse_args()
     relay_url = args.relay_url.rstrip("/")
 
     cases = build_cases()
     print(f"Running {len(cases)} test case(s) against {relay_url} (/note) and {HAPPYVIEW_URL} (listNotes)...\n")
 
-    results = [run_case(relay_url, name, body) for name, body in cases]
+    results = []
+    for name, body in cases:
+        if args.audition:
+            print(f"\n>>> Now playing: {name}")
+        results.append(run_case(relay_url, name, body))
+        if args.audition:
+            pause = 18.0 if "rickroll" in name.lower() else args.pace
+            time.sleep(pause)
     passed = sum(results)
     total = len(results)
 

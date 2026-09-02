@@ -100,3 +100,35 @@ done
 echo
 echo "Flashing $SKETCH_DIR ($FQBN) to $PORT..."
 arduino-cli compile --fqbn "$FQBN" --upload -p "$PORT" "$SKETCH_DIR"
+
+# --- 4. optionally run the mode test suite too ----------------------------
+# Same tmux discipline as every other long-running task in this station
+# (~/txt/tracker/CLAUDE.md "Fleet tmux ops convention"): upsert a
+# topic-named session/windows rather than kill/recreate, pipe output to a
+# real logfile since capture-pane truncates. Runs against whatever board
+# was just flashed, over the network (the relay, not this USB connection),
+# so it's a real end-to-end check of the flash that just happened.
+
+echo
+read -r -p "Run the mode test suite too (station-5-synth/relay/test_modes.py, in tmux)? [y/N] " run_tests
+if [[ "$run_tests" =~ ^[Yy]$ ]]; then
+  RELAY_DIR="$(cd "$FIRMWARE_ROOT/../relay" && pwd)"
+  LOG_FILE="/tmp/station5-test-modes.log"
+
+  TEST_ARGS=""
+  read -r -p "Fast (correctness only) or paced for listening? [f/A] " pace_choice
+  if [[ ! "$pace_choice" =~ ^[Ff]$ ]]; then
+    TEST_ARGS="--audition"
+  fi
+
+  tmux has-session -t station5-tasks 2>/dev/null || tmux new-session -d -s station5-tasks
+  tmux list-windows -t station5-tasks -F '#{window_name}' | grep -qx ops || tmux new-window -t station5-tasks -n ops
+  tmux list-windows -t station5-tasks -F '#{window_name}' | grep -qx log || tmux new-window -t station5-tasks -n log
+
+  tmux pipe-pane -t station5-tasks:ops -o "cat >> $LOG_FILE"
+  tmux send-keys -t station5-tasks:ops "cd '$RELAY_DIR' && python3 test_modes.py $TEST_ARGS" Enter
+  tmux send-keys -t station5-tasks:log "tail -f $LOG_FILE" Enter
+
+  echo "Test suite launched in tmux session 'station5-tasks' (window: ops, log tailed in: log)."
+  echo "Attach with: tmux attach -t station5-tasks  (Ctrl-b w to switch windows)"
+fi
