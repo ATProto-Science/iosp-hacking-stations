@@ -5,8 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>hacking.tilde.style — IOSP 2026</title>
   <link rel="stylesheet" href="site.css">
+  <style>
+    /* Loud, one-off — this page is served over HTTPS (Cloudflare Pages),
+       which browsers block from reaching a plain-HTTP local relay at all
+       (mixed content), so anyone actually at the venue needs a different
+       URL for Station 5's player. Not part of the shared Bonfire
+       vocabulary on purpose — this is meant to stand out. */
+    .beacon {
+      background: var(--fire); color: var(--night);
+      text-align: center; padding: 0.85rem 1rem; font-weight: 600;
+    }
+    .beacon a { color: var(--night); text-decoration: underline; }
+  </style>
 </head>
 <body class="clearing">
+
+  <p class="beacon">📢 At IOSP in person for Station 5? This page can't reach the local synth relay over HTTPS — ask at the station for the <strong>local</strong> player address instead (same content, works on-site).</p>
 
   <header class="hearth">
     <div class="hearth-inner">
