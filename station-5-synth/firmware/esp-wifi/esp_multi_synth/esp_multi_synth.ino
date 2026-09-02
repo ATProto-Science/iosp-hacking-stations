@@ -120,7 +120,10 @@ LowPassFilter rf; // ResonantFilter<uint8_t, LOWPASS>
 // ---- fm ----
 Oscil<SIN2048_NUM_CELLS, MOZZI_AUDIO_RATE> aFmCarrier(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, MOZZI_AUDIO_RATE> aFmModulator(SIN2048_DATA);
-float fmIndexNorm = 1.0; // 0..~4 cycles of phase deviation
+float fmIndexNorm = 0.5; // 0..~1.5 cycles of phase deviation — kept modest since Mozzi's
+                          // own FMsynth example warns aliasing audibly intrudes at higher
+                          // deviation on its 16384Hz sample rate; the original 0..4 range
+                          // here was untested and likely too aggressive
 
 // ---- pluck ----
 Ead pluckEnvelope(MOZZI_CONTROL_RATE);
@@ -205,6 +208,17 @@ void connectWiFi() {
   Serial.println();
   Serial.print("[multi-synth] WiFi up, IP=");
   Serial.println(WiFi.localIP());
+
+  // Real bug, found by ear (2026-09-02): every mode crackled, not just
+  // reverb — this is the first sketch in this station to run WiFi and
+  // Mozzi audio at the same time (the earlier clean-sounding chimes had
+  // no WiFi code at all). ESP8266's default WiFi modem-sleep power saving
+  // periodically stalls the radio for tens of milliseconds at a time,
+  // which is long enough to disrupt Mozzi's audio-rate timing and is a
+  // well-documented cause of exactly this kind of crackle. This sketch is
+  // always-on and cares about audio smoothness, not battery life, so
+  // there's no downside to disabling it.
+  WiFi.setSleepMode(WIFI_NONE_SLEEP);
 }
 
 // Same mechanism as esp_note_player.ino/bmp180_wifi.ino — see either for
@@ -410,7 +424,7 @@ void applyLine(const String &line) {
     // lexicon's own _comment.
     float carrierFreq = midiToFreq(note);
     float fmRatioNorm = 0.5 + (constrain(bias, 0, 127) / 127.0) * 3.5;
-    fmIndexNorm = (constrain(gain, 0, 127) / 127.0) * 4.0;
+    fmIndexNorm = (constrain(gain, 0, 127) / 127.0) * 1.5;
     aFmCarrier.setFreq(carrierFreq);
     aFmModulator.setFreq(carrierFreq * fmRatioNorm);
     sounding = true;
@@ -563,8 +577,17 @@ AudioOutput updateAudio() {
           uint16_t delSamps = map(constrain(fxAmount, 0, 100), 0, 100, 10, 120);
           return MonoOutput::fromAlmostNBit(9, (sample >> 3) + aDelay.next(sample, delSamps));
         }
-        case FX_REVERB:
-          return MonoOutput::fromNBit(16, reverb.next(sample));
+        case FX_REVERB: {
+          // Real bug, found by ear (2026-09-02): this used to be
+          // fromNBit(16, reverb.next(sample)) with no dry signal and no
+          // attenuation — reverb.next()'s raw output isn't a clean 16-bit
+          // range on its own, so that clipped hard and came out as
+          // crackle/noise, not reverb. Matches
+          // ~/src/Mozzi/examples/09.Delays/ReverbTank_STANDARD exactly now:
+          // mix dry + attenuated wet, fromAlmostNBit(9, ...).
+          int arev = reverb.next(sample);
+          return MonoOutput::fromAlmostNBit(9, sample + (arev >> 3));
+        }
         default:
           return MonoOutput::from8Bit(sample);
       }

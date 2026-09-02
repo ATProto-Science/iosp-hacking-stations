@@ -313,6 +313,14 @@ void connectWiFi() {
   Serial.println();
   Serial.print("[multi-synth-oled] WiFi up, IP=");
   Serial.println(WiFi.localIP());
+
+  // Same fix as esp_multi_synth.ino, found by ear on real hardware
+  // 2026-09-02: ESP8266's default WiFi modem-sleep periodically stalls
+  // the radio for tens of milliseconds, long enough to disrupt Mozzi's
+  // audio-rate timing and cause audible crackle across every mode. This
+  // sketch is always-on and cares about audio smoothness, not battery
+  // life, so there's no downside to disabling it.
+  WiFi.setSleepMode(WIFI_NONE_SLEEP);
 }
 
 // Same mechanism as esp_note_player.ino/bmp180_wifi.ino — see either for
