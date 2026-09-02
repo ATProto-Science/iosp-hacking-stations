@@ -73,8 +73,8 @@ _write_lock = threading.Lock()
 _broadcast_clients = set()
 _broadcast_lock = threading.Lock()
 
-_INT_FIELDS = ("note", "velocity", "fxAmount", "cutoffHz")
-_STR_FIELDS = ("deviceId", "synthType", "fxType")
+_INT_FIELDS = ("note", "velocity", "fxAmount", "cutoffHz", "scrubPos", "foldGain", "foldBias", "resonance")
+_STR_FIELDS = ("deviceId", "synthType", "fxType", "mode", "sampleId")
 _REQUIRED = ("note", "velocity", "deviceId", "synthType")
 
 
@@ -135,6 +135,18 @@ def record_to_line(record):
         parts.append(f"fxAmount={record.get('fxAmount', 0)}")
     if record.get("cutoffHz") is not None:
         parts.append(f"cutoffHz={record['cutoffHz']}")
+    if record.get("mode"):
+        parts.append(f"mode={record['mode']}")
+    if record.get("sampleId"):
+        parts.append(f"sampleId={record['sampleId']}")
+    if record.get("scrubPos") is not None:
+        parts.append(f"scrubPos={record['scrubPos']}")
+    if record.get("foldGain") is not None:
+        parts.append(f"foldGain={record['foldGain']}")
+    if record.get("foldBias") is not None:
+        parts.append(f"foldBias={record['foldBias']}")
+    if record.get("resonance") is not None:
+        parts.append(f"resonance={record['resonance']}")
     return " ".join(parts) + "\n"
 
 
