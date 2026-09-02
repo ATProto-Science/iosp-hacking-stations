@@ -22,7 +22,7 @@
     here — and got reflashed three separate times in one session as the
     relay's IP kept changing (new WiFi network, then switching this laptop
     from ethernet to WiFi). Now fetched at boot from ATProto instead: a
-    music.atproto.synth.relayConfig record (../../../lexicon/, published by
+    music.atproto.noizetoyz.synth.relayConfig record (../../../lexicon/, published by
     ../../../relay/publish_relay_config.py), read the same read-only way
     landing-page/viewer.html reads everything else — a plain HTTPS GET
     against HappyView's XRPC endpoint with a read-only client key, no
@@ -47,12 +47,12 @@
 Adafruit_BMP085 bmp;
 
 // ---- fill in for your workshop WiFi ----
-const char *WIFI_SSID = "freshtomato";
-const char *WIFI_PASSWORD = "freshtomato";
+const char *WIFI_SSID = "noizetoyz";
+const char *WIFI_PASSWORD = "synthbeep";
 // ------------------------------------------------------
 
 // Used only if the ATProto relayConfig fetch below fails.
-const char *DEFAULT_RELAY_HOST = "192.168.1.15";
+const char *DEFAULT_RELAY_HOST = "192.168.1.20"; // laptop's wired LAN IP — WiFi stays on the home network instead
 const uint16_t DEFAULT_RELAY_PORT = 8480;
 
 // Same read-only client key already committed in landing-page/viewer.html —
@@ -83,7 +83,7 @@ void connectWiFi() {
   Serial.println(WiFi.localIP());
 }
 
-// Fetches the most recent music.atproto.synth.relayConfig record and sets
+// Fetches the most recent music.atproto.noizetoyz.synth.relayConfig record and sets
 // the global relayHost/relayPort from it. Falls back to
 // DEFAULT_RELAY_HOST/DEFAULT_RELAY_PORT on any failure (network error, bad
 // JSON, no records yet, lexicon not registered with HappyView) — this path
@@ -96,7 +96,7 @@ void fetchRelayConfig() {
   httpsClient.setInsecure(); // no cert store on this MCU; same tradeoff every ESP8266 HTTPS sketch makes
 
   HTTPClient http;
-  String url = String(HAPPYVIEW_URL) + "/xrpc/music.atproto.synth.listRelayConfig?limit=10";
+  String url = String(HAPPYVIEW_URL) + "/xrpc/music.atproto.noizetoyz.synth.listRelayConfig?limit=10";
   Serial.print("[bmp180-wifi] fetching relay config: ");
   Serial.println(url);
 

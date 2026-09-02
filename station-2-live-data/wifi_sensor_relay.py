@@ -126,6 +126,11 @@ def main():
     ).did
     print(f"[station-2] resolved {handle} -> {_repo_did}")
 
+    # allow_reuse_address (unset by default) — without it, restarting this
+    # process quickly after a previous run can fail to rebind with
+    # "Address already in use" while the old socket sits in TIME_WAIT.
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+
     server = socketserver.ThreadingTCPServer(("0.0.0.0", TCP_PORT), LineHandler)
     server.serve_forever()
 
