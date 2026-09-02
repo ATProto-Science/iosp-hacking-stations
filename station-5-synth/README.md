@@ -115,6 +115,33 @@ Not yet run on an actual Raspberry Pi — only proven on this laptop
 standing in for one; the Pi-specific part (USB-serial driver, `pip
 install`) is assumed to just work rather than independently verified.
 
+### c) Arduino UNO + Ethernet shield, direct LAN — `firmware/uno-ethernet/uno_ethernet_smoke_test.ino`
+
+A third UNO path, added 2026-09-01 after the TP-Link TL-WR841N v9 earmarked
+for a USB bridge turned out to have no USB port on the hardware at all
+(confirmed via SSH — no USB anywhere in `dmesg`/`lsmod`/sysfs). Sidesteps
+that entirely: a UNO + standard W5100-class Ethernet shield opens its own
+TCP connection straight to the relay over wired Ethernet, plugged into the
+same router's ordinary LAN port — no serial bridge, no framing, no
+separate bridge process, simpler than option (b) once you have a shield
+and a spare LAN port. Compiles clean (51% flash, 45% RAM) but **untested
+past that** — no shield in hand to verify against yet.
+
+### Diagnostics — `firmware/esp-wifi/diagnostics/`
+
+Two small sketches pulled out of scratch work because they document real,
+hardware-confirmed findings, not just throwaway debugging: `blink_test`
+(a trivial "does the board/USB/toolchain even work at all" baseline — run
+this first whenever a sketch produces no serial output, to rule out
+hardware/cable/capture issues before suspecting the code) and
+`mozzi_startup_race_repro` (the minimal repro of a real bug found
+2026-09-01 — `startMozzi()` briefly disrupts UART transmission right as it
+sets up its timer/interrupt, so a `Serial.println()` called immediately
+before it, with no flush/delay, can be silently lost even though the
+sketch isn't actually crashed; every real Mozzi+ESP8266 sketch in this
+station now calls `Serial.flush(); delay(500);` right before `startMozzi()`
+because of this).
+
 ## The relay — `relay/`
 
 Talks to ATProto directly via the `atproto` SDK, not nebra — station-2's
