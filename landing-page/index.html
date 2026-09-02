@@ -20,7 +20,7 @@
 </head>
 <body class="clearing">
 
-  <p class="beacon">📢 At IOSP in person for Station 5? This page can't reach the local synth relay over HTTPS — ask at the station for the <strong>local</strong> player address instead (same content, works on-site).</p>
+  <p class="beacon">📢 At IOSP in person for Station 5? This page can't reach the local synth relay over HTTPS — <a href="#" id="localPlayerLink">open the local player instead</a> (same content, works on-site).</p>
 
   <header class="hearth">
     <div class="hearth-inner">
@@ -235,6 +235,36 @@
       </p>
     </div>
   </footer>
+
+  <script>
+    // Points the beacon's link at wherever the relay/local player actually
+    // are right now, instead of a hardcoded IP that'll be wrong the moment
+    // the venue network changes (a recurring problem this whole project —
+    // see station-5-synth/README.md's "Workshop network topology" section).
+    // Same source of truth player.html's own relay-address hint uses:
+    // music.atproto.noizetoyz.synth.relayConfig, published by whichever
+    // machine is running synth_relay.py. station-5-synth/ops.sh always
+    // serves landing-page/ on port 8000 on that same machine, so the local
+    // player's address is derivable from the relay's own host.
+    (async () => {
+      const link = document.getElementById("localPlayerLink");
+      try {
+        const res = await fetch(
+          "https://happyview.werk.museum/xrpc/music.atproto.noizetoyz.synth.listRelayConfig?limit=10",
+          { headers: { "X-Client-Key": "hvc_4f63d844f5a253fe658f1491160126dc" } }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { records } = await res.json();
+        const newest = records.reduce((a, b) => (!a || b.createdAt > a.createdAt ? b : a), null);
+        if (newest && newest.relayHost) {
+          link.href = `http://${newest.relayHost}:8000/player.html`;
+        }
+      } catch (err) {
+        // leave the link as "#" — better than sending someone to a guessed,
+        // possibly-wrong address
+      }
+    })();
+  </script>
 
 </body>
 </html>
