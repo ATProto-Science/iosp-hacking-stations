@@ -323,3 +323,11 @@ port-wait times out.
 - Real Mozzi patches (filters, real tremolo/ADSR objects from
   `~/src/Mozzi/examples/`) in place of the placeholder amplitude-modulation
   trick both firmware sketches currently use for `fxType=tremolo`.
+- Optional "sign in with your handle" for `player.html`, so a participant's
+  notes land under their own repo instead of the relay's shared service
+  account — scaffolded 2026-09-02 (`../landing-page/client-metadata.json`,
+  `../landing-page/oauth-login.js`, modeled loosely on eurosky-portal's
+  browser-vs-server OAuth split) but not wired in or tested; see
+  `oauth-login.js`'s header comment for what's left. No relay change needed
+  for playback — `jetstream_downlink_loop` already filters by collection,
+  not author.
