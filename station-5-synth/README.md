@@ -299,6 +299,18 @@ same registration blocker, needs the admin key), so `fetchRelayConfig()`
 currently always falls through to its hardcoded default in practice, even
 though the fetch/parse code itself is written and compiles clean.
 
+## Flashing during the workshop
+
+`firmware/flash.sh` — waits for a board's serial port to appear, then gives a
+numbered menu of every sketch under `firmware/` to flash to it (FQBN picked
+automatically: `esp8266:esp8266:d1_mini` under `esp-wifi/`,
+`arduino:avr:uno` under `uno-serial/`/`uno-ethernet/`). Written 2026-09-02
+for the workshop's busy hands-on phase, after a long session of "no boards
+found" mostly turning out to be a charge-only USB cable (LED lights up,
+board never enumerates at all — see this repo's own memory) rather than a
+dead board or driver problem; the script prints that exact hint if its
+port-wait times out.
+
 ## Open questions / not yet decided
 
 - Whether this becomes a full 5th self-select station at the workshop, or
