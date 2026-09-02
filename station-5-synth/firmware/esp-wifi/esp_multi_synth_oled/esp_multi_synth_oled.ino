@@ -5,13 +5,17 @@
 // I2C write (display.display(), ~384 bytes) interfering with Mozzi's
 // audio-rate timer closely enough to corrupt the oscillator's frequency
 // state, not just cause crackle. Confirmed by flipping this to 1 (zero
-// display updates) and pitch tracked correctly. Defaulting to 1 for now —
-// pitch correctness over the visual — since the real fix (throttling the
-// I2C write further, or moving it off whatever timing this collides with)
-// hasn't been done yet. Flip to 0 to get the display back once that's
-// actually fixed; until then this sketch is functionally audio-only,
-// display disabled, same as esp_multi_synth.ino.
-#define DIAG_DISABLE_OLED_DRAW 1
+// display updates) and pitch tracked correctly.
+//
+// Real fix (2026-09-03), confirmed on hardware: a full 384-byte I2C write
+// at the ESP8266's 100kHz default clock takes roughly 30ms+ — enough to
+// stall Mozzi's audio-rate timer for hundreds of samples. Bumped I2C to
+// 400kHz Fast Mode (setup(), ~4x shorter transfer) and halved the redraw
+// rate to 10fps (DRAW_INTERVAL_MS) so the shorter stall also happens half
+// as often. Both pitch and display confirmed working together with this.
+// Flip back to 1 immediately if pitch ever regresses — don't assume this
+// holds on different hardware without re-confirming by ear.
+#define DIAG_DISABLE_OLED_DRAW 0
 
 /*  Station 5 — esp_multi_synth.ino's full mode dispatch (tone+fx, scrub,
     fold, filter, fm, pluck, plus the hidden rickroll easter egg), PLUS
@@ -252,7 +256,9 @@ const float IDLE_AMPLITUDE = 2.0;
 const float DECAY_TAU_MS = 600.0; // time constant — bigger = slower decay
 unsigned long noteStartAt = 0;
 unsigned long lastDraw = 0;
-const unsigned long DRAW_INTERVAL_MS = 50; // ~20fps — see header comment on why this is throttled
+const unsigned long DRAW_INTERVAL_MS = 100; // ~10fps — halved from the original 20fps alongside the
+                                             // 400kHz I2C bump, so the (still blocking) redraw happens
+                                             // half as often on top of taking a quarter as long each time
 
 const char *NOTE_NAMES[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
@@ -686,6 +692,15 @@ void setup() {
   Serial.println("[multi-synth-oled] starting");
 
   Wire.begin(D2, D1); // SDA, SCL
+  // Fast-mode I2C (400kHz vs the 100kHz default) — see the
+  // DIAG_DISABLE_OLED_DRAW comment at the top of this file: a full 384-byte
+  // SSD1306 framebuffer write at 100kHz takes ~30ms+, long enough to stall
+  // Mozzi's audio-rate timer for hundreds of samples and corrupt its
+  // oscillator state, not just click. At 400kHz that same write drops to
+  // roughly a quarter of that. Every SSD1306 module encountered in this
+  // station's hardware supports Fast Mode; if a display ever doesn't ACK
+  // after this, drop back to Wire.setClock(100000) as the first thing to try.
+  Wire.setClock(400000);
   Wire.setClockStretchLimit(1000); // microseconds — see bmp180_smoke_test.ino's REAL-HARDWARE FINDING note; the classic ESP8266 Wire library has no timeout by default and a stuck/miswired I2C bus hangs forever without this
 
   Wire.beginTransmission(0x3C);
