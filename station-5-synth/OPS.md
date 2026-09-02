@@ -6,10 +6,25 @@ debugging. See `README.md` for the station's own architecture; this file is
 just "how do I look at it."
 
 Run `./ops.sh` to set up all of it at once: a tmux session (`station5-tasks`)
-with `flash` (ready for `firmware/flash.sh`), `jetstream`
-(`synth_console_viewer.py`), and `firehose` (`goat firehose | jq`) windows —
+with `flash` (ready for `firmware/flash.sh`), `tests` (ready for
+`relay/test_modes.py` — standalone now, not just reachable via flash.sh's
+own post-flash prompt), `jetstream` (`synth_console_viewer.py`), `firehose`
+(`goat firehose | jq`), and `landing` (a plain-HTTP mirror of
+`landing-page/` on port 8000, `LANDING_PORT` env var to change it) windows —
 upserts, safe to re-run any time, never kills/recreates an already-running
 window. `tmux attach -t station5-tasks`, `Ctrl-b w` to switch.
+
+## Why `landing` exists — the HTTPS/mixed-content gotcha
+
+`landing-page/` is normally deployed to `hacking.tilde.style` over HTTPS.
+Browsers block an HTTPS page from `fetch()`-ing a plain-HTTP endpoint at all
+(mixed content) — and `synth_relay.py` only ever speaks plain HTTP, no TLS.
+So the *deployed* `player.html` can never reach a local relay, full stop,
+regardless of what's typed into its relay-URL field. Anyone actually at the
+venue needs to load `player.html` from the `landing` window's local HTTP
+server instead — same file, same content, just same-scheme as the relay so
+the browser doesn't block it. `index.html`'s deployed copy has a banner
+pointing this out.
 
 ## Watching live traffic
 
