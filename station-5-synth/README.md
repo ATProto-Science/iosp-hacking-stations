@@ -19,7 +19,7 @@ ESP8266/ESP32 (WiFi) ──TCP──┐
                              ├──> synth_relay.py ──createRecord──> PDS ──> Jetstream
 Arduino UNO (Serial) ──> OpenWrt bridge ──TCP──┘        │                     │
                                                           │                     │
-webapp/index.html (browser) ─────HTTP POST /note─────────┘                     │
+../landing-page/player.html (browser) ─HTTP POST /note────┘                     │
                                                                                  │
 receive-only instruments (e.g. ~/sdiy/mozzi-noizetoyz's                        │
 timonsfiretruck-esp32) <──plain wire lines── downlink (Jetstream subscriber) ◄──┘
@@ -143,15 +143,22 @@ upstream; see that file's docstring for the full detail — the read side's
 verified reasoning still applies even though the Jetstream URL helpers
 themselves are no longer imported from nebra).
 
-## The web app — `webapp/index.html`
+## The web app — `../landing-page/player.html`
+
+**Moved 2026-09-02** from `webapp/index.html` into `landing-page/`,
+restyled to use the site's shared Bonfire CSS (`site.css` — `.style-card`,
+`.kindling-table`, `.smoke-text`, `a.spark`), same component vocabulary as
+`viewer.html`/`kiosk.html`. Linked from `index.html`'s "Looking around"
+section. Not yet deployed live (`wrangler pages deploy`) — that's a
+separate, explicit step.
 
 No build step, static HTML/JS. Set the relay's HTTP base URL in the page
 (top field) — it POSTs `{note, velocity, deviceId, synthType, fxType?,
 fxAmount?}` to `<relay>/note` on every key press, plays a local Web Audio
 tone immediately for responsiveness, and polls HappyView for the shared
 live feed underneath, same `fetch()`-against-XRPC pattern as
-`../landing-page/viewer.html` (read-only client key, no OAuth, no separate
-backend for reads).
+`viewer.html` (read-only client key, no OAuth, no separate backend for
+reads).
 
 **Confirmed working end-to-end 2026-09-01** (real hardware, real ATProto
 writes, watched live on an OLED — see the milestone entries below):
@@ -270,9 +277,10 @@ though the fetch/parse code itself is written and compiles clean.
 - Whether this becomes a full 5th self-select station at the workshop, or
   stays a stretch-goal/demo extension of station-2 — raise in `tracker-vss7`
   (this repo's own CLAUDE.md: task-tracking lives there, not here).
-- Whether `webapp/index.html` gets promoted into `../landing-page/` (styled
-  to match Bonfire, deployed via the same `wrangler pages deploy`) once
-  proven, the way `viewer.html`/`kiosk.html` did for stations 2/4.
+- ~~Whether `webapp/index.html` gets promoted into `../landing-page/`~~ —
+  done 2026-09-02, now `../landing-page/player.html`. Still open: whether
+  to actually deploy it live (`wrangler pages deploy`) — not done, needs an
+  explicit go-ahead separate from just moving the file.
 - Real Mozzi patches (filters, real tremolo/ADSR objects from
   `~/src/Mozzi/examples/`) in place of the placeholder amplitude-modulation
   trick both firmware sketches currently use for `fxType=tremolo`.

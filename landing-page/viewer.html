@@ -9,6 +9,7 @@
     /* .kindling-table/.style-card/.smoke-text already cover everything this
        page needs — no new component, just the empty-state color. */
     .empty { color: var(--smoke); font-style: italic; }
+    .last-note { font-family: var(--font-display); font-size: 2.5rem; color: var(--spark); margin: 0.3em 0; }
   </style>
 </head>
 <body class="clearing">
@@ -48,6 +49,13 @@
             <thead><tr><th>track</th><th>repo</th><th>when</th></tr></thead>
             <tbody id="rows-checkins"></tbody>
           </table>
+        </div>
+
+        <div class="style-card">
+          <h3>Station 5 — last played note</h3>
+          <p class="smoke-text" id="status-notes">loading…</p>
+          <p class="last-note" id="last-note-display">—</p>
+          <p class="smoke-text" id="last-note-detail"></p>
         </div>
       </div>
     </section>
@@ -156,10 +164,40 @@
       }
     }
 
+    // Same MIDI-note-to-name convention as station-5-synth's own firmware
+    // (esp_note_player.ino's midiNoteName()) — note 60 = C4.
+    const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    function midiNoteName(note) {
+      const octave = Math.floor(note / 12) - 1;
+      return `${NOTE_NAMES[note % 12]}${octave}`;
+    }
+
+    async function loadLastNote() {
+      const statusEl = document.getElementById("status-notes");
+      const displayEl = document.getElementById("last-note-display");
+      const detailEl = document.getElementById("last-note-detail");
+      try {
+        const records = await fetchRecords("music.atproto.noizetoyz.synth.listNotes");
+        statusEl.textContent = `${records.length} note(s) recently`;
+        if (records.length) {
+          const latest = records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+          displayEl.textContent = midiNoteName(latest.note);
+          const fx = latest.fxType ? ` · ${latest.fxType}@${latest.fxAmount}%` : "";
+          detailEl.textContent = `${latest.deviceId ?? "?"} (${latest.synthType ?? "?"})${fx} — ${new Date(latest.createdAt).toLocaleTimeString()}`;
+        } else {
+          displayEl.textContent = "—";
+          detailEl.textContent = "no notes yet";
+        }
+      } catch (err) {
+        statusEl.textContent = `error: ${err.message}`;
+      }
+    }
+
     function loadAll() {
       loadSensors();
       loadFacts();
       loadCheckins();
+      loadLastNote();
     }
 
     loadAll();

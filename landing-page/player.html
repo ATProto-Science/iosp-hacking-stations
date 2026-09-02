@@ -4,95 +4,92 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Station 5 — synth keys</title>
+  <link rel="stylesheet" href="site.css">
   <style>
-    :root {
-      --fire: #E8651A; --ember: #C44B10; --spark: #F5A623;
-      --smoke: #7A6F65; --night: #141210; --ground: #221E1A;
-      --log: #3A3028; --ash: #EDE8E2;
-    }
-    * { box-sizing: border-box; }
-    body {
-      background: var(--night); color: var(--ash);
-      font-family: system-ui, -apple-system, sans-serif;
-      max-width: 720px; margin: 0 auto; padding: 1.5rem;
-    }
-    h1 { color: var(--spark); font-weight: 400; margin-bottom: 0.2em; }
-    .sub { color: var(--smoke); margin-bottom: 1.5rem; font-size: 0.95rem; }
-    fieldset {
-      border: 1px solid var(--log); border-radius: 6px;
-      padding: 0.75rem 1rem; margin-bottom: 1.25rem;
-    }
-    legend { color: var(--smoke); padding: 0 0.4em; font-size: 0.85rem; }
-    label { display: block; font-size: 0.85rem; color: var(--smoke); margin-top: 0.5rem; }
+    /* Piano keys + the relay-connection fields aren't covered by the
+       shared Bonfire vocabulary (site.css) — everything else on this page
+       (style-card, kindling-table, smoke-text, spark) reuses it directly,
+       same as viewer.html/kiosk.html. */
+    .empty { color: var(--smoke); font-style: italic; }
+
+    label { display: block; font-size: 0.85rem; color: var(--smoke); margin-top: 0.6rem; }
     input, select {
-      background: var(--ground); color: var(--ash); border: 1px solid var(--log);
-      border-radius: 4px; padding: 0.35rem 0.5rem; width: 100%; font-size: 0.9rem;
+      background: var(--night); color: var(--ash); border: 1px solid var(--log);
+      border-radius: 4px; padding: 0.4rem 0.6rem; width: 100%; font-size: 0.9rem;
+      font-family: var(--font-body);
     }
-    #keys {
-      display: flex; gap: 4px; margin-bottom: 1.25rem; user-select: none;
-    }
+
+    #keys { display: flex; gap: 4px; margin: 1rem 0; user-select: none; }
     .key {
-      flex: 1; background: var(--ground); border: 1px solid var(--log);
+      flex: 1; background: var(--night); border: 1px solid var(--log);
       color: var(--ash); border-radius: 4px; padding: 1.5rem 0.25rem;
-      text-align: center; cursor: pointer; font-family: monospace;
+      text-align: center; cursor: pointer; font-family: var(--font-mono);
     }
     .key:active, .key.playing { background: var(--fire); border-color: var(--ember); }
-    #status { color: var(--smoke); font-size: 0.85rem; margin-bottom: 0.5rem; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th, td { text-align: left; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--log); }
-    th { color: var(--smoke); font-weight: 400; }
-    .empty { color: var(--smoke); font-style: italic; }
   </style>
 </head>
-<body>
+<body class="clearing">
 
-  <h1>Station 5 — synth keys</h1>
-  <p class="sub">
-    Plays a local tone (Web Audio) and publishes each note-on as a
-    <code>music.atproto.synth.note</code> ATProto record via the relay —
-    same wire event the Mozzi hardware (ESP8266/ESP32, or Arduino UNO
-    through the OpenWrt bridge) sends. Everyone's notes, from every
-    device, land in the shared feed below.
-  </p>
+  <header class="hearth">
+    <div class="hearth-inner">
+      <h1 class="site-name">Station 5 — synth keys</h1>
+      <p class="site-tagline">Play a note here, hear it on a real Mozzi-driven board across the room — every keypress is a real ATProto record, shared live over the network.</p>
+    </div>
+  </header>
 
-  <fieldset>
-    <legend>connection</legend>
-    <label for="relayUrl">relay HTTP base URL (e.g. http://192.168.1.50:8478 — the box running synth_relay.py)</label>
-    <input id="relayUrl" placeholder="http://localhost:8478">
+  <main>
+    <section class="gathered">
+      <div class="gathered-inner">
+        <div class="style-card">
+          <h3>Connection</h3>
+          <label for="relayUrl">relay HTTP base URL (the box running synth_relay.py)</label>
+          <input id="relayUrl" placeholder="http://192.168.1.20:8478">
 
-    <label for="deviceId">deviceId</label>
-    <input id="deviceId" value="webkeys-anon">
+          <label for="deviceId">deviceId</label>
+          <input id="deviceId" value="webkeys-anon">
 
-    <label for="fxType">fx</label>
-    <select id="fxType">
-      <option value="">none</option>
-      <option value="tremolo">tremolo</option>
-      <option value="reverb">reverb</option>
-      <option value="delay">delay</option>
-    </select>
-  </fieldset>
+          <label for="fxType">fx</label>
+          <select id="fxType">
+            <option value="">none</option>
+            <option value="tremolo">tremolo</option>
+            <option value="reverb">reverb</option>
+            <option value="delay">delay</option>
+          </select>
+        </div>
 
-  <div id="keys"></div>
-  <p id="status">not yet played anything</p>
+        <div class="style-card">
+          <h3>Keys</h3>
+          <div id="keys"></div>
+          <p class="smoke-text" id="status">not yet played anything</p>
+        </div>
 
-  <fieldset>
-    <legend>live feed — everyone's notes (music.atproto.synth.note, via HappyView)</legend>
-    <table>
-      <thead><tr><th>device</th><th>synth</th><th>note</th><th>vel</th><th>fx</th><th>when</th></tr></thead>
-      <tbody id="rows-notes"></tbody>
-    </table>
-  </fieldset>
+        <div class="style-card">
+          <h3>Live feed — everyone's notes</h3>
+          <p class="smoke-text" id="status-notes">loading…</p>
+          <table class="kindling-table">
+            <thead><tr><th>device</th><th>synth</th><th>note</th><th>vel</th><th>fx</th><th>when</th></tr></thead>
+            <tbody id="rows-notes"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="embers">
+    <div class="embers-inner">
+      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a> · <a href="viewer.html" class="spark">Viewer</a></p>
+    </div>
+  </footer>
 
   <script>
-    // Same no-build, plain-fetch pattern as landing-page/viewer.html — one
-    // read-only client key against HappyView, no separate backend for reads.
+    // Same no-build, plain-fetch pattern as viewer.html — one read-only
+    // client key against HappyView, no separate backend for reads.
     const HAPPYVIEW_URL = "https://happyview.werk.museum";
     const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc"; // read-only, rate-limited
-    const NSID_LIST = "music.atproto.synth.listNotes"; // TODO(station-5): confirm exact HappyView list-endpoint name once registered, mirrors science.iosp.sensor.listReadings's shape
+    const NSID_LIST = "music.atproto.noizetoyz.synth.listNotes";
     const POLL_MS = 3000;
 
-    // One octave, C4-C5, MIDI 60-72 — deliberately small, this is a demo
-    // keyboard not a full synth UI.
+    // One octave, C4-C5, MIDI 60-72 — a demo keyboard, not a full synth UI.
     const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B","C"];
     const BASE_NOTE = 60;
 
@@ -166,15 +163,21 @@
       setTimeout(() => btn.classList.remove("playing"), 150);
     }
 
+    async function fetchRecords(nsid) {
+      const res = await fetch(`${HAPPYVIEW_URL}/xrpc/${nsid}?limit=30`, {
+        headers: { "X-Client-Key": CLIENT_KEY },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return data.records ?? [];
+    }
+
     async function loadFeed() {
       const rowsEl = document.getElementById("rows-notes");
+      const statusNotesEl = document.getElementById("status-notes");
       try {
-        const res = await fetch(`${HAPPYVIEW_URL}/xrpc/${NSID_LIST}?limit=30`, {
-          headers: { "X-Client-Key": CLIENT_KEY },
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const records = data.records ?? [];
+        const records = await fetchRecords(NSID_LIST);
+        statusNotesEl.textContent = `${records.length} note(s) recently`;
         rowsEl.innerHTML = records.length
           ? records
               .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -191,7 +194,8 @@
               .join("")
           : `<tr><td colspan="6" class="empty">no notes yet</td></tr>`;
       } catch (err) {
-        rowsEl.innerHTML = `<tr><td colspan="6" class="empty">feed unavailable: ${err.message} — HappyView listing for this NSID may not be registered yet</td></tr>`;
+        statusNotesEl.textContent = `error: ${err.message}`;
+        rowsEl.innerHTML = `<tr><td colspan="6" class="empty">feed unavailable: ${err.message}</td></tr>`;
       }
     }
 

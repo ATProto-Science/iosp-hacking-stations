@@ -112,9 +112,19 @@
         <div class="style-card">
           <h3>Viewer</h3>
           <p>Read station 2's live sensor readings, station 4's SAITO facts,
-          and who's checked in, side by side — plain <code>fetch()</code>
-          against HappyView, no separate backend.
+          station 5's last played note, and who's checked in, side by side —
+          plain <code>fetch()</code> against HappyView, no separate backend.
           <a href="viewer.html" class="spark">Open the viewer.</a></p>
+          <p class="stones"><span class="stone">live</span></p>
+        </div>
+
+        <div class="style-card">
+          <h3>Synth keys</h3>
+          <p>Station 5 — play an on-screen keyboard, hear it on a real
+          Mozzi-driven board across the room. Every keypress is a real
+          ATProto record, shared live over the network — same
+          no-separate-backend pattern as the viewer.
+          <a href="player.html" class="spark">Open the synth keys.</a></p>
           <p class="stones"><span class="stone">live</span></p>
         </div>
 
@@ -127,24 +137,34 @@
           <p class="stones"><span class="stone">live</span></p>
         </div>
 
+      </div>
+    </section>
+
+    <section class="gathered" id="deeper">
+      <div class="gathered-inner">
+        <h2>Going deeper</h2>
+        <p>How the viewer's tables actually get their data, and how to look
+        even further underneath them:</p>
+
         <div class="style-card">
           <h3>HappyView</h3>
           <p>The schema-driven AppView the viewer above reads through, and
           station 3 uses directly for feeds, lists, and starter packs.
           <a href="https://happyview.werk.museum" class="spark">happyview.werk.museum</a></p>
           <p class="stones"><span class="stone">live</span></p>
-          <p class="smoke-text">How the viewer's tables actually get their
-          data: HappyView doesn't expose a list endpoint just because a record
-          lexicon exists. Each collection needed <em>two</em> lexicons
-          registered by hand in HappyView's admin UI (or its Admin API —
-          that's how the check-in lexicons below were actually registered
-          this time, no dashboard clicking needed) — the record schema
-          itself (<code>science.iosp.sensor.reading</code>,
-          <code>run.saito.fact</code>, <code>style.tilde.hacking.checkin</code>)
+          <p class="smoke-text">HappyView doesn't expose a list endpoint just
+          because a record lexicon exists. Each collection needed
+          <em>two</em> lexicons registered by hand in HappyView's admin UI
+          (or its Admin API — that's how the check-in lexicons below were
+          actually registered this time, no dashboard clicking needed) — the
+          record schema itself (<code>science.iosp.sensor.reading</code>,
+          <code>run.saito.fact</code>, <code>style.tilde.hacking.checkin</code>,
+          <code>music.atproto.noizetoyz.synth.note</code>)
           <em>and</em> a companion query lexicon
           (<code>science.iosp.sensor.listReadings</code>,
           <code>run.saito.listFacts</code>,
-          <code>style.tilde.hacking.listCheckins</code>) whose
+          <code>style.tilde.hacking.listCheckins</code>,
+          <code>music.atproto.noizetoyz.synth.listNotes</code>) whose
           <code>target_collection</code> points back at the record NSID —
           that pairing is what actually creates the
           <code>/xrpc/&lt;query-nsid&gt;</code> endpoint the viewer calls.
