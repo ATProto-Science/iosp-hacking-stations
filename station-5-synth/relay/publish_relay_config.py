@@ -13,6 +13,18 @@ By default, auto-detects this machine's own LAN IP (the address used to
 reach the default route) rather than requiring it typed in by hand — override
 with --host if that guess is wrong (multiple interfaces, VPNs, etc.).
 
+**Real gotcha, hit 2026-09-02**: when this laptop is dual-homed — WiFi on a
+network with internet (needed for real ATProto/HappyView calls), Ethernet
+to the workshop's own noizetoyz router (no internet, but the actual LAN
+the boards join) — auto-detect always picks the WiFi address, since that's
+whichever interface has the *default route* to 8.8.8.8, never the
+Ethernet link. The boards can't reach that address at all (different
+subnet). In this exact setup, always pass --host explicitly with the
+Ethernet interface's IP (`ip -4 addr show` to find it) — never run this
+bare. This is also why switching this laptop's own WiFi over to noizetoyz
+itself isn't the fix and isn't needed: staying dual-homed and just
+overriding --host here is simpler and keeps internet access.
+
 Usage:
     python3 publish_relay_config.py [--host 192.168.1.15] [--label torsten-laptop]
 
