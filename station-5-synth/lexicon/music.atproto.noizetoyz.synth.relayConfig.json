@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
-  "id": "music.atproto.synth.relayConfig",
-  "_comment": "NSID authority: atproto.music (same as music.atproto.synth.note). Solves a real problem hit live during the 2026-09-01 hardware session: relay_host was a hardcoded compile-time constant in every ESP8266 sketch, meaning every time the relay's IP changed (new WiFi network, DHCP renewal, swapping which laptop runs it) every board needed a firmware reflash. Instead, devices fetch the current relay location from ATProto at boot — the location can change without ever touching firmware. One record per relay instance; devices use the most recent one (sorted by createdAt) rather than assuming a singleton, since a workshop could run more than one relay.",
+  "id": "music.atproto.noizetoyz.synth.relayConfig",
+  "_comment": "NSID authority: atproto.music (same as music.atproto.noizetoyz.synth.note). Solves a real problem hit live during the 2026-09-01 hardware session: relay_host was a hardcoded compile-time constant in every ESP8266 sketch, meaning every time the relay's IP changed (new WiFi network, DHCP renewal, swapping which laptop runs it) every board needed a firmware reflash. Instead, devices fetch the current relay location from ATProto at boot — the location can change without ever touching firmware. One record per relay instance; devices use the most recent one (sorted by createdAt) rather than assuming a singleton, since a workshop could run more than one relay.",
   "defs": {
     "main": {
       "type": "record",
@@ -40,7 +40,7 @@
           "createdAt": {
             "type": "string",
             "format": "datetime",
-            "description": "ATProto-compatible UTC timestamp — use nebra.get_atproto_utc_time(). Devices use the most recent relayConfig record, not a single fixed one."
+            "description": "ATProto-compatible UTC timestamp — use atproto_helpers.get_atproto_utc_time() (relay/), not nebra's. Devices use the most recent relayConfig record, not a single fixed one."
           }
         }
       }

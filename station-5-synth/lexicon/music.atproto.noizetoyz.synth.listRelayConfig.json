@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "music.atproto.noizetoyz.synth.listRelayConfig",
+  "_comment": "Companion query lexicon for music.atproto.noizetoyz.synth.relayConfig — same pairing requirement as music.atproto.noizetoyz.synth.listNotes, see that file's own _comment.",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Lists music.atproto.noizetoyz.synth.relayConfig records, most recent first — read by every WiFi device's fetchRelayConfig() at boot instead of a hardcoded relay IP.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["records"],
+          "properties": {
+            "records": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "music.atproto.noizetoyz.synth.relayConfig"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

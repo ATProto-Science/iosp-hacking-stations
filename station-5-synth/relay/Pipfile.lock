@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "140947da900091305c8b20276192ff5b031207d4a32f23c2989c42d1ac642525"
+            "sha256": "67549326ff623bda01403ef6af3f0d18ff5f947a583ddf6b1737f4d6c29b3c0c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -38,6 +38,7 @@
                 "sha256:2054cb1f3bb882f5db6face7f427216119cc3002f3735871056c72cad778f96a",
                 "sha256:34b9c6951208807ee066b46dcd7d7476bbd48dc4a36f4a6c3a6f9fa48359166f"
             ],
+            "index": "pypi",
             "markers": "python_version < '3.15' and python_version >= '3.9'",
             "version": "==0.0.71"
         },
@@ -252,6 +253,7 @@
                 "sha256:71640d2fb1bf9a225775015b33cd755cfd4c5f7e21c885192fe3adc4c387b248",
                 "sha256:797373326f70eec1ae96f6e43ae9f12002fd7d73aee139a4985eaab964338a08"
             ],
+            "index": "pypi",
             "markers": "python_version >= '3.10'",
             "version": "==0.9.0"
         },
@@ -365,15 +367,6 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==3.4.1"
-        },
-        "nebra": {
-            "hashes": [
-                "sha256:0aff1a7be8759c30fbbca8f82795044eb19f3497f694438c57637083f4ed2fc7",
-                "sha256:2f615a9f2e615aebbbfc667873ed692c80cd5e33cbec74a9b50ec1774f5e9b54"
-            ],
-            "index": "pypi",
-            "markers": "python_version >= '3.11'",
-            "version": "==0.1.0"
         },
         "pycparser": {
             "hashes": [

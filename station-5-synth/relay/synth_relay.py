@@ -11,35 +11,36 @@ ends up here and here alone writes to ATProto (the uplink):
                                      TCP sockets, so it gets its own listener)
 
 It also runs a downlink: a background thread subscribes to Jetstream for
-music.atproto.synth.note (same connection recipe as
+music.atproto.noizetoyz.synth.note (same connection recipe as
 synth_console_viewer.py/station-2's consumer_viewer.py — see that file's
-docstring for why this is hand-rolled rather than nebra.stream()) and
-re-broadcasts every record it sees — from any device, any participant, not
-just ones this relay itself published — to every client connected on
-BROADCAST_PORT, as the same plain wire line MCU clients already speak. This
-is what lets a receive-only instrument (e.g. sdiy/mozzi-noizetoyz's
-ESP-ported firetruck) be "played" by everyone else's note/fx events instead
-of a local pot, without needing any JSON/TLS/ATProto logic of its own —
-same reasoning as the uplink wire format.
+docstring for why this is hand-rolled) and re-broadcasts every record it
+sees — from any device, any participant, not just ones this relay itself
+published — to every client connected on BROADCAST_PORT, as the same plain
+wire line MCU clients already speak. This is what lets a receive-only
+instrument (e.g. sdiy/mozzi-noizetoyz's ESP-ported firetruck) be "played"
+by everyone else's note/fx events instead of a local pot, without needing
+any JSON/TLS/ATProto logic of its own — same reasoning as the uplink wire
+format.
 
-Centralizing the ATProto write (and the Jetstream read) here means that
-logic only needs to exist once, and the write half is the same proven logic
-as station-2-live-data's sensor_producer.py — copied verbatim rather than
-re-derived:
+ATProto session/Jetstream-URL logic lives in atproto_helpers.py, not
+nebra (station-2's sensor_producer.py borrows nebra, Emily Hunt's
+astronomy-telemetry library, and that's the right call there — it's
+genuinely streaming sensor telemetry, nebra's actual purpose. This relay
+publishes music note events, not telemetry, so depending on an astronomy
+library for it was a mismatch, corrected 2026-09-01: both nebra helpers
+this file used turned out to be a few lines each once actually read, so
+reimplemented directly against the `atproto` SDK instead — see
+atproto_helpers.py's own docstring). The tolerant-get_profile patch there
+(a brand-new, not-yet-crawled account's first write otherwise crashes,
+since atproto SDK's login() unconditionally fetches the account's own
+profile right after auth, and that profile doesn't exist anywhere in the
+network yet) is the same one station-2's sensor_producer.py verified
+against a real PDS — not nebra-specific, it's patching the underlying
+`atproto` SDK either way.
 
-  - The tolerant-get_profile patch: a brand-new, not-yet-crawled account's
-    first write crashes because atproto SDK's login() unconditionally fetches
-    the account's own profile right after auth, and that profile doesn't
-    exist anywhere in the network yet ("Profile not found"). Patched to
-    tolerate just that one failure; a no-op once the account is indexed.
-  - repo=DID, not repo=handle: some self-hosted PDSs (e.g. cocoon) don't
-    resolve a handle to a DID for you inside createRecord and return a bare
-    400 for a handle. Resolved once at startup, used for every write.
-
-See sensor_producer.py's own docstring for the full verified detail on both.
-
-Auth via the same env vars as station-2: NEBRA_HANDLE, NEBRA_PASSWORD,
-NEBRA_BASE_URL (optional).
+Auth via ATPROTO_HANDLE, ATPROTO_PASSWORD, ATPROTO_BASE_URL (optional) —
+not NEBRA_* (station-2's env vars, a different library, correctly kept as
+NEBRA_* there).
 """
 
 import json
@@ -50,27 +51,17 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from httpx_ws import connect_ws
-from nebra.jetstream import get_jetstream_query_url, get_public_jetstream_base_url
 
-from atproto_client.namespaces.sync_ns import AppBskyActorNamespace
-
-_original_get_profile = AppBskyActorNamespace.get_profile
-
-
-def _get_profile_tolerant(self, *args, **kwargs):
-    try:
-        return _original_get_profile(self, *args, **kwargs)
-    except Exception:
-        return None
-
-
-AppBskyActorNamespace.get_profile = _get_profile_tolerant
-
-import nebra
 from atproto import models
-from nebra.client import get_client, get_credentials
+from atproto_helpers import (
+    get_atproto_utc_time,
+    get_client,
+    get_credentials,
+    get_jetstream_query_url,
+    get_public_jetstream_base_url,
+)
 
-RECORD_TYPE = "music.atproto.synth.note"
+RECORD_TYPE = "music.atproto.noizetoyz.synth.note"
 TCP_PORT = int(os.environ.get("SYNTH_TCP_PORT", "8477"))
 HTTP_PORT = int(os.environ.get("SYNTH_HTTP_PORT", "8478"))
 BROADCAST_PORT = int(os.environ.get("SYNTH_BROADCAST_PORT", "8479"))
@@ -89,13 +80,13 @@ _REQUIRED = ("note", "velocity", "deviceId", "synthType")
 
 def publish_note(fields):
     """fields: dict of raw strings (from the wire) or already-typed values
-    (from JSON). Builds a music.atproto.synth.note record and writes it.
+    (from JSON). Builds a music.atproto.noizetoyz.synth.note record and writes it.
     """
     missing = [f for f in _REQUIRED if f not in fields or fields[f] in (None, "")]
     if missing:
         raise ValueError(f"missing required field(s): {missing}")
 
-    record = {"$type": RECORD_TYPE, "createdAt": nebra.get_atproto_utc_time()}
+    record = {"$type": RECORD_TYPE, "createdAt": get_atproto_utc_time()}
     for key in _INT_FIELDS:
         if key in fields and fields[key] not in (None, ""):
             record[key] = int(fields[key])
@@ -130,7 +121,7 @@ def parse_line(line):
 
 
 def record_to_line(record):
-    """Inverse of parse_line() — a music.atproto.synth.note record (from
+    """Inverse of parse_line() — a music.atproto.noizetoyz.synth.note record (from
     Jetstream) back into the same wire line format MCU clients read.
     """
     parts = [
@@ -255,14 +246,20 @@ def main():
     print(f"[station-5] TCP line listener on :{TCP_PORT} (ESP direct WiFi, or Arduino UNO via OpenWrt bridge)")
     print(f"[station-5] HTTP POST /note listener on :{HTTP_PORT} (webapp/index.html)")
     print(f"[station-5] broadcast (downlink) listener on :{BROADCAST_PORT} (e.g. the firetruck)")
-    print("[station-5] requires NEBRA_HANDLE / NEBRA_PASSWORD env vars set to a real ATProto account")
+    print("[station-5] requires ATPROTO_HANDLE / ATPROTO_PASSWORD env vars set to a real ATProto account")
 
     handle, password, base_url = get_credentials()
-    _client = get_client(handle, password, base_url=base_url, reuse_session=True)
+    _client = get_client(handle, password, base_url=base_url)
     _repo_did = _client.com.atproto.identity.resolve_handle(
         models.ComAtprotoIdentityResolveHandle.Params(handle=handle)
     ).did
     print(f"[station-5] resolved {handle} -> {_repo_did}")
+
+    # allow_reuse_address (unset by default on socketserver.TCPServer) —
+    # without it, restarting this process quickly after a previous run can
+    # fail to rebind with "Address already in use" while the old socket
+    # sits in TIME_WAIT, hit repeatedly during today's frequent restarts.
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
 
     tcp_server = socketserver.ThreadingTCPServer(("0.0.0.0", TCP_PORT), LineHandler)
     http_server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), NoteHTTPHandler)

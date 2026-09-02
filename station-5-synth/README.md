@@ -35,7 +35,7 @@ clients — both hardware variants and the web app — converge on it, so the
 ATProto session only needs to exist in one place.
 
 The relay also runs a **downlink**: a background thread subscribes to
-Jetstream for `music.atproto.synth.note` (same hand-rolled recipe as
+Jetstream for `music.atproto.noizetoyz.synth.note` (same hand-rolled recipe as
 `relay/synth_console_viewer.py`) and re-broadcasts every record — from any
 device, any participant — to whoever's connected on `SYNTH_BROADCAST_PORT`
 (default 8479), as the same plain wire line. This is what lets a
@@ -46,7 +46,7 @@ as the uplink wire format. First real use: `~/sdiy/mozzi-noizetoyz`'s
 this downlink, using incoming `fxAmount`/`velocity` in place of the pot
 reading to drive its siren pitch and sample-loop threshold.
 
-Records are `music.atproto.synth.note` (`lexicon/`), NSID authority
+Records are `music.atproto.noizetoyz.synth.note` (`lexicon/`), NSID authority
 `atproto.music` (owned, clean slate). Every numeric field is an integer —
 AT Protocol's on-wire record model has no floating-point type (verified in
 station-2; see its README's "no floats" section) — so `fxAmount`/`cutoffHz`
@@ -117,21 +117,31 @@ install`) is assumed to just work rather than independently verified.
 
 ## The relay — `relay/`
 
+Talks to ATProto directly via the `atproto` SDK, not nebra — station-2's
+`sensor_producer.py` borrows nebra (Emily Hunt's astronomy-telemetry
+library) because that station genuinely is telemetry; this one publishes
+music notes, a mismatch pointed out directly and fixed 2026-09-01. See
+`relay/atproto_helpers.py`'s docstring for the full reasoning — both
+helpers this file used from nebra turned out to be a few lines each once
+read, reimplemented directly rather than carrying the dependency.
+
 ```
-pipenv install     # same Pipfile shape as station-2-live-data/
+pipenv install     # own Pipfile — atproto + httpx-ws directly, not nebra
 pipenv shell
-export NEBRA_HANDLE=your-handle.bsky.social
-export NEBRA_PASSWORD=...
+export ATPROTO_HANDLE=your-handle.bsky.social
+export ATPROTO_PASSWORD=...
 ./run_relay.sh      # or: python3 synth_relay.py
 ```
 
 Listens on two ports (`SYNTH_TCP_PORT`, default 8477; `SYNTH_HTTP_PORT`,
 default 8478) and writes every note it receives as a
-`music.atproto.synth.note` record under one ATProto account. Watch it land
-in real time with `relay/synth_console_viewer.py` — same Jetstream
-recipe as station-2's `consumer_viewer.py` (nebra's `stream()` isn't an
-importable generator and its zstd-dictionary download 404s upstream; see
-that file's docstring), pointed at this station's collection instead.
+`music.atproto.noizetoyz.synth.note` record under one ATProto account. Watch it land
+in real time with `relay/synth_console_viewer.py` — same hand-rolled
+Jetstream recipe as station-2's `consumer_viewer.py` (nebra's `stream()`
+isn't an importable generator and its zstd-dictionary download 404s
+upstream; see that file's docstring for the full detail — the read side's
+verified reasoning still applies even though the Jetstream URL helpers
+themselves are no longer imported from nebra).
 
 ## The web app — `webapp/index.html`
 
@@ -143,23 +153,32 @@ live feed underneath, same `fetch()`-against-XRPC pattern as
 `../landing-page/viewer.html` (read-only client key, no OAuth, no separate
 backend for reads).
 
-**TODO**: `music.atproto.synth.listNotes` in the web app is a guess at
-HappyView's list-endpoint naming, mirrored from
-`science.iosp.sensor.listReadings` — confirm the actual endpoint once this
-collection is registered with the HappyView instance. Registration
-mechanism (found in `tracker-vss7`, used for station-2/4's own collections):
-HappyView has a real `POST /admin/lexicons` REST endpoint (Bearer-token
-auth, documented at happyview.dev) — each collection needs *two*
-registered lexicons, the record schema and a companion `query`-type lexicon
-whose `target_collection` points back at it; that pairing is what creates
-the `/xrpc/<query-nsid>` endpoint. Needs the `gretel-happyview/key` API
-key, which per this project's own hardened rule (a real key-leak incident,
-see that bean) has to be retrieved by Torsten out-of-band, never pasted
-through this chat — not done yet as of this session, so
-`music.atproto.synth.note`, `.listNotes`, `.relayConfig`, and
-`.listRelayConfig` are all still unregistered; every fetch against them
-currently 404s (or, for the ESP8266 side, falls back to its hardcoded
-default per `fetchRelayConfig()`'s design).
+**Confirmed working end-to-end 2026-09-01** (real hardware, real ATProto
+writes, watched live on an OLED — see the milestone entries below):
+`music.atproto.noizetoyz.synth.listNotes` is registered and live, not a
+guess anymore. Registration mechanism (found in `tracker-vss7`, used for
+station-2/4's own collections): HappyView has a real `POST /admin/lexicons`
+REST endpoint (Bearer-token auth, documented at happyview.dev) — each
+collection needs *two* registered lexicons, the record schema and a
+companion `query`-type lexicon whose `target_collection` points back at
+it; that pairing is what creates the `/xrpc/<query-nsid>` endpoint. Also
+needed a real DNS `_lexicon` TXT record proving NSID authority ownership
+before HappyView would actually persist the registration — see
+`reference_domains` (tracker memory) for the full EasyDNS API recipe.
+Needs the `gretel-happyview/key` API key, retrieved by Torsten out-of-band
+per this project's own hardened rule (a real key-leak incident, see that
+bean) — **done 2026-09-02**: all four lexicons
+(`music.atproto.noizetoyz.synth.note`/`.listNotes`/`.relayConfig`/`.listRelayConfig`)
+are registered and confirmed serving real data. The NSID itself changed
+mid-session too — was `music.atproto.synth.*`, renamed to
+`music.atproto.noizetoyz.synth.*` per Torsten's request, which broke
+reads with a genuinely confusing symptom (a DNS lookup error from
+HappyView's public XRPC endpoint) until traced to the real cause: HappyView
+gates lexicon *persistence* on a `_lexicon.<reversed-authority>` DNS TXT
+record proving ownership, checked even for admin-registered lexicons, not
+just a fallback for unregistered ones as first assumed. Fixed by adding
+the real record via the EasyDNS API (see `reference_domains`, tracker
+memory, for the full recipe) — resolves to `atproto.music`'s own DID.
 
 ## First real-hardware milestone (2026-09-01)
 
@@ -228,7 +247,7 @@ Also solves a real, repeatedly-hit problem from this same session: every
 device's relay IP was a hardcoded firmware constant, and got reflashed
 three separate times as the relay's actual address kept changing (new WiFi
 network, then this laptop switching from ethernet to WiFi to reach that
-network at all). Fixed with `lexicon/music.atproto.synth.relayConfig.json`
+network at all). Fixed with `lexicon/music.atproto.noizetoyz.synth.relayConfig.json`
 + `relay/publish_relay_config.py`: whoever's running the relay publishes
 one record with its current host/ports (auto-detects the LAN IP, or pass
 `--host`), and `bmp180_wifi.ino`'s `fetchRelayConfig()` reads the most
@@ -240,7 +259,7 @@ for any reason, so discovery is never a hard dependency. Same pattern is
 worth porting to `esp_synth.ino`/`timonsfiretruck-esp32.ino` next, once
 proven here — not done yet, to keep this change testable in isolation.
 
-**Not yet end-to-end verified**: `music.atproto.synth.relayConfig` isn't
+**Not yet end-to-end verified**: `music.atproto.noizetoyz.synth.relayConfig` isn't
 registered with HappyView yet (see the TODO under "The web app" above —
 same registration blocker, needs the admin key), so `fetchRelayConfig()`
 currently always falls through to its hardcoded default in practice, even

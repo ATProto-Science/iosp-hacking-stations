@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "music.atproto.synth.note",
+  "id": "music.atproto.noizetoyz.synth.note",
   "_comment": "NSID authority: atproto.music (owned, per Torsten — 2026-09-01). One record per note-on event, published by whichever device/app played it — hardware synth (ESP8266/ESP32 WiFi-native, or Arduino UNO via an OpenWrt tty<>net bridge) or the on-screen-keyboard web app, all through station-5-synth/relay/synth_relay.py. Modeled on station-2's science.iosp.sensor.reading.json — same no-floats rule (AT Protocol's on-wire record model has no floating-point type; every fx amount here is an integer 0-100, not a fraction).",
   "defs": {
     "main": {
@@ -52,7 +52,7 @@
           "createdAt": {
             "type": "string",
             "format": "datetime",
-            "description": "ATProto-compatible UTC timestamp — use nebra.get_atproto_utc_time()."
+            "description": "ATProto-compatible UTC timestamp — use atproto_helpers.get_atproto_utc_time() (relay/), not nebra's — see that module's docstring."
           }
         }
       }

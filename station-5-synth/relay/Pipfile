@@ -4,7 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-nebra = "*"
+atproto = "*"
+httpx-ws = "*"
 
 [dev-packages]
 
