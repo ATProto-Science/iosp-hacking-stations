@@ -356,3 +356,10 @@ address instead, which the boards can't reach at all.
   `oauth-login.js`'s header comment for what's left. No relay change needed
   for playback — `jetstream_downlink_loop` already filters by collection,
   not author.
+- `esp_multi_synth_oled.ino`'s OLED display is disabled by default
+  (`DIAG_DISABLE_OLED_DRAW 1`) — confirmed on real hardware 2026-09-02 that
+  its I2C write (`display.display()`) interferes with Mozzi's audio-rate
+  timer closely enough to corrupt pitch, not just cause crackle. Real fix
+  (throttle the write further, or move it off whatever timing it collides
+  with) not done yet; until then this sketch plays correctly but is
+  functionally audio-only, same as `esp_multi_synth.ino`.

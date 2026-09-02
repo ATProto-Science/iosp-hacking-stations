@@ -1,3 +1,18 @@
+// CONFIRMED ON REAL HARDWARE (2026-09-02): pitch was stuck regardless of
+// note/mode on this sketch specifically, while the identical dispatch/
+// setFreq code is verified correct on esp_multi_synth.ino (no OLED) — the
+// application logic is byte-for-byte the same, so the cause was the OLED's
+// I2C write (display.display(), ~384 bytes) interfering with Mozzi's
+// audio-rate timer closely enough to corrupt the oscillator's frequency
+// state, not just cause crackle. Confirmed by flipping this to 1 (zero
+// display updates) and pitch tracked correctly. Defaulting to 1 for now —
+// pitch correctness over the visual — since the real fix (throttling the
+// I2C write further, or moving it off whatever timing this collides with)
+// hasn't been done yet. Flip to 0 to get the display back once that's
+// actually fixed; until then this sketch is functionally audio-only,
+// display disabled, same as esp_multi_synth.ino.
+#define DIAG_DISABLE_OLED_DRAW 1
+
 /*  Station 5 — esp_multi_synth.ino's full mode dispatch (tone+fx, scrub,
     fold, filter, fm, pluck, plus the hidden rickroll easter egg), PLUS
     esp_note_player.ino's OLED shield (Wemos D1 mini + SSD1306, three-band
@@ -722,10 +737,12 @@ void updateControl() {
     // pluck on its own, and scrub is a continuous control, not a note-on.
   }
 
+#if !DIAG_DISABLE_OLED_DRAW
   if (millis() - lastDraw >= DRAW_INTERVAL_MS) {
     lastDraw = millis();
     drawWaveform();
   }
+#endif
 }
 
 AudioOutput updateAudio() {
