@@ -94,9 +94,36 @@ void fetchRelayConfig() {
 
   WiFiClientSecure httpsClient;
   httpsClient.setInsecure(); // no cert store on this MCU; same tradeoff every ESP8266 HTTPS sketch makes
+  // Real bug, diagnosed 2026-09-03: this fetch was failing silently on real
+  // hardware (falling back to DEFAULT_RELAY_HOST every boot, no visible
+  // error without a serial monitor attached). Confirmed via curl that
+  // HappyView itself is fine — a plain TLS1.2/HTTP1.1 request (what BearSSL
+  // actually negotiates; it doesn't support TLS1.3 or HTTP/2 at all) gets a
+  // clean 200. The difference is BearSSL's *default* buffer sizes here:
+  // ~16KB for RX and TX each, reserved before the handshake even starts, on
+  // a chip with roughly 50KB of free heap once WiFi is up — comfortably
+  // enough to starve the handshake or the JSON parse that follows.
+  //
+  // First fix tried the same day, `setBufferSizes(1024, 512)`, worked
+  // initially but *regressed a few hours later* on real hardware —
+  // `deserializeJson` started failing with `IncompleteInput` (a truncated
+  // response, not a malformed one). Root cause: the query below used to
+  // ask for `?limit=10` of every `relayConfig` record ever published, and
+  // that response only grows over an event as more get published (every
+  // `ops.sh`/`publish_relay_config.py` run adds one, none ever get
+  // deleted) — a buffer sized against *today's* response length was
+  // always a ticking clock, not a fix. Fixed at the actual root two ways
+  // together: `?limit=5` below bounds the response itself regardless of
+  // how many records ever accumulate (~1.6KB for 5, confirmed 2026-09-04
+  // — down from 10, which isn't needed: HappyView doesn't document a
+  // sort guarantee, so this still fetches several and compares
+  // `createdAt` itself below rather than trusting record 0 blindly, just
+  // fewer of them), and 4096 bytes here gives that bounded response
+  // comfortable headroom on top rather than a tight fit.
+  httpsClient.setBufferSizes(4096, 512);
 
   HTTPClient http;
-  String url = String(HAPPYVIEW_URL) + "/xrpc/music.atproto.noizetoyz.synth.listRelayConfig?limit=10";
+  String url = String(HAPPYVIEW_URL) + "/xrpc/music.atproto.noizetoyz.synth.listRelayConfig?limit=5";
   Serial.print("[bmp180-wifi] fetching relay config: ");
   Serial.println(url);
 

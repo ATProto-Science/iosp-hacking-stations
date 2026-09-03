@@ -17,6 +17,12 @@
 // holds on different hardware without re-confirming by ear.
 #define DIAG_DISABLE_OLED_DRAW 0
 
+// Set to 1 to skip the real relayConfig fetch and always take the
+// DEFAULT_RELAY_HOST fallback path — for testing the fallback icon/
+// behavior on demand rather than needing to actually break HappyView
+// reachability. Flip back to 0 before leaving it running unattended.
+#define FORCE_RELAY_FALLBACK 0
+
 /*  Station 5 — esp_multi_synth.ino's full mode dispatch (tone+fx, scrub,
     fold, filter, fm, pluck, plus the hidden rickroll easter egg), PLUS
     esp_note_player.ino's OLED shield (Wemos D1 mini + SSD1306, three-band
@@ -132,6 +138,11 @@ String relayHost;
 uint16_t relayPort;
 WiFiClient downlink;
 String lineBuffer;
+bool relayFromATProto = false; // set by fetchRelayConfig() — false means DEFAULT_RELAY_HOST was
+                                // used, the exact silent failure mode diagnosed 2026-09-03
+                                // (ESP8266 BearSSL default buffer sizes starving the HTTPS fetch;
+                                // see fetchRelayConfig()'s own setBufferSizes() line). The status
+                                // HUD surfaces this live instead of it only showing up in Serial.
 
 // ---- OLED ----
 #define OLED_RESET 0
@@ -234,14 +245,58 @@ unsigned long noteOffAt = 0;
 uint8_t fxAmount = 0; // tone mode's tremolo depth, 0-100 (existing field's own range)
 
 // ---- OLED display state (esp_note_player.ino's layout, extended) ----
-// Screen layout — 64x48 total, split into three bands:
+// Screen layout — 64x48 total, split into three bands, same as originally:
 //   y  0- 7: per-mode info line (text size 1, 8px tall) — see buildInfoLine()
 //   y 10-37: waveform, in its own 28px band
-//   y 40-47: scrolling footer marquee (text size 1, 8px tall)
+//   y 40-47: scrolling footer marquee (text size 1, 8px tall) — the status
+//            icon badge (drawStatusHud()) now lives here too, opaque-masked
+//            over the left edge of the marquee, rather than in its own row
+//            stealing height from the waveform (tried 2026-09-03, reverted
+//            same day — the waveform is the whole point of this display).
 const int W = 64;
+const int FOOTER_Y = 40;
 const int WAVE_TOP = 10;
 const int WAVE_HEIGHT = 28;
 const int WAVE_MID = WAVE_TOP + WAVE_HEIGHT / 2;
+
+// ---- status HUD icons, 8x8 monochrome, drawn with Adafruit_GFX's
+// drawBitmap() — one byte per row, MSB-first. Kept deliberately simple/
+// geometric rather than skeuomorphic: legible at 8px is the only bar.
+// A WiFi icon was here too originally but got dropped 2026-09-03 — it was
+// drawn as a static "connected" glyph that never re-checked WiFi.status(),
+// so it never actually changed after boot and told the viewer nothing.
+// The two icons below are both genuinely live.
+const uint8_t ICON_HEART[] PROGMEM = { // relay config: fetched from ATProto/HappyView
+  0x00, 0x66, 0xFF, 0xFF, 0xFF, 0x7E, 0x3C, 0x18
+};
+const uint8_t ICON_FALLBACK[] PROGMEM = { // relay config: DEFAULT_RELAY_HOST used instead —
+  0x18, 0x3C, 0x3C, 0x18, 0x18, 0x00, 0x18, 0x18  // reads as an exclamation mark on real hardware
+};
+const uint8_t ICON_LINK[] PROGMEM = { // downlink: connected
+  0x00, 0x66, 0x99, 0x99, 0x99, 0x99, 0x66, 0x00
+};
+const uint8_t ICON_LINK_BROKEN[] PROGMEM = { // downlink: not connected
+  0x00, 0x60, 0x90, 0x90, 0x09, 0x09, 0x06, 0x00
+};
+const int ICON_W = 8;
+const int ICON_H = 8;
+const int ICON_GAP = 2;
+const int ICON_ZONE_W = 2 * ICON_W + ICON_GAP; // the two-icon badge's total footprint
+const int ICON_ZONE_PAD = 3; // extra masked gap between the badge and the scrolling text
+
+// Status icon badge — which relay-config source is active (real ATProto/
+// HappyView discovery vs the hardcoded fallback), and live downlink
+// connection state. Right-aligned in the footer row, opaque-masked (with
+// a little breathing room) over the scrolling marquee text — see the
+// fillRect call right before this at the call site — rather than owning
+// a row of its own; a dedicated row was tried 2026-09-03 and reverted the
+// same session, it ate into the waveform for little gain.
+void drawStatusHud() {
+  int x = W - ICON_ZONE_W;
+  display.drawBitmap(x, FOOTER_Y, relayFromATProto ? ICON_HEART : ICON_FALLBACK, ICON_W, ICON_H, WHITE);
+  x += ICON_W + ICON_GAP;
+  display.drawBitmap(x, FOOTER_Y, downlink.connected() ? ICON_LINK : ICON_LINK_BROKEN, ICON_W, ICON_H, WHITE);
+}
 
 int lastNote = 60; // last note-on across tone/fold/filter/fm/pluck — drives the waveform when not in scrub
 
@@ -259,6 +314,11 @@ unsigned long lastDraw = 0;
 const unsigned long DRAW_INTERVAL_MS = 100; // ~10fps — halved from the original 20fps alongside the
                                              // 400kHz I2C bump, so the (still blocking) redraw happens
                                              // half as often on top of taking a quarter as long each time
+const unsigned long BOOT_STATUS_HOLD_MS = 1400; // how long each boot-status message stays up before
+                                                 // the next one overwrites it. 600ms (the original
+                                                 // value) was confirmed too fast to actually read on
+                                                 // real hardware 2026-09-03 — bumped until it's
+                                                 // comfortable, at the cost of ~6s added to every boot.
 
 const char *NOTE_NAMES[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
@@ -342,12 +402,26 @@ void connectWiFi() {
 void fetchRelayConfig() {
   relayHost = DEFAULT_RELAY_HOST;
   relayPort = DEFAULT_RELAY_PORT;
+  relayFromATProto = false;
+
+#if FORCE_RELAY_FALLBACK
+  Serial.println("[multi-synth-oled] FORCE_RELAY_FALLBACK set — skipping ATProto fetch");
+  return;
+#endif
 
   WiFiClientSecure httpsClient;
   httpsClient.setInsecure();
+  // Shrink BearSSL's default ~16KB RX/TX buffers — real hardware bug fixed
+  // 2026-09-03, see bmp180_wifi.ino's identical line for the full
+  // diagnosis and its follow-up: 1024 bytes regressed a few hours later
+  // as the (then-unbounded, ?limit=10) response kept growing. Fixed at
+  // the root by bounding the query itself (?limit=5 below) instead of
+  // just chasing growth with a bigger buffer; 4096 here is headroom on
+  // top of that now-bounded ~1.6KB response, not a tight fit against it.
+  httpsClient.setBufferSizes(4096, 512);
 
   HTTPClient http;
-  String url = String(HAPPYVIEW_URL) + "/xrpc/music.atproto.noizetoyz.synth.listRelayConfig?limit=10";
+  String url = String(HAPPYVIEW_URL) + "/xrpc/music.atproto.noizetoyz.synth.listRelayConfig?limit=5";
   Serial.print("[multi-synth-oled] fetching relay config: ");
   Serial.println(url);
 
@@ -397,6 +471,7 @@ void fetchRelayConfig() {
   if (newestHost.length() > 0) {
     relayHost = newestHost;
     relayPort = newestPort;
+    relayFromATProto = true;
     Serial.print("[multi-synth-oled] relay config from ATProto: ");
     Serial.print(relayHost);
     Serial.print(":");
@@ -748,11 +823,13 @@ void drawWaveform() {
   // see drawWaveBand() below for what each mode actually draws and why.
   drawWaveBand();
 
-  // --- footer marquee (y 40-47) ---
+  // --- footer marquee (y 40-47), status icon badge masked over its left edge ---
   const char *footerText = rickrolling ? RICKROLL_FOOTER_TEXT : FOOTER_TEXT;
   display.setTextColor(WHITE);
-  display.setCursor((int)footerX, 40);
+  display.setCursor((int)footerX, FOOTER_Y);
   display.print(footerText);
+  display.fillRect(W - ICON_ZONE_W - ICON_ZONE_PAD, FOOTER_Y, ICON_ZONE_W + ICON_ZONE_PAD, 8, BLACK); // opaque mask, badge + a little gap, so scrolling text never runs right up against it
+  drawStatusHud();
 
   display.display();
 
@@ -763,6 +840,28 @@ void drawWaveform() {
   if (footerX < -footerWidth) {
     footerX = W;
   }
+}
+
+// Surfaces each boot phase on the OLED itself, not just Serial — added
+// 2026-09-03 so a board that's stuck (WiFi out of range, relay
+// unreachable) is diagnosable by looking at it, not just by whoever
+// happens to have a laptop and a serial monitor plugged in at the venue.
+// Reuses the info-line's y=0 slot and the waveform band's y=16 slot,
+// both otherwise unused before playback starts — costs no screen space
+// from the normal three-band layout above. Holds each message for
+// BOOT_STATUS_HOLD_MS so it's actually readable, not just a flash.
+void showBootStatus(const String &line1, const String &line2 = "") {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.println(line1);
+  if (line2.length() > 0) {
+    display.setCursor(0, 16);
+    display.println(line2);
+  }
+  display.display();
+  delay(BOOT_STATUS_HOLD_MS);
 }
 
 void setup() {
@@ -804,9 +903,16 @@ void setup() {
   wf.setLimits(-2047, 2047); // 12-bit output range, matches WaveFolder example
   aDelay.setFeedbackLevel(90); // a repeating slapback rather than the AudioDelayFeedback example's flange-y negative feedback
 
+  showBootStatus("WiFi", WIFI_SSID);
   connectWiFi();
+  showBootStatus("WiFi OK", WiFi.localIP().toString());
+
+  showBootStatus("Relay", "fetching config...");
   fetchRelayConfig();
+  showBootStatus("Relay cfg", relayHost + ":" + String(relayPort));
+
   connectDownlink();
+  showBootStatus("Downlink", downlink.connected() ? "connected" : "failed, retrying");
 
   // Same startup-race fix as every Mozzi+ESP8266 sketch in this station —
   // see diagnostics/mozzi_startup_race_repro/.

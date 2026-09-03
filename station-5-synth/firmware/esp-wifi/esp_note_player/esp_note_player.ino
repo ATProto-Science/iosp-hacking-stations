@@ -158,9 +158,17 @@ void fetchRelayConfig() {
 
   WiFiClientSecure httpsClient;
   httpsClient.setInsecure(); // no cert store on this MCU — same tradeoff every ESP8266 HTTPS sketch makes
+  // Shrink BearSSL's default ~16KB RX/TX buffers — real hardware bug fixed
+  // 2026-09-03, see bmp180_wifi.ino's identical line for the full
+  // diagnosis and its follow-up: 1024 bytes regressed a few hours later
+  // as the (then-unbounded, ?limit=10) response kept growing. Fixed at
+  // the root by bounding the query itself (?limit=5 below) instead of
+  // just chasing growth with a bigger buffer; 4096 here is headroom on
+  // top of that now-bounded ~1.6KB response, not a tight fit against it.
+  httpsClient.setBufferSizes(4096, 512);
 
   HTTPClient http;
-  String url = String(HAPPYVIEW_URL) + "/xrpc/music.atproto.noizetoyz.synth.listRelayConfig?limit=10";
+  String url = String(HAPPYVIEW_URL) + "/xrpc/music.atproto.noizetoyz.synth.listRelayConfig?limit=5";
   Serial.print("[note-player] fetching relay config: ");
   Serial.println(url);
 

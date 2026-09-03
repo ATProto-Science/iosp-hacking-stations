@@ -9,6 +9,16 @@ address; no firmware reflashes. See ../lexicon/music.atproto.noizetoyz.synth.rel
 for the record shape and the reasoning (a real problem hit live during the
 2026-09-01 hardware session: three separate reflashes just to update an IP).
 
+Upserts a single fixed-rkey record (`put_record`, rkey="current") rather
+than creating a new one every run — real bug found 2026-09-04: this used
+to `create_record` unconditionally, so the collection grew by one on every
+`ops.sh`/manual run (never deleted), which is exactly what made every
+board's relayConfig fetch response grow unbounded over an event until it
+started truncating on real hardware (see station-5-synth/README.md's
+"Workshop network topology" section for the full story). One record,
+always overwritten in place, makes that failure mode structurally
+impossible instead of just harder to hit.
+
 By default, auto-detects this machine's own LAN IP (the address used to
 reach the default route) rather than requiring it typed in by hand — override
 with --host if that guess is wrong (multiple interfaces, VPNs, etc.).
@@ -81,8 +91,8 @@ def main():
     if args.label:
         record["label"] = args.label
 
-    client.com.atproto.repo.create_record(
-        models.ComAtprotoRepoCreateRecord.Data(collection=RECORD_TYPE, record=record, repo=repo_did)
+    client.com.atproto.repo.put_record(
+        models.ComAtprotoRepoPutRecord.Data(collection=RECORD_TYPE, record=record, repo=repo_did, rkey="current")
     )
     print(f"[station-5] published relayConfig: {record}")
 
