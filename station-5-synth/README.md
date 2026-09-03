@@ -356,10 +356,21 @@ address instead, which the boards can't reach at all.
   `oauth-login.js`'s header comment for what's left. No relay change needed
   for playback — `jetstream_downlink_loop` already filters by collection,
   not author.
-- `esp_multi_synth_oled.ino`'s OLED display is disabled by default
-  (`DIAG_DISABLE_OLED_DRAW 1`) — confirmed on real hardware 2026-09-02 that
-  its I2C write (`display.display()`) interferes with Mozzi's audio-rate
-  timer closely enough to corrupt pitch, not just cause crackle. Real fix
-  (throttle the write further, or move it off whatever timing it collides
-  with) not done yet; until then this sketch plays correctly but is
-  functionally audio-only, same as `esp_multi_synth.ino`.
+- ~~`esp_multi_synth_oled.ino`'s OLED display is disabled by default~~ —
+  fixed 2026-09-02: `Wire.setClock(400000)` (was the default 100kHz) plus
+  halving the redraw rate to `DRAW_INTERVAL_MS = 100` (~10fps) resolved the
+  I2C-write-corrupts-Mozzi-pitch interference; `DIAG_DISABLE_OLED_DRAW` is
+  now `0` and mode-aware waveform animations (scanning line for scrub,
+  folded-wave shape, filter sweep, FM ripple) are live and confirmed
+  working — pitch and display coexist on real hardware. Root cause is still
+  only mitigated, not fully explained at the hardware-timing level, per the
+  comment in that file.
+- DHT22 humidity sensor (`firmware/esp-wifi/dht22_wifi/`) — a
+  station-2/5 crossover, sends into `station-2-live-data/wifi_sensor_relay.py`'s
+  new `humidity` handling, not a station-5 relay path. Wired on a real
+  board 2026-09-03 (DATA on D5/GPIO14, VCC on 3V3) but reads NaN on every
+  attempt so far, across three separate rewires — see the sketch's own
+  header comment for the troubleshooting checklist (power LED, onboard
+  pull-up, multimeter check) picked up for the next session. Firmware/relay
+  code itself isn't suspected; this is a physical-wiring-or-dead-module
+  question, deferred a few days until more sensors arrive.
