@@ -311,7 +311,7 @@ board never enumerates at all — see this repo's own memory) rather than a
 dead board or driver problem; the script prints that exact hint if its
 port-wait times out.
 
-## Workshop network topology (2026-09-03 plan)
+## Workshop network topology
 
 `noizetoyz` (the boards' WiFi network, `synthbeep`) is a lab router with no
 internet of its own — a real problem, since `landing-page/player.html` is
@@ -319,22 +319,124 @@ hosted on the internet (Cloudflare Pages) and its live feed polls
 HappyView over the internet too, so a participant connected *only* to
 `noizetoyz` can't load the page at all, let alone see the feed update.
 
-**Primary plan**: bring the "bastl" Raspberry Pi, wire it into the
-`noizetoyz` router's LAN, and run `synth_relay.py` there instead of on a
-laptop — the Pi is always on that LAN, no dual-homing needed at all.
-Bridge `noizetoyz` itself to the venue's WiFi via an OpenWrt wireless
-bridge/repeater, so the same network that reaches the Pi/boards also has
-real internet — participants can join `noizetoyz` by LAN cable (if a port
-is free) or WiFi and reach `player.html` either way, no separate
-"how do I get online" step for anyone.
+**Primary plan — fully verified end-to-end 2026-09-03, against a home
+FRITZ!Box (not yet the actual venue WiFi)**: bring the "bastl" Raspberry
+Pi (hostname `re`, user `pi` — doesn't announce itself over mDNS, find it
+with `nmap -sn <subnet>` plus an SSH banner grab if hostnames don't
+resolve), wire it into the `noizetoyz` router's LAN. `join_uplink_wifi.sh`
+(repo root of this station) scripts the OpenWrt side of the bridge — a
+station (client) WiFi interface joining the upstream network, NATed into
+the existing LAN firewall zone, no packages installed (the router has
+~90KB free flash, no room for `relayd`). `synth_relay.py` now actually
+runs on robopi itself (not a laptop) — synced there via `rsync`, not
+`git clone` (this repo's own CLAUDE.md: no GitHub credentials on
+shared/participant infra), dependencies via plain `pip3 install --user
+atproto httpx-ws` (compiles `zstandard` from source on the Pi's ARM CPU,
+several minutes — no prebuilt wheel for this arch/Python combo). robopi's
+own default route already goes out through the bridge, so no
+dual-homed-style `--host` override is needed there at all, unlike the
+Fallback below. This completes the Primary plan as originally scoped —
+no laptop required for the relay once the bridge is up. As of 2026-09-04
+robopi runs `ops.sh` itself (not just a bare `run_relay.sh` in the
+background) — `tmux` installed there, `firmware/`/`landing-page/` synced
+alongside `relay/`, `ops.sh`'s `pipenv run`-or-plain-`python3` auto-detect
+(`$PY_RUN`) making the same script work with robopi's plain
+`pip3 install --user` setup — so `relay`, `jetstream`, and `landing` all
+run from the one already-networked box, `tmux attach -t station5-tasks`
+same as on a laptop. Its MOTD reminds anyone who SSHes in how to attach.
+
+**Real bug, root-caused and fixed 2026-09-03/04, board-side, in two
+rounds**: `esp_multi_synth.ino` (and every sibling sketch with an HTTPS
+fetch — `bmp180_wifi.ino`, `esp_note_player.ino`, `dht22_wifi.ino`,
+`esp_multi_synth_oled.ino`) fetch their relay address from HappyView's
+`listRelayConfig` over HTTPS once at boot, falling back to a hardcoded
+`DEFAULT_RELAY_HOST` (currently `192.168.1.20`) on any failure — and that
+fetch was failing silently on real hardware, twice, for two different
+reasons.
+
+*Round 1*: confirmed by comparing curl (server-side fine, clean
+TLS1.2/HTTP1.1 response) against the ESP8266's actual BearSSL stack:
+`WiFiClientSecure`'s *default* RX/TX buffer sizes (~16KB combined) are
+large enough relative to the chip's ~50KB free heap post-WiFi-init to
+starve the handshake or the JSON parse that follows — a well-documented
+ESP8266 gotcha once you know to look for it, invisible without a serial
+monitor otherwise. First fix: `httpsClient.setBufferSizes(1024, 512)`.
+
+*Round 2*, a few hours later: the same fetch started failing again, this
+time with `deserializeJson` reporting `IncompleteInput` (a truncated
+response, not a malformed one) — because the query was `?limit=10` of
+*every* `relayConfig` record ever published, a response that only grows
+over an event (every `ops.sh`/`publish_relay_config.py` run adds one,
+none ever get deleted), so a buffer sized against one day's response
+length was always a ticking clock. Real fix this time: bound the query
+itself, `?limit=5` (checked empirically first — fetched all 8 real
+records that exist across this project's history and confirmed zero
+out-of-order results by `createdAt`, including an 11-second-apart burst
+from rapid same-session `ops.sh` re-runs, the tightest gap in the data;
+`limit=1` would likely have been safe too, but 5 keeps the existing
+defensive "compare several, newest wins" logic as a real safety net
+rather than trusting HappyView's list order outright, which its own
+`listRelayConfig` lexicon doesn't document a guarantee for) plus
+`setBufferSizes(4096, 512)` for headroom on top of that now-bounded
+~1.6KB response. The board now fetches the real relayConfig every boot;
+the fallback-IP-alias trick below is back to being a true fallback, not a
+load-bearing workaround.
 
 **Fallback**: run the relay on a laptop instead, dual-homed exactly as
-verified end-to-end on 2026-09-02 — WiFi on a network with internet,
-Ethernet straight into the `noizetoyz` router for the boards' LAN. The one
-gotcha, already documented in `relay/publish_relay_config.py`'s own
-docstring: in this dual-homed setup, always run it with an explicit
-`--host <ethernet-ip>` — auto-detect will grab the WiFi (internet-facing)
-address instead, which the boards can't reach at all.
+verified end-to-end on 2026-09-02 (and again 2026-09-03) — WiFi on a
+network with internet, Ethernet straight into the `noizetoyz` router for
+the boards' LAN. The one gotcha, already documented in
+`relay/publish_relay_config.py`'s own docstring: in this dual-homed setup,
+always run it with an explicit `--host <ethernet-ip>` — auto-detect will
+grab the WiFi (internet-facing) address instead, which the boards can't
+reach at all. `ops.sh`'s own `RELAY_HOST` env var handles this the same
+way. Belt-and-suspenders tip regardless of the fetch fix above: alias
+`DEFAULT_RELAY_HOST` onto whichever machine is actually running the relay
+(`sudo ip addr add 192.168.1.20/24 dev <iface>` — outside the router's
+DHCP pool, `192.168.1.100`–`249`, so safe to claim statically) so a board
+lands on a live relay even if its ATProto fetch ever does fail for some
+other reason. Only one machine on the LAN can hold that address at once —
+move it, don't duplicate it, if the relay moves.
+
+**Two real laptop-networking gotchas hit 2026-09-03, same underlying
+shape** — a device silently sitting on the wrong network config with no
+error, so "nothing is reachable" turns out to be a config problem, not a
+connectivity one:
+1. The Ethernet NIC's NetworkManager connection profile had a stale
+   *static* IP (from some earlier, unrelated setup) instead of DHCP, so it
+   sat on a completely different subnet than whatever was actually plugged
+   in. `nmcli connection show <iface>` (`ipv4.method`) is the first thing
+   to check before assuming a device isn't reachable.
+2. A second, separate NetworkManager profile for the *same port*
+   ("Wired connection 1", distinct from the profile actually configured
+   for this station) had its own leftover static config and
+   `autoconnect: yes`. A router power-cycle (or any carrier-drop/replug)
+   let NetworkManager pick that profile over the correct one on
+   reconnect, silently reverting the interface to the stale static
+   address. Fix: `nmcli connection modify "Wired connection 1"
+   connection.autoconnect no` — check `nmcli -t -f NAME,DEVICE connection
+   show` for *every* profile bound to the port in use, not just the one
+   you remember configuring.
+
+**A third, router-side this time, hit 2026-09-03/04**: the OpenWrt
+router's `dnsmasq` auto-registers every DHCP client's hostname under
+`.lan` (e.g. `re.lan` for robopi, `OpenWrt.lan` for itself) — genuinely
+useful given how often robopi's actual IP has changed during setup. But
+the router was also handing out an IPv6 ULA address to LAN clients
+(`network.lan.ip6assign`) that turned out to be unreachable on this
+network, so `.lan` names resolved to *two* records — a working IPv4 one
+and a dead IPv6 one — and IPv6-preferring clients (this laptop's `ssh`
+included) tried the dead address first, hung for a full connect timeout,
+then silently fell back to the working IPv4 one. Read as "broken" unless
+you waited it out. Fix: disabled IPv6 assignment/RA/DHCPv6 entirely on
+the router's `lan` interface — nothing on this workshop LAN needs it —
+via `uci set network.lan.ip6assign='0'`, `uci set dhcp.lan.ra='disabled'`,
+`uci set dhcp.lan.dhcpv6='disabled'`, committed and applied. Applying it
+live (`/etc/init.d/network restart` + `dnsmasq restart`) left the router
+itself unresponsive for a couple of minutes rather than just briefly
+dropping — same flash-constrained hardware as the WiFi-bridge work above;
+a power-cycle recovered it cleanly with the committed config intact.
+`.lan` names are reliable for both humans and scripts now.
 
 ## Open questions / not yet decided
 
@@ -365,12 +467,39 @@ address instead, which the boards can't reach at all.
   working — pitch and display coexist on real hardware. Root cause is still
   only mitigated, not fully explained at the hardware-timing level, per the
   comment in that file.
+- `esp_multi_synth_oled.ino` gained boot-time status messages and a live
+  status HUD, 2026-09-03 — `showBootStatus()` surfaces each boot phase
+  (WiFi, relay fetch, downlink) on the display itself, held
+  `BOOT_STATUS_HOLD_MS` (1400ms — 600ms was confirmed too fast to read on
+  real hardware) so it's actually legible without a serial monitor
+  attached. `drawStatusHud()` then keeps two icons live during play,
+  right-aligned in the footer row over an opaque mask so the scrolling
+  marquee never shows through: a heart/exclamation-mark pair for which relay-config
+  source is active (real ATProto discovery vs. `DEFAULT_RELAY_HOST`
+  fallback) and a link/broken-link pair for live downlink connection
+  state — confirmed correctly flipping through a real router power-cycle.
+  A `FORCE_RELAY_FALLBACK` compile-time flag (default `0`) forces the
+  fallback path on demand for testing the exclamation-mark icon without needing to
+  actually break HappyView reachability. A dedicated 8px HUD row was
+  tried first and reverted the same session — ate into the waveform for
+  little gain; the footer-overlay approach kept the original 28px
+  waveform band intact. Draft icons for what's next (note-playing pulse,
+  active preset/instrument, sequence running, humidity/temperature —
+  station-2 sensor crossover) sketched but not wired in; see the
+  `noizetoyz`/design conversation this came out of for the actual bitmap
+  bytes if picking one up later.
 - DHT22 humidity sensor (`firmware/esp-wifi/dht22_wifi/`) — a
   station-2/5 crossover, sends into `station-2-live-data/wifi_sensor_relay.py`'s
   new `humidity` handling, not a station-5 relay path. Wired on a real
-  board 2026-09-03 (DATA on D5/GPIO14, VCC on 3V3) but reads NaN on every
-  attempt so far, across three separate rewires — see the sketch's own
-  header comment for the troubleshooting checklist (power LED, onboard
-  pull-up, multimeter check) picked up for the next session. Firmware/relay
-  code itself isn't suspected; this is a physical-wiring-or-dead-module
-  question, deferred a few days until more sensors arrive.
+  board 2026-09-03 (DATA on D5/GPIO14, VCC on 3V3, plus an external
+  pull-up between VCC/DATA added 2026-09-04 — redundant with the 4-pin
+  breakout's own onboard pull-up per this file's header comment, two
+  resistors in parallel, not expected to be the actual problem on its
+  own) but reads NaN on every attempt so far, across three separate
+  rewires — see the sketch's own header comment for the troubleshooting
+  checklist (power LED, onboard pull-up, multimeter check). Retest
+  attempted 2026-09-04 via the flash+immediate-serial-capture technique
+  (see OPS.md) but coincided with the router/IPv6 outage documented above
+  and never got past the WiFi-connect stage in the capture window —
+  inconclusive, still open. Firmware/relay code itself isn't suspected;
+  this remains a physical-wiring-or-dead-module question.
