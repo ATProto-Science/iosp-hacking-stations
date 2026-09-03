@@ -60,6 +60,7 @@ RECORD_TYPE = "science.iosp.sensor.reading"
 TCP_PORT = int(os.environ.get("SENSOR_TCP_PORT", "8480"))
 TEMP_SCALE = 10  # matches sensor_producer.py's VALUE_SCALE — one decimal place
 PRESSURE_SCALE = 1  # BMP180's readPressure() is already an integer Pascal value
+HUMIDITY_SCALE = 10  # DHT22 humidity, one decimal place — same convention as TEMP_SCALE
 
 _client = None
 _repo_did = None
@@ -99,6 +100,8 @@ def handle_reading(fields):
         publish_reading("temperature", int(fields["temp"]), TEMP_SCALE, "celsius", device_id)
     if "pressure" in fields:
         publish_reading("pressure", int(fields["pressure"]), PRESSURE_SCALE, "pascal", device_id)
+    if "humidity" in fields:
+        publish_reading("humidity", int(fields["humidity"]), HUMIDITY_SCALE, "percent", device_id)
 
 
 class LineHandler(socketserver.StreamRequestHandler):
