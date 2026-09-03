@@ -2,12 +2,14 @@
 # Station 5 — set up the tmux ops session with the standard set of live
 # panes: flash (ready for firmware/flash.sh), tests (ready for
 # relay/test_modes.py — previously only reachable via flash.sh's own
-# post-flash prompt, now runnable standalone any time), jetstream (the
-# console viewer), firehose (goat, piped through jq), landing (a local
-# HTTP mirror of landing-page/). Same tmux discipline as the rest of this
-# station (~/txt/tracker/CLAUDE.md "Fleet tmux ops convention"): upsert
-# the session/windows, never kill/recreate — safe to re-run any time, it
-# just leaves already-running windows alone.
+# post-flash prompt, now runnable standalone any time), relay
+# (synth_relay.py itself — added 2026-09-03; before this it had to be
+# started by hand, this script only ever published its address), jetstream
+# (the console viewer), firehose (goat, piped through jq), landing (a
+# local HTTP mirror of landing-page/). Same tmux discipline as the rest of
+# this station (~/txt/tracker/CLAUDE.md "Fleet tmux ops convention"):
+# upsert the session/windows, never kill/recreate — safe to re-run any
+# time, it just leaves already-running windows alone.
 #
 # Also publishes a fresh music.atproto.noizetoyz.synth.relayConfig record
 # every run (relay/publish_relay_config.py) — this is what player.html's
@@ -15,12 +17,21 @@
 # this script is the one thing that keeps both up to date whenever this
 # machine's address changes, without a separate manual step.
 #
+# Runs equally on a laptop or on robopi directly (added 2026-09-03, the
+# actual Primary-plan setup — see README.md's "Workshop network
+# topology"): robopi has no pipenv, just plain `pip3 install --user`, so
+# every relay-related command below goes through $PY_RUN rather than a
+# hardcoded `pipenv run` — empty (plain python3) when pipenv isn't on
+# PATH, `pipenv run` otherwise.
+#
 # Usage: ./ops.sh
 #   RELAY_HOST=1.2.3.4 ./ops.sh   — override the published address, needed
 #     whenever this machine is dual-homed (WiFi for internet, Ethernet to
 #     the boards' own LAN) since auto-detect always picks whichever
 #     interface has the *internet* route, not the boards' one — see
 #     relay/publish_relay_config.py's own docstring for the full gotcha.
+#     Not needed on robopi itself — single-homed, auto-detect already
+#     picks the right (only) address.
 
 set -euo pipefail
 
@@ -31,6 +42,12 @@ LANDING_DIR="$(cd "$STATION_ROOT/../landing-page" && pwd)"
 SESSION="station5-tasks"
 COLLECTION="music.atproto.noizetoyz.synth.note"
 LANDING_PORT="${LANDING_PORT:-8000}"
+
+if command -v pipenv >/dev/null 2>&1; then
+  PY_RUN="pipenv run"
+else
+  PY_RUN=""
+fi
 
 tmux has-session -t "$SESSION" 2>/dev/null || tmux new-session -d -s "$SESSION"
 
@@ -47,7 +64,8 @@ upsert_window() {
 
 upsert_window flash "cd '$FIRMWARE_DIR' && echo 'Ready — run: ./flash.sh'"
 upsert_window tests "cd '$RELAY_DIR' && echo 'Ready — run: python3 test_modes.py  (add --audition to pace+narrate for listening)'"
-upsert_window jetstream "cd '$RELAY_DIR' && pipenv run python3 synth_console_viewer.py"
+upsert_window relay "cd '$RELAY_DIR' && $PY_RUN ./run_relay.sh"
+upsert_window jetstream "cd '$RELAY_DIR' && $PY_RUN python3 synth_console_viewer.py"
 upsert_window firehose "goat firehose --collection $COLLECTION --ops | jq"
 
 # Plain-HTTP mirror of landing-page/ for on-site play. The deployed
@@ -73,9 +91,9 @@ echo "Publishing current relay address to ATProto (relayConfig)..."
     set +a
   fi
   if [ -n "${RELAY_HOST:-}" ]; then
-    pipenv run python3 publish_relay_config.py --host "$RELAY_HOST"
+    $PY_RUN python3 publish_relay_config.py --host "$RELAY_HOST"
   else
-    pipenv run python3 publish_relay_config.py
+    $PY_RUN python3 publish_relay_config.py
   fi
 ) || echo "Warning: publish_relay_config.py failed — see output above. player.html/index.html will fall back to their own guesses until this succeeds."
 
