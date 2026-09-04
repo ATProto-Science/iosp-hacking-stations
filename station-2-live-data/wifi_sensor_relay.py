@@ -31,30 +31,17 @@ line into two separate creates rather than inventing a new combined record
 shape.
 
 Auth via the same env vars as sensor_producer.py: NEBRA_HANDLE,
-NEBRA_PASSWORD, NEBRA_BASE_URL (optional).
+NEBRA_PASSWORD, NEBRA_BASE_URL (optional) — but not nebra itself as of
+2026-09-04; see atproto_helpers.py's own docstring for why (robopi, the box
+that actually runs this, can't run nebra's Python 3.11 requirement).
 """
 
 import os
 import socketserver
 import threading
 
-from atproto_client.namespaces.sync_ns import AppBskyActorNamespace
-
-_original_get_profile = AppBskyActorNamespace.get_profile
-
-
-def _get_profile_tolerant(self, *args, **kwargs):
-    try:
-        return _original_get_profile(self, *args, **kwargs)
-    except Exception:
-        return None
-
-
-AppBskyActorNamespace.get_profile = _get_profile_tolerant
-
-import nebra
 from atproto import models
-from nebra.client import get_client, get_credentials
+from atproto_helpers import get_atproto_utc_time, get_client, get_credentials
 
 RECORD_TYPE = "science.iosp.sensor.reading"
 TCP_PORT = int(os.environ.get("SENSOR_TCP_PORT", "8480"))
@@ -75,7 +62,7 @@ def publish_reading(sensor_type, value, value_scale, unit, device_id):
         "valueScale": value_scale,
         "unit": unit,
         "deviceId": device_id,
-        "createdAt": nebra.get_atproto_utc_time(),
+        "createdAt": get_atproto_utc_time(),
     }
     with _write_lock:
         _client.com.atproto.repo.create_record(
@@ -123,7 +110,7 @@ def main():
     print("[station-2] requires NEBRA_HANDLE / NEBRA_PASSWORD env vars set to a real ATProto account")
 
     handle, password, base_url = get_credentials()
-    _client = get_client(handle, password, base_url=base_url, reuse_session=True)
+    _client = get_client(handle, password, base_url=base_url)
     _repo_did = _client.com.atproto.identity.resolve_handle(
         models.ComAtprotoIdentityResolveHandle.Params(handle=handle)
     ).did

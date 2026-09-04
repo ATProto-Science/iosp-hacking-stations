@@ -67,6 +67,8 @@ this runs on a laptop with nothing attached — swap in a real GPIO/DHT read (se
 | `WEBCAM-SENSORS.md` | Readings table + the exact `read_sensor()`/`UNIT` call-site changes to wire this into `sensor_producer.py`. |
 | `local_sensors.py` | No-Pi, no-webcam alternative for `read_sensor()` — CPU temperature, weather (Open-Meteo, no API key), ping latency, uptime, each a plain function. See `LOCAL-SENSORS.md`. |
 | `LOCAL-SENSORS.md` | Readings table + the exact `read_sensor()`/`UNIT` call-site changes to wire `local_sensors.py` in. |
+| `wifi_sensor_relay.py` | WiFi variant of the producer — a BMP180/DHT22-over-WiFi ESP8266 board sends readings over TCP instead of GPIO, this relay is what actually talks to ATProto. Runs on robopi (station-5-synth's Pi) alongside `synth_relay.py`, not on the same hardware as `sensor_producer.py`. See "wifi_sensor_relay.py drops nebra" below for why it's `atproto`, not `nebra`, unlike the rest of this station. |
+| `atproto_helpers.py` | Direct ATProto session helpers for `wifi_sensor_relay.py` — see its own docstring and the section below. |
 
 ## Note on the Nebra API
 
@@ -90,6 +92,46 @@ just read from Nebra's README:
 
 The library is still early-development (per its own README), so re-check this
 closer to the workshop in case upstream has changed.
+
+## `wifi_sensor_relay.py` drops nebra (2026-09-04)
+
+`nebra` is still the right call for `sensor_producer.py` — that script
+genuinely is streaming sensor telemetry on whatever Pi it's plugged into,
+nebra's actual purpose. `wifi_sensor_relay.py` is different: it needs to run
+on **robopi** (station-5-synth's Pi, already on the venue LAN — see that
+station's README.md), not wherever a BMP180/DHT22 happens to be wired, and
+robopi hit a real wall trying to get `nebra` running there: `nebra` requires
+Python 3.11+, robopi's system Python is 3.9. Tried a precompiled
+`python-build-standalone` 3.11 build first (`armv7-unknown-linux-gnueabihf`)
+— that got further, importing `nebra` itself, but its `cryptography`
+dependency's compiled extension needs `GLIBC_2.34`, and robopi's Bullseye-
+based OS only has glibc 2.31. A side-installed newer `libffi` didn't help —
+the actual `_cffi_backend` binary itself needs newer glibc symbols, not just
+a newer `libffi.so`. Compiling everything from source (Python + a
+Rust-toolchain build of `cryptography`) would have worked but at real time
+cost on a Pi 3's 4 cores and ~900MB RAM.
+
+Real fix: checked what `wifi_sensor_relay.py` actually used from `nebra` —
+just `get_client()`, `get_credentials()`, and `get_atproto_utc_time()`, the
+exact same three helpers `station-5-synth/relay/synth_relay.py` already
+replaced for its own (different) reasons. `atproto_helpers.py` here is the
+same fix applied to this script — a few lines each, reimplemented directly
+against the `atproto` SDK (already installed and working on robopi's
+existing Python 3.9 for `synth_relay.py`) instead of carrying `nebra`. No
+Python upgrade needed after all; the version wall only existed because of
+the dependency, not because of anything this script actually does. Verified
+working end-to-end on real hardware: a live BMP180 board's readings
+(`d1mini-bmp180-a`) publishing successfully through it.
+
+Also checked as a longer-term alternative: [sensorthings.dev](https://sensorthings.dev)
+("Meitheal") publishes environmental sensor data on ATProto using the OGC
+SensorThings entity model (`dev.sensorthings.*` lexicons) and ships a
+`atproto-sensorthings` Python package — but that package is a *read-side*
+tool (flattens existing `dev.sensorthings` CAR exports into tables), not a
+publishing library, so it wasn't a drop-in fix here. Worth a look if this
+station ever considers moving off the placeholder `science.iosp.sensor.reading`
+lexicon (see the Files table above) onto an established standard instead —
+a separate, bigger decision from the nebra removal above.
 
 ## Note on AT Protocol's data model — no floats
 
