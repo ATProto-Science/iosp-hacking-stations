@@ -1,7 +1,7 @@
 {
   "//": "SCAFFOLD — not deployed, not referenced by any page yet. See landing-page/oauth-login.js's header comment for status and what wiring this in requires.",
   "client_id": "https://hacking.tilde.style/client-metadata.json",
-  "client_name": "hacking.tilde.style — Station 5 synth keys",
+  "client_name": "hacking.tilde.style — Noizetoyz keys",
   "client_uri": "https://hacking.tilde.style/player.html",
   "redirect_uris": ["https://hacking.tilde.style/player.html"],
   "grant_types": ["authorization_code", "refresh_token"],

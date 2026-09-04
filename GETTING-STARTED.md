@@ -28,7 +28,7 @@ plain `node bot-skeleton.mjs` — no reason to expect WebContainers to behave
 differently for this specific zero-dependency code, though this hasn't been
 opened in an actual browser session yet to confirm end-to-end.
 
-Limitation: pure JS/Node only — if a station ever needs Python (station 2
+Limitation: pure JS/Node only — if a station ever needs Python (Live Data Streaming
 does, for the sensor producer) or anything with native bindings, this isn't
 the right environment for that station.
 

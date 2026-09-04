@@ -1,6 +1,6 @@
 // Real Bluesky post stream via Jetstream — zero-dependency (Node 20+'s
 // built-in WebSocket), matching the exact query-param pattern already
-// proven in station-2-live-data/consumer_viewer.py (nebra.jetstream's
+// proven in live-data/consumer_viewer.py (nebra.jetstream's
 // get_jetstream_query_url: wantedCollections + wantedDids, repeated params).
 //
 // Two ways to scope this, matching the two-tier pattern used everywhere else

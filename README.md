@@ -1,29 +1,38 @@
-# IOSP 2026 — Hacking Stations 2 & 4
+# IOSP 2026 — 📡🌡️ Live Data Streaming & 🎹🎶 Noizetoyz
 
 Code skeletons for the ATScience/Science-PDS workshop at IOSP (Leiden, October 2026),
-"Resilient Data & Sovereign Infrastructure" track. Covers the two stations Torsten
-Goerke is running: **Live Data Streaming** (station 2) and **ATProto Bots** (station 4).
+"Resilient Data & Sovereign Infrastructure" track. Torsten Goerke's workshop station
+(confirmed 2026-09-04) is **Live Data Streaming + Noizetoyz**; `station-4-bots/` (AI
+workflows over ATProto data) is also in this repo but is no longer part of his active
+build plan — see `tracker-vss7` for that ownership change.
 
 Full workshop plan: `tracker-vss7` (private planning bean, not in this repo).
 
 **Participants**: start with `WORKSHEET.md` — step-by-step, checkbox-driven,
-covers both stations plus troubleshooting for the gotchas we already hit
+covers every station here plus troubleshooting for the gotchas we already hit
 testing this.
 
 **Need an editor first?** See `GETTING-STARTED.md` — StackBlitz (no
 account, no install, recommended default for station 4), GitHub
 Codespaces, or the self-hosted base station, with current status of each.
 
-## Station 2 — Live Data Streaming
+## 📡🌡️ Live Data Streaming
 
-`station-2-live-data/` — Raspberry Pi + sensor → [Nebra](https://github.com/the-astrosky-ecosystem/nebra)
+`live-data/` — Raspberry Pi + sensor → [Nebra](https://github.com/the-astrosky-ecosystem/nebra)
 (Emily Hunt's real ATProto streaming library) → a PDS record, plus a
 [Matadisco](https://matadisco.org)-shaped consumer that reads the stream back out.
 Both halves are long-running loops — run them under `run_forever.sh` (see
-`station-2-live-data/README.md`) so a dropped connection restarts instead of
+`live-data/README.md`) so a dropped connection restarts instead of
 ending the demo.
 
-## Station 4 — AI workflows over ATProto data
+## 🎹🎶 Noizetoyz
+
+`noizetoyz/` — an ATProto-networked Mozzi synth (plus a temp/humidity sibling reusing
+Live Data Streaming's sensor pattern). ESP8266/ESP32 or Arduino UNO uplinks →
+`relay/synth_relay.py` → PDS → Jetstream, with a downlink that re-broadcasts every
+note to receive-only instruments and the browser player. See `noizetoyz/README.md`.
+
+## Station 4 — AI workflows over ATProto data (no longer Torsten's)
 
 `station-4-bots/` — a stripped-down, Chatto-agnostic extraction of
 [`sail-judge`](https://github.com/the-astrosky-ecosystem) *(placeholder link — actual

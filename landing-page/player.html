@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Station 5 — synth keys</title>
+  <title>🎹🎶 Noizetoyz keys</title>
   <link rel="stylesheet" href="site.css">
   <style>
     /* Piano keys + the relay-connection fields aren't covered by the
@@ -89,7 +89,7 @@
 
   <header class="hearth">
     <div class="hearth-inner">
-      <h1 class="site-name">Station 5 — synth keys</h1>
+      <h1 class="site-name">🎹🎶 Noizetoyz keys</h1>
       <p class="site-tagline">Play a note here, hear it on a real Mozzi-driven board across the room — every keypress is a real ATProto record, shared live over the network.</p>
     </div>
   </header>
@@ -209,7 +209,7 @@
     // fetchRelayConfig() already queries at boot (see that function for
     // the identical newest-by-createdAt pick). Falls back to guessing from
     // this page's own hostname (relay/this page are normally the same box
-    // — station-5-synth/ops.sh's "landing" window sits right alongside
+    // — noizetoyz/ops.sh's "landing" window sits right alongside
     // synth_relay.py's ports) only if that fetch comes up empty.
     (async () => {
       const hintEl = document.getElementById("relayHint");
@@ -250,7 +250,7 @@
         return;
       }
 
-      // robopi's .lan hostname (station-5-synth/README.md's networking
+      // robopi's .lan hostname (noizetoyz/README.md's networking
       // notes) — stable even when its DHCP IP changes, confirmed reachable
       // 2026-09-04. Offered alongside the guess above, not instead of it:
       // that guess reflects whichever machine is *actually* running the

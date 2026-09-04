@@ -1,12 +1,14 @@
-# IOSP 2026 — Stations 2 & 4 Worksheet
+# IOSP 2026 — 📡🌡️ Live Data Streaming & 🎹🎶 Noizetoyz Worksheet
 
 Work through this at your own pace during the hacking session. It's checkboxes,
 not a lecture — tick things off as you go, and skip straight to whichever
-station interests you (you don't need to do both).
+station interests you (you don't need to do all of them). Station 4 (AI
+workflows) is also covered below for anyone pairing on it, though it's Ronen's
+station now, not Torsten's.
 
 Time budget: roughly 90 minutes of hands-on time before the show-and-tell.
 Nothing here requires more than a laptop — the Raspberry Pi + sensor hardware
-is a bonus, not a requirement, for station 2.
+is a bonus, not a requirement, for Live Data Streaming.
 
 ---
 
@@ -15,14 +17,14 @@ is a bonus, not a requirement, for station 2.
 Pick one (see hacking.tilde.style for the current status of each):
 
 - [ ] **`pds.rip`** — a public test PDS, zero commitment. Fastest way to get an
-      account today. **Heads up for station 2 specifically**: `pds.rip`
+      account today. **Heads up for Live Data Streaming specifically**: `pds.rip`
       enforces a strict per-IP rate limit (~10 requests/24h) — fine for
       light use, but a producer writing every 5 seconds will blow through
-      it fast. Prefer `memo.dog` (below) or Aster if you're doing station 2.
+      it fast. Prefer `memo.dog` (below) or Aster if you're doing Live Data Streaming.
 - [ ] **Aster** — the new science PDS, via invite code, if it's live by the
       time you're reading this.
 - [ ] **`memo.dog`** — our own self-hosted test PDS (invite-code only, ask
-      at the station for a code), built specifically to handle station 2's
+      at the station for a code), built specifically to handle Live Data Streaming's
       continuous-write load without the `pds.rip` rate limit. Load-tested
       at 10 concurrent accounts writing every 5s with zero errors.
       **Not a permanent service** — workshop duration + a few days, not
@@ -34,13 +36,13 @@ Pick one (see hacking.tilde.style for the current status of each):
       need to do per account. Nothing else to configure.
 
 Either way, you end up with a **handle** (e.g. `you.pds.rip` or
-`you.memo.dog`) and a **password**. That's all both stations below need.
+`you.memo.dog`) and a **password**. That's all every station below needs.
 
 - [ ] Clone the code: `git clone https://github.com/ATProto-Science/iosp-hacking-stations`
 
 ---
 
-## 1. Station 2 — Live Data Streaming
+## 1. 📡🌡️ Live Data Streaming
 
 **The idea**: a Raspberry Pi + sensor writes readings as ATProto records via
 [Nebra](https://github.com/the-astrosky-ecosystem/nebra) (a real astronomy-
@@ -50,7 +52,7 @@ producer simulates a sensor reading by default.
 
 ### Setup
 
-- [ ] `cd station-2-live-data`
+- [ ] `cd live-data`
 - [ ] Requires Python ≥3.11. Either:
   ```
   pipenv install && pipenv shell
@@ -127,11 +129,11 @@ somewhere real. Pick whichever's easiest to grab from where you're sitting:
 
 - [ ] **Webcam as a sensor** — four readings (brightness, saturation, hue,
       contrast), no Python image library needed. See
-      `station-2-live-data/WEBCAM-SENSORS.md` for the readings table and
+      `live-data/WEBCAM-SENSORS.md` for the readings table and
       the exact `read_sensor()`/`UNIT` wiring.
 - [ ] **CPU temperature, weather, ping latency, uptime** — four more
       readings, no Pi or webcam needed either. See
-      `station-2-live-data/LOCAL-SENSORS.md` for the readings table and
+      `live-data/LOCAL-SENSORS.md` for the readings table and
       the exact `read_sensor()`/`UNIT` wiring.
 - [ ] Something else entirely — `SENSOR_TYPE`/`UNIT` are just strings,
       `read_sensor()` just needs to return a number. Relabel to match
@@ -165,7 +167,66 @@ somewhere real. Pick whichever's easiest to grab from where you're sitting:
 
 ---
 
-## 2. Station 4 — AI workflows over ATProto data
+## 2. 🎹🎶 Noizetoyz
+
+**The idea**: a small [Mozzi](https://sensorium.github.io/Mozzi/)-based synth anyone in the
+room can play — from a browser, no hardware needed, or from a real ESP8266/ESP32/Arduino
+board if you've got one. Every note-on publishes a real
+`music.atproto.noizetoyz.synth.note` record; a relay writes it to a PDS and re-broadcasts it
+to every board in the room, so it plays out loud live, the moment you send it.
+
+### No hardware? Just play
+
+- [ ] Join the **`noizetoyz`** WiFi network (password `synthbeep`) — this is what the
+      physical boards listen on too. Not on-site or the venue WiFi doesn't reach it? Use
+      `hacking.tilde.style/player.html` — same page, and it points you at the local link
+      instead if it detects it can't reach the relay over HTTPS.
+- [ ] Open [`player.html`](https://hacking.tilde.style/player.html) (or
+      [`make-noise.html`](https://hacking.tilde.style/make-noise.html) for the fuller
+      how-to-play writeup first) — it auto-detects today's relay address for you.
+- [ ] Play a note on the on-screen keyboard, then try **scrub**, **wavefold**, **filter**,
+      or **fm** — drag each card's XY pad (or a gamepad's left stick).
+
+**Checkpoint**: you should hear an instant local preview (tone/fold modes only — scrub/fm/filter
+have no local preview, only the real board plays those), and moments later hear it played back
+on a real speaker somewhere in the room. Open [`viewer.html`](https://hacking.tilde.style/viewer.html)
+to see your note land as a real record, same live feed the player's own table reads.
+
+### If you brought (or grab) an ESP8266/ESP32 or Arduino UNO
+
+- [ ] Join the `noizetoyz` WiFi network (see above).
+- [ ] `cd noizetoyz/firmware && ./flash.sh` — waits for your board's serial port, then gives
+      you a numbered menu of every sketch in this station to flash (`esp_synth.ino` for a
+      WiFi-native ESP8266/ESP32, `uno_synth.ino` for an Arduino UNO via a serial bridge).
+- [ ] Power it up, join the network, and it should start playing back everyone else's notes —
+      yours too, the moment you play one from the browser player.
+
+### If something breaks
+
+- **Board never enumerates, no port ever shows up** — before suspecting the board itself,
+  swap the USB cable. Most cables in a typical kit are charge-only (the board's LED lights
+  up, but it never registers as a serial device) — only a real data cable works here.
+- **Board flashes fine but no sound over the network** — double-check you're actually on
+  `noizetoyz`, not still on your phone's own data or the venue's main WiFi.
+- **Browser player shows no relay address** — the venue's relay address changes between
+  setups; ask at the station rather than assuming your cached one is still right.
+
+### Stretch goals
+
+- [ ] Run your own relay and watch the whole ATProto path yourself: `cd noizetoyz/relay`,
+      `pipenv install && pipenv shell`, set `ATPROTO_HANDLE`/`ATPROTO_PASSWORD`, then
+      `./run_relay.sh`. Watch records land with `python3 synth_console_viewer.py` in another
+      terminal — same hand-rolled Jetstream recipe as Live Data Streaming's consumer.
+- [ ] Look at `lexicon/music.atproto.noizetoyz.synth.note.json` and propose a real Mozzi
+      patch (filters, a real ADSR envelope) in place of the current placeholder
+      amplitude-modulation trick used for `fxType=tremolo`.
+- [ ] Full architecture, every hardware variant, and the real hardware-debugging war stories
+      (ESP8266 `Wire` timeouts, BearSSL buffer sizing, a dead DHT22 unit) are in
+      `noizetoyz/README.md` and `noizetoyz/OPS.md` if you want the deeper story.
+
+---
+
+## 3. Station 4 — AI workflows over ATProto data (no longer Torsten's)
 
 **The idea**: an agent that decides *how* to act using a bandit algorithm
 (Thompson sampling) instead of always doing the same thing, and remembers
@@ -289,9 +350,9 @@ in-process FactStore array.
   up), not permanent overflow. Good show-and-tell question: did `other`
   dominate in your run? What would you split it into if you kept classifying
   real data for a week?
-- **Cross-link with station 2 for a real "one substrate" demo — already
+- **Cross-link with Live Data Streaming for a real "one substrate" demo — already
   proven live, not just a hypothetical.** `viewer.html`
-  (`https://code.werk.museum/viewer/`) already shows station 2's sensor
+  (`https://code.werk.museum/viewer/`) already shows Live Data Streaming's sensor
   readings and station 4's SAITO facts side by side, both served through the
   same HappyView AppView instance. The remaining stretch is the deeper
   version: if someone posts on Bluesky citing a sensor reading ("check out
@@ -306,7 +367,7 @@ in-process FactStore array.
 
 ---
 
-## 3. Show-and-tell — come with answers to these
+## 4. Show-and-tell — come with answers to these
 
 - What did you actually get running? (Screenshot or terminal output is fine.)
 - What surprised you — about ATProto, about Nebra/Matadisco, about the
@@ -326,6 +387,6 @@ example does. That's deliberate, not a typo: `nebra.stream` is a
 command-line entry point (`python -m nebra stream --collection=...`), not a
 plain importable generator, and Nebra's default compressed-streaming path
 currently 404s against a moved file upstream. Both are documented in
-`consumer_viewer.py`'s own docstring and `station-2-live-data/README.md`'s
+`consumer_viewer.py`'s own docstring and `live-data/README.md`'s
 "Note on the Nebra API" section, in case you want the full story — or want to
 go fix it upstream yourself.

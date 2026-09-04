@@ -11,9 +11,16 @@
 
 ## What this is
 
-Torsten owns two of the workshop's four self-select hacking stations:
+**Torsten's workshop station (confirmed 2026-09-04) is "Live Data Streaming & Noizetoyz"** —
+a merge of `live-data/` and `noizetoyz/` (the ATProto-networked Mozzi synth, officially
+rebranded from the internal "synth" codename to **Noizetoyz** by ATScience for IOSP), described
+by Torsten as "the most fun" of his original two. He has **dropped the "AI & ATProto" station**
+(formerly `station-4-bots/`); that
+station now belongs to Ronen, built around Semble/Fray rather than this repo's bandit code — not
+yet confirmed whether `station-4-bots/` is still the actual basis for it. See `tracker-vss7`'s
+2026-09-04 entries for the full station-list history and this ownership change.
 
-- **`station-2-live-data/`** — "Live Data Streaming." Raspberry Pi + sensor → an ATProto
+- **`live-data/`** — "Live Data Streaming." Raspberry Pi + sensor → an ATProto
   record → a Matadisco-shaped viewer reading it back out. `sensor_producer.py` writes
   records (Nebra-based, with real fixes for `nebra.stream()` not being a generator,
   zstd-dictionary 404s, AT Protocol having no float type, and cocoon-specific DID/handle
@@ -21,9 +28,17 @@ Torsten owns two of the workshop's four self-select hacking stations:
   `consumer_viewer.py` reads them back via a real Jetstream subscription.
   `webcam_sensors.py`/`local_sensors.py` are no-Pi-required fallbacks (webcam via ffmpeg,
   CPU temp, weather, ping latency, uptime) — see `WEBCAM-SENSORS.md`/`LOCAL-SENSORS.md`.
-- **`station-4-bots/`** — "AI workflows over ATProto data." A bandit-driven agent
-  (Thompson sampling over named "arms") that decides *how* to act instead of just
-  reacting — the decision-making core (`bandit.mjs`, `fact-store.mjs`) is lifted from
+- **`noizetoyz/`** — an ATProto-networked Mozzi synth (plus a temp/humidity sibling
+  reusing station-2's sensor pattern). ESP8266/ESP32 or Arduino UNO uplinks → 
+  `relay/synth_relay.py` (same auth/DID/cocoon-quirk logic as station-2's producer, copied
+  verbatim) → PDS → Jetstream; a downlink thread re-broadcasts every note to receive-only
+  instruments and to `../landing-page/player.html`. Records are
+  `music.atproto.noizetoyz.synth.note`. See `noizetoyz/README.md` and `OPS.md` for the
+  full architecture, hardware variants, and `ops.sh` tooling.
+- **`station-4-bots/`** — "AI workflows over ATProto data," **not part of Torsten's build plan
+  for this workshop as of 2026-09-04** (kept in the repo; not being actively expanded by him).
+  A bandit-driven agent (Thompson sampling over named "arms") that decides *how* to act instead
+  of just reacting — the decision-making core (`bandit.mjs`, `fact-store.mjs`) is lifted from
   `sail-judge`, a production bot for SAIL/haiku.garden. See station-4-bots/README.md
   for the full picture: two skeletons (`bot-skeleton.mjs` — discourse-graph node-type
   classification; `connections-skeleton.mjs` — paper-connection proposer), two ways to
@@ -34,14 +49,14 @@ Torsten owns two of the workshop's four self-select hacking stations:
   directory). Merged into this repo via `git subtree` on 2026-07-19 (was a standalone
   repo at `~/hacking.tilde.style`, now gone — full history preserved under this prefix,
   `git log -- landing-page` shows it). `index.html` is the front door; `viewer.html`
-  reads station 2/4 records back out through HappyView; `memo-dog-signup.html` is the
+  reads Live Data Streaming/station 4 records back out through HappyView; `memo-dog-signup.html` is the
   one-page memo.dog account-creation form; `kiosk.html` is the on-screen check-in
   display for the station (dog/aster/garden emoji per account track); `checkin.html`
   is the staff-only console for logging Aster/Bluesky check-ins (no public link — hand
   the URL to whoever's staffing the desk). All four read/write real ATProto records,
   no separate backend of their own.
 
-`WORKSHEET.md` (repo root) is the actual participant-facing worksheet — both stations'
+`WORKSHEET.md` (repo root) is the actual participant-facing worksheet — every station's
 setup instructions, account options, and stretch goals in one place. `README.md` is the
 top-level repo README (deploys to hacking.tilde.style's "Code" section).
 

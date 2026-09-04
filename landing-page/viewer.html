@@ -16,7 +16,7 @@
 
   <header class="hearth">
     <div class="hearth-inner">
-      <h1 class="site-name">Station 2 + station 4, one substrate</h1>
+      <h1 class="site-name">📡🌡️ Live Data Streaming + station 4, one substrate</h1>
       <p class="site-tagline">Both stations read/write real ATProto records through the same HappyView AppView — no separate backends.</p>
     </div>
   </header>
@@ -25,7 +25,7 @@
     <section class="gathered">
       <div class="gathered-inner">
         <div class="style-card">
-          <h3>Station 2 — live sensor readings</h3>
+          <h3>📡🌡️ Live Data Streaming — live sensor readings</h3>
           <p class="smoke-text" id="status-sensors">loading…</p>
           <table class="kindling-table">
             <thead><tr><th>sensor</th><th>value</th><th>device</th><th>when</th></tr></thead>
@@ -52,7 +52,7 @@
         </div>
 
         <div class="style-card">
-          <h3>Station 5 — last played note</h3>
+          <h3>🎹🎶 Noizetoyz — last played note</h3>
           <p class="smoke-text" id="status-notes">loading…</p>
           <p class="last-note" id="last-note-display">—</p>
           <p class="smoke-text" id="last-note-detail"></p>
@@ -164,7 +164,7 @@
       }
     }
 
-    // Same MIDI-note-to-name convention as station-5-synth's own firmware
+    // Same MIDI-note-to-name convention as noizetoyz's own firmware
     // (esp_note_player.ino's midiNoteName()) — note 60 = C4.
     const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     function midiNoteName(note) {

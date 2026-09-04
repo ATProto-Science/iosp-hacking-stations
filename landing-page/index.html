@@ -9,7 +9,7 @@
     /* Loud, one-off — this page is served over HTTPS (Cloudflare Pages),
        which browsers block from reaching a plain-HTTP local relay at all
        (mixed content), so anyone actually at the venue needs a different
-       URL for Station 5's player. Not part of the shared Bonfire
+       URL for Noizetoyz's player. Not part of the shared Bonfire
        vocabulary on purpose — this is meant to stand out. */
     .beacon {
       background: var(--fire); color: var(--night);
@@ -20,7 +20,7 @@
 </head>
 <body class="clearing">
 
-  <p class="beacon">📢 At IOSP in person for Station 5? This page can't reach the local synth relay over HTTPS — <a href="#" id="localPlayerLink">open the local player instead</a> (same content, works on-site).</p>
+  <p class="beacon">📢 At IOSP in person for Noizetoyz? This page can't reach the local synth relay over HTTPS — <a href="#" id="localPlayerLink">open the local player instead</a> (same content, works on-site).</p>
 
   <header class="hearth">
     <div class="hearth-inner">
@@ -44,9 +44,9 @@
         <h2>Get set up</h2>
         <p>One identity gets you into every station below — pick one:</p>
         <ol>
-          <li><strong>pds.rip</strong> — a public test PDS, zero commitment. Good if you just want to poke around today. Heads up if you're doing station 2 specifically: it rate-limits at roughly 10 requests/24h per IP, which a continuous producer will hit fast.</li>
+          <li><strong>pds.rip</strong> — a public test PDS, zero commitment. Good if you just want to poke around today. Heads up if you're doing Live Data Streaming specifically: it rate-limits at roughly 10 requests/24h per IP, which a continuous producer will hit fast.</li>
           <li><strong>Aster</strong> — the new science PDS, via invite code. Good if you want this to still exist after today.</li>
-          <li><strong>memo.dog</strong> — our own self-hosted test PDS, invite-code only (ask at the station). Built and load-tested specifically for station 2's continuous-write pattern — not a permanent service, workshop duration + a few days only.
+          <li><strong>memo.dog</strong> — our own self-hosted test PDS, invite-code only (ask at the station). Built and load-tested specifically for Live Data Streaming's continuous-write pattern — not a permanent service, workshop duration + a few days only.
           <a href="memo-dog-signup.html" class="spark">One-page signup form</a> — same account-creation API the Bluesky app uses, skips its multi-screen flow.</li>
         </ol>
         <p class="stones">
@@ -68,8 +68,8 @@
         </div>
 
         <div class="style-card">
-          <h3>2. Live Data Streaming</h3>
-          <p>Raspberry Pi + sensor → <a href="https://github.com/ATProto-Science/iosp-hacking-stations/tree/main/station-2-live-data" class="spark">Nebra</a> → an ATProto record → a Matadisco-shaped viewer reading it back out.</p>
+          <h3>2. 📡🌡️ Live Data Streaming</h3>
+          <p>Raspberry Pi + sensor → <a href="https://github.com/ATProto-Science/iosp-hacking-stations/tree/main/live-data" class="spark">Nebra</a> → an ATProto record → a Matadisco-shaped viewer reading it back out.</p>
           <p class="stones"><span class="stone">code ready</span></p>
         </div>
 
@@ -102,7 +102,7 @@
 
         <div class="style-card">
           <h3>GitHub Codespaces</h3>
-          <p>A full Linux VM per person if you want Python too (station 2) or
+          <p>A full Linux VM per person if you want Python too (Live Data Streaming) or
           a persistent environment across sessions. Needs a GitHub account;
           120 free core-hours/month, on your own account, not shared.
           Open from the repo's Code → Codespaces button, or
@@ -125,8 +125,8 @@
 
         <div class="style-card">
           <h3>Viewer</h3>
-          <p>Read station 2's live sensor readings, station 4's SAITO facts,
-          station 5's last played note, and who's checked in, side by side —
+          <p>Read Live Data Streaming's live sensor readings, station 4's SAITO facts,
+          Noizetoyz's last played note, and who's checked in, side by side —
           plain <code>fetch()</code> against HappyView, no separate backend.
           <a href="viewer.html" class="spark">Open the viewer.</a></p>
           <p class="stones"><span class="stone">live</span></p>
@@ -134,7 +134,7 @@
 
         <div class="style-card">
           <h3>Make noise</h3>
-          <p>Station 5 — an ATProto-networked Mozzi synth. Play notes,
+          <p>Noizetoyz — an ATProto-networked Mozzi synth. Play notes,
           scrub samples, fold waves, sweep a filter, or FM synthesize from
           a browser (or a gamepad); real hardware boards play it back live
           on real speakers. Every interaction is a real ATProto record,
@@ -240,10 +240,10 @@
     // Points the beacon's link at wherever the relay/local player actually
     // are right now, instead of a hardcoded IP that'll be wrong the moment
     // the venue network changes (a recurring problem this whole project —
-    // see station-5-synth/README.md's "Workshop network topology" section).
+    // see noizetoyz/README.md's "Workshop network topology" section).
     // Same source of truth player.html's own relay-address hint uses:
     // music.atproto.noizetoyz.synth.relayConfig, published by whichever
-    // machine is running synth_relay.py. station-5-synth/ops.sh always
+    // machine is running synth_relay.py. noizetoyz/ops.sh always
     // serves landing-page/ on port 8000 on that same machine, so the local
     // player's address is derivable from the relay's own host.
     (async () => {
