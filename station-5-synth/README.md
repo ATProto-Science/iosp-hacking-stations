@@ -493,6 +493,38 @@ a power-cycle recovered it cleanly with the committed config intact.
   station-2 sensor crossover) sketched but not wired in; see the
   `noizetoyz`/design conversation this came out of for the actual bitmap
   bytes if picking one up later.
+- `esp_multi_synth_oled.ino` gained a second icon row, top-right corner,
+  2026-09-04 — `drawStatusIconRow()`, four slots right to left: note-in
+  (flashes on when a note arrives over the downlink — anyone's, via
+  `synth_relay.py`'s Jetstream re-broadcast, not just this board's own),
+  humidity, temperature, pressure. Sensor icons behave differently from
+  the note icon on purpose: lit *steady* once that sensor is confirmed
+  present (`bmp180Present` checked once at boot via I2C ACK + `bmp.begin()`;
+  `humidityPresent` sticky-true on the first good DHT22 read), then blink
+  *off* briefly (`SENSOR_BLINK_OFF_MS`) on each fresh reading — presence is
+  the steady-state fact, a reading is a transient event against it. Real
+  sensor code added to this sketch for the first time: `Adafruit_BMP085`
+  (shares the OLED's I2C bus fine, 0x77 vs 0x3C) plus `DHT` on D5 (matching
+  `dht22_wifi.ino`'s convention) for a DHT22 added later via free GPIO —
+  both genuinely optional, a missing/failed BMP180 only logs and moves on
+  (unlike `bmp180_wifi.ino`'s own halt-on-failure, appropriate there since
+  sensing is that sketch's whole job, not here). Readings publish to
+  station-2's `wifi_sensor_relay.py` via a new `sensorRelayPort` (the same
+  relayConfig record's `sensorTcpPort` field the standalone sensor
+  boards already use — extracted alongside the existing downlink-port
+  parsing, not a separate discovery mechanism), throttled to
+  `SENSOR_READ_INTERVAL_MS` (5s, matching `bmp180_wifi.ino`/`dht22_wifi.ino`)
+  and gated on a sensor already being known-present so a bare synth board
+  with no shields never spends audio-timing budget on a DHT read that
+  would just time out. New pressure icon drafted for this (no prior
+  version existed); temperature/humidity reuse the bitmaps already
+  sketched in the Noizetoys icon sheet. Confirmed on real hardware: boots
+  clean and synth/relay/downlink all still work with the BMP180 genuinely
+  absent (`bmp180Present` stays false, the whole periodic read/publish
+  branch never fires) — the actual sensor-lit/blink behavior itself
+  hasn't been confirmed yet, since the specific board tested doesn't
+  carry a BMP180 shield after all (an earlier mix-up about which physical
+  unit has which shields).
 - ~~DHT22 humidity sensor (`firmware/esp-wifi/dht22_wifi/`)~~ — **closed
   2026-09-04: confirmed dead unit, fully cross-checked, wiring/circuit
   exonerated.** Wired on a real board 2026-09-03 (bare sensor on a

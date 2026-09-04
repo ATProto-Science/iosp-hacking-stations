@@ -120,6 +120,21 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+// ---- multi-sensor shields, added 2026-09-04 ----
+// This board physically stacks a BMP180 shield (I2C, addr 0x77 — no
+// conflict with the OLED's 0x3C on the same D1/D2 bus) alongside the
+// synth+OLED hardware, plus free GPIO for a DHT22 added later (D5, same
+// pin/pull-up convention as dht22_wifi.ino/ds18b20_test.ino). Both are
+// genuinely optional: a missing/failed BMP180 or an unwired DHT22 just
+// leaves that sensor's icon dark, it never blocks the synth from working.
+#include <Adafruit_BMP085.h>
+#include <DHT.h>
+#define BMP180_I2C_ADDR 0x77
+#define DHT_PIN D5
+#define DHT_TYPE DHT22
+Adafruit_BMP085 bmp;
+DHT dht(DHT_PIN, DHT_TYPE);
+
 // ---- fill in for your workshop WiFi ----
 const char *WIFI_SSID = "noizetoyz";
 const char *WIFI_PASSWORD = "synthbeep";
@@ -130,12 +145,16 @@ const char *WIFI_PASSWORD = "synthbeep";
 // if that fetch fails.
 const char *DEFAULT_RELAY_HOST = "192.168.1.20";
 const uint16_t DEFAULT_RELAY_PORT = 8479; // synth_relay.py's SYNTH_BROADCAST_PORT
+const uint16_t SENSOR_TCP_PORT = 8480; // wifi_sensor_relay.py's own port — see bmp180_wifi.ino/dht22_wifi.ino
 
 const char *HAPPYVIEW_URL = "https://happyview.werk.museum";
 const char *HAPPYVIEW_CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc";
 
 String relayHost;
 uint16_t relayPort;
+uint16_t sensorRelayPort; // sensorTcpPort from the same relayConfig record — a different port
+                          // on the same relayHost, station-2's wifi_sensor_relay.py rather than
+                          // synth_relay.py's downlink; see fetchRelayConfig()'s parsing loop
 WiFiClient downlink;
 String lineBuffer;
 bool relayFromATProto = false; // set by fetchRelayConfig() — false means DEFAULT_RELAY_HOST was
@@ -278,11 +297,50 @@ const uint8_t ICON_LINK[] PROGMEM = { // downlink: connected
 const uint8_t ICON_LINK_BROKEN[] PROGMEM = { // downlink: not connected
   0x00, 0x60, 0x90, 0x90, 0x09, 0x09, 0x06, 0x00
 };
+const uint8_t ICON_NOTE_IN[] PROGMEM = { // a note just arrived over the downlink
+  0x00, 0x06, 0x05, 0x04, 0x04, 0x64, 0x94, 0x60
+};
+const uint8_t ICON_PRESSURE[] PROGMEM = { // a barometer dial — new 2026-09-04, no prior draft existed
+  0x3C, 0x42, 0x81, 0x89, 0x91, 0x81, 0x42, 0x3C
+};
+const uint8_t ICON_TEMPERATURE[] PROGMEM = { // thermometer — same bytes drafted in the Noizetoys icon sheet
+  0x18, 0x18, 0x18, 0x18, 0x18, 0x3C, 0x7E, 0x7E
+};
+const uint8_t ICON_HUMIDITY[] PROGMEM = { // droplet — same bytes drafted in the Noizetoys icon sheet
+  0x18, 0x18, 0x3C, 0x7E, 0xFF, 0xFF, 0x7E, 0x3C
+};
 const int ICON_W = 8;
 const int ICON_H = 8;
 const int ICON_GAP = 2;
 const int ICON_ZONE_W = 2 * ICON_W + ICON_GAP; // the two-icon badge's total footprint
 const int ICON_ZONE_PAD = 3; // extra masked gap between the badge and the scrolling text
+
+// Incoming-data activity row — top-right corner, 4 icons wide, dedicated
+// 2026-09-04. This board physically carries a BMP180 shield (pressure +
+// temperature) and free GPIO for a DHT22 (humidity) added later, on top
+// of its own downlink (anyone's note, via synth_relay.py's Jetstream
+// re-broadcast) — four independent "something just happened" signals,
+// the same idea as a network activity LED, grouped together since
+// they're all activity indicators. Right to left: note-in, humidity,
+// temperature, pressure — see drawStatusIconRow(). Each sensor icon has
+// two states rather than one: lit steady once that sensor is confirmed
+// present (bmp180Present / humidityPresent), and a brief *blink-off*
+// (not on) the instant a fresh reading comes in — distinct from the
+// note-in icon's flash-on, chosen because "present" is the steady-state
+// fact worth always showing, and a reading is a transient event against
+// that steady background.
+unsigned long lastNoteInAt = 0;
+const unsigned long NOTE_IN_FLASH_MS = 400; // long enough to actually see, short enough to read as "just now"
+
+bool bmp180Present = false; // checked once at boot — a missing/failed shield just leaves these icons dark
+bool humidityPresent = false; // sticky true on the first good DHT22 read — not yet installed as of 2026-09-04
+unsigned long lastPressureReadAt = 0;
+unsigned long lastTemperatureReadAt = 0;
+unsigned long lastHumidityReadAt = 0;
+const unsigned long SENSOR_BLINK_OFF_MS = 150; // brief enough to read as a blink, not a dropout
+const unsigned long SENSOR_READ_INTERVAL_MS = 5000; // matches bmp180_wifi.ino/dht22_wifi.ino's own SEND_INTERVAL_MS
+unsigned long lastSensorReadAt = 0;
+const char *SENSOR_DEVICE_ID = "d1mini-synth-oled-sensors"; // distinct from bmp180_wifi.ino/dht22_wifi.ino's own standalone-board device IDs
 
 // Status icon badge — which relay-config source is active (real ATProto/
 // HappyView discovery vs the hardcoded fallback), and live downlink
@@ -296,6 +354,40 @@ void drawStatusHud() {
   display.drawBitmap(x, FOOTER_Y, relayFromATProto ? ICON_HEART : ICON_FALLBACK, ICON_W, ICON_H, WHITE);
   x += ICON_W + ICON_GAP;
   display.drawBitmap(x, FOOTER_Y, downlink.connected() ? ICON_LINK : ICON_LINK_BROKEN, ICON_W, ICON_H, WHITE);
+}
+
+// Incoming-data row, y=0, right to left: note-in, humidity, temperature,
+// pressure. Every slot is masked black unconditionally first (so
+// buildInfoLine() text — several mode strings already run close to the
+// full 64px width — never bleeds into a reserved slot even when that
+// slot's icon isn't currently drawn), then the icon is drawn on top only
+// when applicable. Sensor icons: lit once bmp180Present/humidityPresent
+// (checked once at boot / on first good read), blinked *off* briefly
+// right after a fresh reading — see SENSOR_BLINK_OFF_MS.
+void drawStatusIconRow() {
+  int x = W - ICON_W;
+  display.fillRect(x, 0, ICON_W, ICON_H, BLACK);
+  if (millis() - lastNoteInAt < NOTE_IN_FLASH_MS) {
+    display.drawBitmap(x, 0, ICON_NOTE_IN, ICON_W, ICON_H, WHITE);
+  }
+
+  x -= ICON_W;
+  display.fillRect(x, 0, ICON_W, ICON_H, BLACK);
+  if (humidityPresent && millis() - lastHumidityReadAt >= SENSOR_BLINK_OFF_MS) {
+    display.drawBitmap(x, 0, ICON_HUMIDITY, ICON_W, ICON_H, WHITE);
+  }
+
+  x -= ICON_W;
+  display.fillRect(x, 0, ICON_W, ICON_H, BLACK);
+  if (bmp180Present && millis() - lastTemperatureReadAt >= SENSOR_BLINK_OFF_MS) {
+    display.drawBitmap(x, 0, ICON_TEMPERATURE, ICON_W, ICON_H, WHITE);
+  }
+
+  x -= ICON_W;
+  display.fillRect(x, 0, ICON_W, ICON_H, BLACK);
+  if (bmp180Present && millis() - lastPressureReadAt >= SENSOR_BLINK_OFF_MS) {
+    display.drawBitmap(x, 0, ICON_PRESSURE, ICON_W, ICON_H, WHITE);
+  }
 }
 
 int lastNote = 60; // last note-on across tone/fold/filter/fm/pluck — drives the waveform when not in scrub
@@ -402,6 +494,7 @@ void connectWiFi() {
 void fetchRelayConfig() {
   relayHost = DEFAULT_RELAY_HOST;
   relayPort = DEFAULT_RELAY_PORT;
+  sensorRelayPort = SENSOR_TCP_PORT;
   relayFromATProto = false;
 
 #if FORCE_RELAY_FALLBACK
@@ -456,6 +549,7 @@ void fetchRelayConfig() {
   String newestCreatedAt = "";
   String newestHost = "";
   uint16_t newestPort = DEFAULT_RELAY_PORT;
+  uint16_t newestSensorPort = SENSOR_TCP_PORT;
 
   for (JsonObject record : records) {
     const char *createdAt = record["createdAt"] | "";
@@ -465,12 +559,14 @@ void fetchRelayConfig() {
       newestCreatedAt = createdAt;
       newestHost = host;
       newestPort = record["synthBroadcastPort"] | DEFAULT_RELAY_PORT;
+      newestSensorPort = record["sensorTcpPort"] | SENSOR_TCP_PORT;
     }
   }
 
   if (newestHost.length() > 0) {
     relayHost = newestHost;
     relayPort = newestPort;
+    sensorRelayPort = newestSensorPort;
     relayFromATProto = true;
     Serial.print("[multi-synth-oled] relay config from ATProto: ");
     Serial.print(relayHost);
@@ -677,6 +773,50 @@ void applyLine(const String &line) {
   }
 }
 
+// Fresh short-lived connection per send, one write, matching
+// bmp180_wifi.ino's sendReading() exactly — see that file's own
+// REAL-HARDWARE FINDING note: multiple client.print() calls followed
+// immediately by client.stop() truncated messages on this platform.
+void sendSensorReading(const String &line) {
+  WiFiClient client;
+  if (!client.connect(relayHost.c_str(), sensorRelayPort)) {
+    Serial.println("[multi-synth-oled] sensor relay connect failed");
+    return;
+  }
+  client.print(line + "\n");
+  client.flush();
+  client.stop();
+  Serial.print("[multi-synth-oled] sensor sent: ");
+  Serial.print(line);
+}
+
+// Throttled to SENSOR_READ_INTERVAL_MS from updateControl() — never called
+// every control tick. Even so, a BMP180 read (several I2C transactions)
+// costs tens of ms of blocking time once per interval, and a DHT22 read
+// costs ~250ms — a real, audible audio stall once DHT22 is actually wired
+// in, not yet confirmed against real hardware since it isn't installed
+// yet. Worth listening for by ear the same way the OLED redraw itself was
+// diagnosed, if this ever gets flashed with a DHT22 present.
+void readAndPublishSensors() {
+  if (bmp180Present) {
+    float tempC = bmp.readTemperature();
+    int32_t pressurePa = bmp.readPressure();
+    lastPressureReadAt = millis();
+    lastTemperatureReadAt = millis();
+    String line = "temp=" + String((int)(tempC * 10)) + " pressure=" + String(pressurePa) +
+                  " deviceId=" + String(SENSOR_DEVICE_ID);
+    sendSensorReading(line);
+  }
+
+  float humidity = dht.readHumidity();
+  if (!isnan(humidity)) {
+    humidityPresent = true;
+    lastHumidityReadAt = millis();
+    String line = "humidity=" + String((int)(humidity * 10)) + " deviceId=" + String(SENSOR_DEVICE_ID);
+    sendSensorReading(line);
+  }
+}
+
 void pollDownlink() {
   if (!downlink.connected()) {
     connectDownlink();
@@ -686,6 +826,7 @@ void pollDownlink() {
     char c = downlink.read();
     if (c == '\n') {
       applyLine(lineBuffer);
+      lastNoteInAt = millis();
       lineBuffer = "";
     } else if (c != '\r') {
       lineBuffer += c;
@@ -819,6 +960,13 @@ void drawWaveform() {
   display.setCursor(0, 0);
   display.print(rickrolling ? "RICKROLL!" : buildInfoLine());
 
+  // --- incoming-data icon row (y 0-7, top-right, dedicated) ---
+  // Skipped only during the rickroll flash, which already owns the whole
+  // row for its own inverted-flash effect.
+  if (!rickrolling) {
+    drawStatusIconRow();
+  }
+
   // --- waveform band (y WAVE_TOP..WAVE_TOP+WAVE_HEIGHT) — mode-specific,
   // see drawWaveBand() below for what each mode actually draws and why.
   drawWaveBand();
@@ -903,6 +1051,18 @@ void setup() {
   wf.setLimits(-2047, 2047); // 12-bit output range, matches WaveFolder example
   aDelay.setFeedbackLevel(90); // a repeating slapback rather than the AudioDelayFeedback example's flange-y negative feedback
 
+  // Optional shields — unlike the OLED's own ACK check above, a missing or
+  // failed BMP180 does NOT halt startup (bmp180_wifi.ino's own bare-board
+  // sketch does halt, correctly, since sensing is that sketch's entire
+  // job; here it's one optional feature on a synth board). dht.begin()
+  // always succeeds regardless of whether anything's actually wired to
+  // D5 yet — humidityPresent only flips true on a real successful read.
+  Wire.beginTransmission(BMP180_I2C_ADDR);
+  bmp180Present = (Wire.endTransmission() == 0) && bmp.begin();
+  Serial.println(bmp180Present ? "[multi-synth-oled] BMP180 found" : "[multi-synth-oled] BMP180 not found (optional)");
+  showBootStatus(bmp180Present ? "BMP180 OK" : "BMP180: none", "");
+  dht.begin();
+
   showBootStatus("WiFi", WIFI_SSID);
   connectWiFi();
   showBootStatus("WiFi OK", WiFi.localIP().toString());
@@ -925,6 +1085,19 @@ void setup() {
 
 void updateControl() {
   pollDownlink();
+
+  // Gated on a sensor already being known-present so a bare synth board
+  // (no shields at all) never spends audio-timing budget on a DHT read
+  // that would just time out. Known gap: a board with *only* a not-yet-
+  // detected DHT22 and no BMP180 would never get tried at all, since
+  // humidityPresent can only flip true from inside readAndPublishSensors()
+  // itself — not a real limitation for this board, which always has the
+  // BMP180 shield, but worth knowing if this sketch is ever reused on a
+  // DHT-only variant.
+  if ((bmp180Present || humidityPresent) && millis() - lastSensorReadAt >= SENSOR_READ_INTERVAL_MS) {
+    lastSensorReadAt = millis();
+    readAndPublishSensors();
+  }
 
   if (currentMode == MODE_RICKROLL) {
     updateRickroll();
