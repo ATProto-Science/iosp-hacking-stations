@@ -2,7 +2,11 @@
 # Station 5 — set up the tmux ops session with the standard set of live
 # panes: flash (ready for firmware/flash.sh), tests (ready for
 # relay/test_modes.py — previously only reachable via flash.sh's own
-# post-flash prompt, now runnable standalone any time), relay
+# post-flash prompt, now runnable standalone any time), serial
+# (firmware/watch_serial.sh, added 2026-09-04 — waits for whichever board
+# is plugged into this machine's USB and streams its boot log live,
+# looping back to waiting on disconnect/reflash, instead of the stty+cat
+# incantation from OPS.md needing to be typed by hand every time), relay
 # (synth_relay.py itself — added 2026-09-03; before this it had to be
 # started by hand, this script only ever published its address), jetstream
 # (the console viewer), firehose (goat, piped through jq), landing (a
@@ -64,6 +68,7 @@ upsert_window() {
 
 upsert_window flash "cd '$FIRMWARE_DIR' && echo 'Ready — run: ./flash.sh'"
 upsert_window tests "cd '$RELAY_DIR' && echo 'Ready — run: python3 test_modes.py  (add --audition to pace+narrate for listening)'"
+upsert_window serial "cd '$FIRMWARE_DIR' && ./watch_serial.sh"
 upsert_window relay "cd '$RELAY_DIR' && $PY_RUN ./run_relay.sh"
 upsert_window jetstream "cd '$RELAY_DIR' && $PY_RUN python3 synth_console_viewer.py"
 upsert_window firehose "goat firehose --collection $COLLECTION --ops | jq"
