@@ -1,0 +1,753 @@
+<title>Station 5 Handout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  /* Print-first, deliberately single-theme (light) — this page exists to be
+     printed, and a dark-mode variant would just waste ink. Every color is
+     still painted explicitly per artifact convention, just once. */
+  :root {
+    --paper: #eef1ee;
+    --card: #ffffff;
+    --ink: #1b2320;
+    --ink-dim: #5c665f;
+    --line: #c7cec8;
+    --accent: #b5651d;
+    --pwr: #c23b3b;
+    --gnd: #5b655e;
+    --sig: #1f7a6c;
+    --bus: #5b57c9;
+    --shadow: rgba(27, 35, 32, 0.10);
+    --wire-power: #b8862f;
+    --wire-data: #2f6f5e;
+    --wire-gnd: #4a4640;
+  }
+
+  @page { size: A4; margin: 16mm 14mm; }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    margin: 0;
+  }
+
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+
+  section.doc { padding: 40px 0; }
+  section.doc:first-of-type { padding-top: 0; }
+
+  @media print {
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    section.doc { page-break-before: always; padding-top: 0; }
+    section.doc:first-of-type { page-break-before: avoid; }
+    .page { max-width: none; padding: 0; }
+  }
+
+  .cover {
+    padding: 60px 0 40px;
+    border-bottom: 3px solid var(--ink);
+    margin-bottom: 8px;
+  }
+  .cover .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .cover h1 {
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 700;
+    margin: 8px 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .cover p {
+    max-width: 68ch;
+    color: var(--ink-dim);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 0 20px;
+  }
+  .cover ol {
+    margin: 0;
+    padding-left: 1.3em;
+    color: var(--ink);
+    font-size: 0.95rem;
+    line-height: 1.9;
+  }
+  .cover ol code {
+    font-family: "IBM Plex Mono", monospace;
+    background: color-mix(in srgb, var(--line) 40%, transparent);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+  }
+
+  .sheet-head { margin-bottom: 1.6rem; }
+  .sheet-head .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .sheet-head h2 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    margin: 6px 0 8px;
+    letter-spacing: -0.01em;
+  }
+  .sheet-head p {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--ink-dim);
+    margin: 0;
+    max-width: 72ch;
+  }
+  .sheet-head strong { color: var(--ink); font-weight: 600; }
+
+  .sheet {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 1.4rem;
+    align-items: start;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.3rem 1.4rem 1.2rem;
+    box-shadow: 0 1px 2px var(--shadow);
+    break-inside: avoid;
+  }
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    flex-wrap: wrap;
+  }
+  .card-head h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .card-head .marking {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    color: var(--ink-dim);
+    white-space: nowrap;
+  }
+
+  figure { margin: 0; }
+  figure svg { display: block; width: 100%; height: auto; overflow: visible; }
+  figcaption {
+    margin-top: 0.85rem;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--ink-dim);
+  }
+  figcaption code {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.77rem;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--line) 35%, transparent);
+    padding: 0.05em 0.35em;
+    border-radius: 4px;
+  }
+  figcaption .file { display: block; margin-top: 0.3rem; }
+  figcaption .file:first-of-type { margin-top: 0.55rem; }
+
+  /* pin semantics — shared across every board diagram */
+  .pin text { font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+  .pin.pwr circle, .pin.pwr text { fill: var(--pwr); }
+  .pin.gnd circle, .pin.gnd text { fill: var(--gnd); }
+  .pin.sig circle, .pin.sig text { fill: var(--sig); }
+  .pin.bus circle, .pin.bus text { fill: var(--bus); }
+  .pin.audio circle, .pin.audio text { fill: var(--accent); }
+  .pin.neutral circle { fill: var(--card); stroke: var(--ink-dim); stroke-width: 1.4; }
+  .pin.neutral text { fill: var(--ink-dim); }
+  .lead { stroke: var(--line); stroke-width: 1.5; }
+  .board-outline { fill: var(--card); stroke: var(--line); stroke-width: 2; }
+  .board-ghost { fill: var(--card); stroke: var(--line); stroke-width: 1.4; opacity: 0.55; }
+  .chip { fill: var(--paper); stroke: var(--line); stroke-width: 1.4; }
+  .chip-label { fill: var(--ink-dim); font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+  .chip-label.lg { fill: var(--ink); font-family: "IBM Plex Sans", sans-serif; font-weight: 600; font-size: 15px; }
+  .board-note { fill: var(--ink-dim); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; }
+  .pin.small text { font-size: 10.5px; }
+  .wire-audio { stroke: var(--accent); stroke-width: 2.25; fill: none; }
+  .wire-gnd-net { stroke: var(--gnd); stroke-width: 2.25; fill: none; }
+  .wire-pwr { stroke: var(--pwr); stroke-width: 2.25; fill: none; }
+  .gotcha-pill rect { fill: var(--card); stroke: var(--pwr); stroke-width: 1.5; }
+  .gotcha-pill text { fill: var(--pwr); font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 12px; }
+  .wiring-card { margin-top: 1.4rem; }
+
+  .legend {
+    margin-top: 2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+    align-items: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+  .swatch { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+  .swatch.pwr { background: var(--pwr); }
+  .swatch.gnd { background: var(--gnd); }
+  .swatch.sig { background: var(--sig); }
+  .swatch.bus { background: var(--bus); }
+  .swatch.audio { background: var(--accent); }
+  .swatch.neutral { background: var(--card); border: 1.4px solid var(--ink-dim); }
+  .legend-item span { font-size: 0.8rem; color: var(--ink-dim); font-family: "IBM Plex Mono", monospace; }
+  .legend-note { width: 100%; font-size: 0.78rem; color: var(--ink-dim); margin-top: 0.4rem; line-height: 1.5; }
+
+  /* --- wiring section (DHT22 / DS18B20) --- */
+  .wiring-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 14px;
+    font-size: 0.78rem;
+    color: var(--ink-dim);
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .wiring-legend span { display: flex; align-items: center; gap: 6px; }
+  .wiring-legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; }
+  .wl-power { background: var(--wire-power); }
+  .wl-data { background: var(--wire-data); }
+  .wl-gnd { background: var(--wire-gnd); }
+
+  .notes {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .note {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 11px 13px;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--ink);
+    break-inside: avoid;
+  }
+  .note b {
+    display: block;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+    font-weight: 700;
+  }
+
+  .callout {
+    margin-top: 20px;
+    background: var(--card);
+    border: 1.5px dashed var(--accent);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 0.83rem;
+    line-height: 1.6;
+  }
+  .callout h4 { margin: 0 0 6px; font-size: 1rem; color: var(--accent); }
+  .callout code { font-family: "IBM Plex Mono", monospace; background: color-mix(in srgb, var(--line) 40%, transparent); padding: 0.05em 0.35em; border-radius: 4px; }
+
+  /* --- icon section --- */
+  .icon-grid-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .icon-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    break-inside: avoid;
+  }
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 8px);
+    grid-template-rows: repeat(8, 8px);
+    gap: 1px;
+    margin: 0 auto 10px;
+    width: fit-content;
+    background: #0e1210;
+    padding: 6px;
+    border-radius: 3px;
+  }
+  .icon-grid i { display: block; background: #1c2620; }
+  .icon-grid i.on { background: #eafff2; }
+  .icon-card b { display: block; font-size: 0.85rem; margin-bottom: 3px; }
+  .icon-card span { font-size: 0.72rem; color: var(--ink-dim); line-height: 1.4; display: block; }
+  .icon-src { margin-top: 10px; font-size: 0.72rem; color: var(--ink-dim); font-family: "IBM Plex Mono", monospace; }
+
+  footer.doc-footer {
+    margin-top: 28px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-size: 0.72rem;
+    color: var(--ink-dim);
+    line-height: 1.6;
+  }
+</style>
+
+<div class="page">
+
+  <div class="cover">
+    <p class="eyebrow">IOSP ATScience workshop &middot; station 5</p>
+    <h1>Hardware Handout</h1>
+    <p>
+      Three reference sheets for building and debugging this station's boards —
+      pulled from real firmware and real hardware sessions, not generic
+      datasheet redraws. Print double-sided; each section starts on its own page.
+    </p>
+    <ol>
+      <li>Board &amp; sensor pinouts — every board wired into the synth</li>
+      <li>DHT22 / DS18B20 sensor wiring — the shared D5 pull-up circuit</li>
+      <li>OLED status icons — what the synth board's display is telling you</li>
+    </ol>
+  </div>
+
+  <!-- ============ SECTION 1: NOIZETOYZ PINOUTS ============ -->
+  <section class="doc">
+    <div class="sheet-head">
+      <p class="eyebrow">Station 5 — hardware reference</p>
+      <h2>Noizetoyz Pinouts</h2>
+      <p>Real pin assignments for every board wired into the synth, pulled straight
+      from this repo's firmware — not a generic datasheet redraw. <strong>Copper</strong>
+      traces the actual audio signal across boards: GPIO out on the Wemos or UNO,
+      in and back out the far side of the LM386.</p>
+    </div>
+
+    <div class="sheet">
+      <div class="card">
+        <div class="card-head">
+          <h3>Wemos D1 mini</h3>
+          <span class="marking">ESP8266 &middot; esp_synth / bmp180 / note_player / dht22</span>
+        </div>
+        <figure>
+          <svg viewBox="0 0 280 460" style="aspect-ratio: 280 / 460; max-width: 260px; margin: 0 auto; display: block;" role="img" aria-label="Wemos D1 mini pinout, with D1, D2, D3, D4, D5 and A0 highlighted as the pins this project's sketches actually use">
+            <rect class="board-outline" x="60" y="50" width="160" height="370" rx="8"/>
+            <rect class="board-outline" x="120" y="28" width="40" height="24" rx="2"/>
+            <rect class="chip" x="108" y="204" width="64" height="52" rx="3"/>
+            <text class="chip-label lg" x="140" y="226" text-anchor="middle">ESP8266</text>
+            <text class="chip-label" x="140" y="244" text-anchor="middle">D1 mini</text>
+            <g class="pin neutral"><line class="lead" x1="60" y1="90" x2="20" y2="90"/><circle cx="60" cy="90" r="4.5"/><text x="15" y="94" text-anchor="end">RST</text></g>
+            <g class="pin sig"><line class="lead" x1="60" y1="137" x2="20" y2="137"/><circle cx="60" cy="137" r="4.5"/><text x="15" y="141" text-anchor="end">A0</text></g>
+            <g class="pin neutral"><line class="lead" x1="60" y1="184" x2="20" y2="184"/><circle cx="60" cy="184" r="4.5"/><text x="15" y="188" text-anchor="end">D0</text></g>
+            <g class="pin sig"><line class="lead" x1="60" y1="231" x2="20" y2="231"/><circle cx="60" cy="231" r="4.5"/><text x="15" y="235" text-anchor="end">D5</text></g>
+            <g class="pin neutral"><line class="lead" x1="60" y1="278" x2="20" y2="278"/><circle cx="60" cy="278" r="4.5"/><text x="15" y="282" text-anchor="end">D6</text></g>
+            <g class="pin neutral"><line class="lead" x1="60" y1="325" x2="20" y2="325"/><circle cx="60" cy="325" r="4.5"/><text x="15" y="329" text-anchor="end">D7</text></g>
+            <g class="pin neutral"><line class="lead" x1="60" y1="372" x2="20" y2="372"/><circle cx="60" cy="372" r="4.5"/><text x="15" y="376" text-anchor="end">D8</text></g>
+            <g class="pin pwr"><line class="lead" x1="60" y1="419" x2="20" y2="419"/><circle cx="60" cy="419" r="4.5"/><text x="15" y="423" text-anchor="end">3V3</text></g>
+            <g class="pin neutral"><line class="lead" x1="220" y1="90" x2="260" y2="90"/><circle cx="220" cy="90" r="4.5"/><text x="265" y="94" text-anchor="start">TX</text></g>
+            <g class="pin neutral"><line class="lead" x1="220" y1="137" x2="260" y2="137"/><circle cx="220" cy="137" r="4.5"/><text x="265" y="141" text-anchor="start">RX</text></g>
+            <g class="pin bus"><line class="lead" x1="220" y1="184" x2="260" y2="184"/><circle cx="220" cy="184" r="4.5"/><text x="265" y="188" text-anchor="start">D1</text></g>
+            <g class="pin bus"><line class="lead" x1="220" y1="231" x2="260" y2="231"/><circle cx="220" cy="231" r="4.5"/><text x="265" y="235" text-anchor="start">D2</text></g>
+            <g class="pin sig"><line class="lead" x1="220" y1="278" x2="260" y2="278"/><circle cx="220" cy="278" r="4.5"/><text x="265" y="282" text-anchor="start">D3</text></g>
+            <g class="pin audio"><line class="lead" x1="220" y1="325" x2="260" y2="325"/><circle cx="220" cy="325" r="4.5"/><text x="265" y="329" text-anchor="start">D4</text></g>
+            <g class="pin gnd"><line class="lead" x1="220" y1="372" x2="260" y2="372"/><circle cx="220" cy="372" r="4.5"/><text x="265" y="376" text-anchor="start">G</text></g>
+            <g class="pin pwr"><line class="lead" x1="220" y1="419" x2="260" y2="419"/><circle cx="220" cy="419" r="4.5"/><text x="265" y="423" text-anchor="start">5V</text></g>
+          </svg>
+          <figcaption>
+            D1/D2 pull double duty — I&sup2;C bus for the sensor and OLED sketches, plain
+            buttons in the synth sketch. Same physical pins, different job per sketch.
+            <span class="file"><code>esp_synth.ino</code> — D1/D2/D3 buttons, A0 pot (fx amount), D4 fixed Mozzi audio out.</span>
+            <span class="file"><code>bmp180_wifi.ino</code> / <code>bmp180_smoke_test.ino</code> — D2 SDA, D1 SCL.</span>
+            <span class="file"><code>esp_note_player.ino</code> — D4 audio out, D1/D2 I&sup2;C to the OLED shield.</span>
+            <span class="file"><code>dht22_wifi.ino</code> / <code>ds18b20_test.ino</code> — D5 sensor data line (a separate board — see the wiring section).</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>Arduino UNO</h3>
+          <span class="marking">ATmega328P &middot; uno_synth / uno_ethernet</span>
+        </div>
+        <figure>
+          <svg viewBox="0 0 460 300" style="aspect-ratio: 460 / 300;" role="img" aria-label="Arduino UNO pinout, with pin 9 as Mozzi audio out, pins 2 to 4 as buttons, A0 as the pot, and pins 10 to 13 as the Ethernet shield's SPI bus">
+            <rect class="board-outline" x="30" y="40" width="400" height="190" rx="8"/>
+            <rect class="board-outline" x="8" y="108" width="24" height="52" rx="3"/>
+            <text class="board-note" x="20" y="176" text-anchor="middle">USB-B</text>
+            <rect class="chip" x="190" y="98" width="80" height="58" rx="3"/>
+            <text class="chip-label lg" x="230" y="122" text-anchor="middle">ATmega328P</text>
+            <text class="chip-label" x="230" y="140" text-anchor="middle">UNO R3</text>
+            <g class="pin neutral"><line class="lead" x1="55" y1="40" x2="55" y2="26"/><circle cx="55" cy="40" r="4.2"/><text x="55" y="18" text-anchor="middle">AREF</text></g>
+            <g class="pin gnd"><line class="lead" x1="78" y1="40" x2="78" y2="14" /><circle cx="78" cy="40" r="4.2"/><text x="78" y="10" text-anchor="middle">GND</text></g>
+            <g class="pin bus"><line class="lead" x1="101" y1="40" x2="101" y2="26"/><circle cx="101" cy="40" r="4.2"/><text x="101" y="18" text-anchor="middle">13</text></g>
+            <g class="pin bus"><line class="lead" x1="125" y1="40" x2="125" y2="14"/><circle cx="125" cy="40" r="4.2"/><text x="125" y="10" text-anchor="middle">12</text></g>
+            <g class="pin bus"><line class="lead" x1="148" y1="40" x2="148" y2="26"/><circle cx="148" cy="40" r="4.2"/><text x="148" y="18" text-anchor="middle">11</text></g>
+            <g class="pin bus"><line class="lead" x1="171" y1="40" x2="171" y2="14"/><circle cx="171" cy="40" r="4.2"/><text x="171" y="10" text-anchor="middle">10</text></g>
+            <g class="pin audio"><line class="lead" x1="195" y1="40" x2="195" y2="26"/><circle cx="195" cy="40" r="4.2"/><text x="195" y="18" text-anchor="middle">9</text></g>
+            <g class="pin neutral"><line class="lead" x1="218" y1="40" x2="218" y2="14"/><circle cx="218" cy="40" r="4.2"/><text x="218" y="10" text-anchor="middle">8</text></g>
+            <g class="pin neutral"><line class="lead" x1="242" y1="40" x2="242" y2="26"/><circle cx="242" cy="40" r="4.2"/><text x="242" y="18" text-anchor="middle">7</text></g>
+            <g class="pin neutral"><line class="lead" x1="265" y1="40" x2="265" y2="14"/><circle cx="265" cy="40" r="4.2"/><text x="265" y="10" text-anchor="middle">6</text></g>
+            <g class="pin neutral"><line class="lead" x1="288" y1="40" x2="288" y2="26"/><circle cx="288" cy="40" r="4.2"/><text x="288" y="18" text-anchor="middle">5</text></g>
+            <g class="pin sig"><line class="lead" x1="311" y1="40" x2="311" y2="14"/><circle cx="311" cy="40" r="4.2"/><text x="311" y="10" text-anchor="middle">4</text></g>
+            <g class="pin sig"><line class="lead" x1="335" y1="40" x2="335" y2="26"/><circle cx="335" cy="40" r="4.2"/><text x="335" y="18" text-anchor="middle">3</text></g>
+            <g class="pin sig"><line class="lead" x1="358" y1="40" x2="358" y2="14"/><circle cx="358" cy="40" r="4.2"/><text x="358" y="10" text-anchor="middle">2</text></g>
+            <g class="pin neutral"><line class="lead" x1="381" y1="40" x2="381" y2="26"/><circle cx="381" cy="40" r="4.2"/><text x="381" y="18" text-anchor="middle">TX</text></g>
+            <g class="pin neutral"><line class="lead" x1="405" y1="40" x2="405" y2="14"/><circle cx="405" cy="40" r="4.2"/><text x="405" y="10" text-anchor="middle">RX</text></g>
+            <g class="pin neutral"><line class="lead" x1="70" y1="230" x2="70" y2="252"/><circle cx="70" cy="230" r="4.2"/><text x="70" y="264" text-anchor="middle">IOREF</text></g>
+            <g class="pin neutral"><line class="lead" x1="90" y1="230" x2="90" y2="240"/><circle cx="90" cy="230" r="4.2"/><text x="90" y="252" text-anchor="middle">RST</text></g>
+            <g class="pin pwr"><line class="lead" x1="110" y1="230" x2="110" y2="252"/><circle cx="110" cy="230" r="4.2"/><text x="110" y="264" text-anchor="middle">3V3</text></g>
+            <g class="pin pwr"><line class="lead" x1="130" y1="230" x2="130" y2="240"/><circle cx="130" cy="230" r="4.2"/><text x="130" y="252" text-anchor="middle">5V</text></g>
+            <g class="pin gnd"><line class="lead" x1="150" y1="230" x2="150" y2="252"/><circle cx="150" cy="230" r="4.2"/><text x="150" y="264" text-anchor="middle">GND</text></g>
+            <g class="pin gnd"><line class="lead" x1="170" y1="230" x2="170" y2="240"/><circle cx="170" cy="230" r="4.2"/><text x="170" y="252" text-anchor="middle">GND</text></g>
+            <g class="pin pwr"><line class="lead" x1="190" y1="230" x2="190" y2="252"/><circle cx="190" cy="230" r="4.2"/><text x="190" y="264" text-anchor="middle">VIN</text></g>
+            <g class="pin sig"><line class="lead" x1="260" y1="230" x2="260" y2="240"/><circle cx="260" cy="230" r="4.2"/><text x="260" y="252" text-anchor="middle">A0</text></g>
+            <g class="pin neutral"><line class="lead" x1="285" y1="230" x2="285" y2="252"/><circle cx="285" cy="230" r="4.2"/><text x="285" y="264" text-anchor="middle">A1</text></g>
+            <g class="pin neutral"><line class="lead" x1="310" y1="230" x2="310" y2="240"/><circle cx="310" cy="230" r="4.2"/><text x="310" y="252" text-anchor="middle">A2</text></g>
+            <g class="pin neutral"><line class="lead" x1="335" y1="230" x2="335" y2="252"/><circle cx="335" cy="230" r="4.2"/><text x="335" y="264" text-anchor="middle">A3</text></g>
+            <g class="pin neutral"><line class="lead" x1="360" y1="230" x2="360" y2="240"/><circle cx="360" cy="230" r="4.2"/><text x="360" y="252" text-anchor="middle">A4</text></g>
+            <g class="pin neutral"><line class="lead" x1="385" y1="230" x2="385" y2="252"/><circle cx="385" cy="230" r="4.2"/><text x="385" y="264" text-anchor="middle">A5</text></g>
+          </svg>
+          <figcaption>
+            <span class="file"><code>uno_synth.ino</code> — pins 2/3/4 buttons, A0 pot, pin 9 Mozzi audio out (per Mozzi's own pin table).</span>
+            <span class="file"><code>uno_ethernet_smoke_test.ino</code> — W5100-class shield on the standard SPI bus (11/12/13), CS on pin 10.</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>LM386 amp module</h3>
+          <span class="marking">GS26347 &middot; &times;4 channels on one strip</span>
+        </div>
+        <figure>
+          <svg viewBox="0 0 380 320" style="aspect-ratio: 380 / 320;" role="img" aria-label="LM386 amplifier module pinout: top header GND, GND, IN, VDD; a volume trimpot; the LM386 chip; and a bottom screw terminal for GND and speaker output">
+            <rect class="board-ghost" x="46" y="30" width="200" height="230" rx="8"/>
+            <rect class="board-ghost" x="32" y="20" width="200" height="230" rx="8"/>
+            <rect class="board-outline" x="40" y="40" width="200" height="230" rx="8"/>
+            <circle class="chip" cx="90" cy="115" r="22"/>
+            <line x1="90" y1="115" x2="103" y2="102" stroke="var(--ink-dim)" stroke-width="1.6"/>
+            <text class="board-note" x="90" y="150" text-anchor="middle">VOL</text>
+            <rect class="chip" x="140" y="98" width="60" height="34" rx="3"/>
+            <text class="chip-label" x="170" y="119" text-anchor="middle">LM386</text>
+            <g class="pin gnd"><line class="lead" x1="70" y1="40" x2="70" y2="16"/><circle cx="70" cy="40" r="4.5"/><text x="70" y="10" text-anchor="middle">GND</text></g>
+            <g class="pin gnd"><line class="lead" x1="110" y1="40" x2="110" y2="16"/><circle cx="110" cy="40" r="4.5"/><text x="110" y="10" text-anchor="middle">GND</text></g>
+            <g class="pin audio"><line class="lead" x1="150" y1="40" x2="150" y2="16"/><circle cx="150" cy="40" r="4.5"/><text x="150" y="10" text-anchor="middle">IN</text></g>
+            <g class="pin pwr"><line class="lead" x1="190" y1="40" x2="190" y2="16"/><circle cx="190" cy="40" r="4.5"/><text x="190" y="10" text-anchor="middle">VDD</text></g>
+            <g class="pin gnd"><line class="lead" x1="110" y1="270" x2="110" y2="296"/><circle cx="110" cy="270" r="4.5"/><text x="110" y="308" text-anchor="middle">GND</text></g>
+            <g class="pin audio"><line class="lead" x1="190" y1="270" x2="190" y2="296"/><circle cx="190" cy="270" r="4.5"/><text x="190" y="308" text-anchor="middle">OUT</text></g>
+          </svg>
+          <figcaption>
+            <code>IN</code> takes the filtered PWM straight off the Wemos/UNO's audio
+            pin; <code>OUT</code> drives a speaker. One strip carries four identical
+            channels — enough for every hardware variant in the room at once.
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>BMP180</h3>
+          <span class="marking">temp / pressure &middot; I&sup2;C, addr 0x77</span>
+        </div>
+        <figure>
+          <svg viewBox="0 0 260 200" style="max-width: 320px; aspect-ratio: 260 / 200;" role="img" aria-label="BMP180 sensor pinout: VCC, GND, SCL, and SDA in a row">
+            <rect class="board-outline" x="30" y="30" width="200" height="100" rx="8"/>
+            <circle class="chip" cx="130" cy="70" r="24"/>
+            <text class="board-note" x="130" y="74" text-anchor="middle">BMP180</text>
+            <g class="pin pwr"><line class="lead" x1="55" y1="130" x2="55" y2="156"/><circle cx="55" cy="130" r="4.5"/><text x="55" y="168" text-anchor="middle">VCC</text></g>
+            <g class="pin gnd"><line class="lead" x1="103" y1="130" x2="103" y2="156"/><circle cx="103" cy="130" r="4.5"/><text x="103" y="168" text-anchor="middle">GND</text></g>
+            <g class="pin bus"><line class="lead" x1="157" y1="130" x2="157" y2="156"/><circle cx="157" cy="130" r="4.5"/><text x="157" y="168" text-anchor="middle">SCL</text></g>
+            <g class="pin bus"><line class="lead" x1="205" y1="130" x2="205" y2="156"/><circle cx="205" cy="130" r="4.5"/><text x="205" y="168" text-anchor="middle">SDA</text></g>
+          </svg>
+          <figcaption>
+            Same four pins regardless of which relay it feeds —
+            station-2's <code>wifi_sensor_relay.py</code> or station-5's
+            <code>bmp180_wifi.ino</code>, both read it over I&sup2;C. Confirmed
+            publishing live readings end-to-end 2026-09-04.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="card wiring-card">
+      <div class="card-head">
+        <h3>Wiring: Wemos &rarr; amp &rarr; speaker</h3>
+        <span class="marking">signal chain &middot; 3 connections, 1 gotcha</span>
+      </div>
+      <figure>
+        <svg viewBox="0 0 880 260" style="aspect-ratio: 880 / 260;" role="img" aria-label="Signal chain diagram. The Wemos D1 mini's D4 pin and a ground pin connect to the LM386 amp module's top header IN and GND. The Wemos's 5V pin, not its 3V3 pin, connects to the amp's VDD. The amp's bottom screw terminal OUT and GND connect to a speaker.">
+          <rect class="board-outline" x="20" y="40" width="150" height="180" rx="8"/>
+          <text class="chip-label lg" x="95" y="124" text-anchor="middle">WEMOS</text>
+          <text class="chip-label" x="95" y="142" text-anchor="middle">D1 mini</text>
+          <g class="pin audio small"><circle cx="170" cy="80" r="4.5"/><text x="170" y="66" text-anchor="middle">D4</text></g>
+          <g class="pin gnd small"><circle cx="170" cy="130" r="4.5"/><text x="170" y="116" text-anchor="middle">GND</text></g>
+          <g class="pin pwr small"><circle cx="170" cy="180" r="4.5"/><text x="170" y="166" text-anchor="middle">5V</text></g>
+          <rect class="board-outline" x="390" y="40" width="140" height="180" rx="8"/>
+          <text class="chip-label lg" x="460" y="124" text-anchor="middle">LM386</text>
+          <text class="chip-label" x="460" y="142" text-anchor="middle">amp module</text>
+          <text class="board-note" x="390" y="205" text-anchor="middle">top header</text>
+          <text class="board-note" x="530" y="205" text-anchor="middle">screw terminal</text>
+          <g class="pin audio small"><circle cx="390" cy="80" r="4.5"/><text x="390" y="66" text-anchor="middle">IN</text></g>
+          <g class="pin gnd small"><circle cx="390" cy="130" r="4.5"/><text x="390" y="116" text-anchor="middle">GND</text></g>
+          <g class="pin pwr small"><circle cx="390" cy="180" r="4.5"/><text x="390" y="166" text-anchor="middle">VDD</text></g>
+          <g class="pin audio small"><circle cx="530" cy="95" r="4.5"/><text x="530" y="81" text-anchor="middle">OUT</text></g>
+          <g class="pin gnd small"><circle cx="530" cy="165" r="4.5"/><text x="530" y="151" text-anchor="middle">GND</text></g>
+          <rect class="board-outline" x="690" y="50" width="110" height="160" rx="8"/>
+          <circle class="chip" cx="745" cy="130" r="30"/>
+          <circle class="chip" cx="745" cy="130" r="13"/>
+          <text class="chip-label" x="745" y="225" text-anchor="middle">SPEAKER</text>
+          <g class="pin audio small"><circle cx="690" cy="95" r="4.5"/><text x="690" y="81" text-anchor="middle">+</text></g>
+          <g class="pin gnd small"><circle cx="690" cy="165" r="4.5"/><text x="690" y="151" text-anchor="middle">&minus;</text></g>
+          <line class="wire-audio" x1="170" y1="80" x2="390" y2="80"/>
+          <line class="wire-gnd-net" x1="170" y1="130" x2="390" y2="130"/>
+          <line class="wire-pwr" x1="170" y1="180" x2="390" y2="180"/>
+          <line class="wire-audio" x1="530" y1="95" x2="690" y2="95"/>
+          <line class="wire-gnd-net" x1="530" y1="165" x2="690" y2="165"/>
+          <g class="gotcha-pill">
+            <rect x="210" y="165" width="140" height="30" rx="15"/>
+            <text x="280" y="184.5" text-anchor="middle">5V — NOT 3V3</text>
+          </g>
+        </svg>
+        <figcaption>
+          Three wires, no more: <code>D4</code> + a <code>GND</code> off the Wemos
+          into the amp module's top header <code>IN</code> + <code>GND</code>; the
+          amp's bottom screw terminal <code>OUT</code> + <code>GND</code> straight
+          to a speaker. The one gotcha is power — the amp's <code>VDD</code> comes
+          off the Wemos's <code>5V</code> pin, <strong>not <code>3V3</code></strong>.
+          The regulated 3.3V rail only has ~200&ndash;300mA of headroom and is already
+          feeding the ESP8266's own WiFi radio; the LM386 wants upward of 4V to
+          behave, and sharing that rail risks brownouts or resets under load.
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="swatch pwr"></span><span>power</span></div>
+      <div class="legend-item"><span class="swatch gnd"></span><span>ground</span></div>
+      <div class="legend-item"><span class="swatch sig"></span><span>signal (button / pot / data)</span></div>
+      <div class="legend-item"><span class="swatch bus"></span><span>bus (I&sup2;C / SPI)</span></div>
+      <div class="legend-item"><span class="swatch audio"></span><span>audio path</span></div>
+      <div class="legend-item"><span class="swatch neutral"></span><span>unused here</span></div>
+      <p class="legend-note">Traced from this repo's firmware (<code>station-5-synth/firmware/</code>,
+      <code>station-2-live-data/wifi_sensor_relay.py</code>) and real hardware photographed
+      2026-09-01 through 2026-09-04 — pin roles reflect what these sketches actually do.</p>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 2: SENSOR WIRING ============ -->
+  <section class="doc">
+    <div class="sheet-head">
+      <p class="eyebrow">station-5-synth &middot; station-2-live-data crossover</p>
+      <h2>DHT22 / DS18B20 sensor wiring</h2>
+      <p>
+        Both sensors share one circuit: <code>D5</code> for data,
+        <code>3V3</code> for power, a pull-up bridging the two — confirmed
+        2026-09-04 by swapping sensors on the exact same untouched wiring
+        (this is exactly how a dead DHT22 unit was isolated from an
+        otherwise healthy circuit). Only the physical pin order differs.
+      </p>
+      <div class="wiring-legend">
+        <span><i class="wl-power"></i> power</span>
+        <span><i class="wl-data"></i> data + pull-up</span>
+        <span><i class="wl-gnd"></i> ground</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>DHT22 / AM2302</h3><span class="marking">bare sensor on breadboard</span></div>
+      <figure>
+        <svg viewBox="0 0 860 300" style="aspect-ratio: 860 / 300;" role="img" aria-label="DHT22 sensor pin 1 VCC, pin 2 DATA, pin 3 NC (unconnected), pin 4 GND, wired to a Wemos D1 mini: VCC to 3V3, DATA to D5 with a 10 kilohm pull-up resistor to 3V3, GND to G.">
+          <defs>
+            <marker id="arrow-dht" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/>
+            </marker>
+          </defs>
+          <g font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--ink)">
+            <rect x="30" y="60" width="120" height="170" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+            <text x="90" y="100" text-anchor="middle" font-weight="700">DHT22</text>
+            <text x="90" y="118" text-anchor="middle" fill="var(--ink-dim)" font-size="11">AM2302</text>
+            <rect x="55" y="140" width="70" height="55" rx="4" fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <text x="90" y="171" text-anchor="middle" fill="var(--ink-dim)" font-size="10">vent holes</text>
+            <line x1="150" y1="75" x2="185" y2="75" stroke="var(--wire-power)" stroke-width="3"/>
+            <text x="158" y="68" font-size="11">1 VCC</text>
+            <line x1="150" y1="110" x2="185" y2="110" stroke="var(--wire-data)" stroke-width="3"/>
+            <text x="158" y="103" font-size="11">2 DATA</text>
+            <line x1="150" y1="145" x2="185" y2="145" stroke="var(--ink-dim)" stroke-width="2" stroke-dasharray="2 3"/>
+            <text x="158" y="138" font-size="11" fill="var(--ink-dim)">3 NC</text>
+            <line x1="150" y1="215" x2="185" y2="215" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <text x="158" y="208" font-size="11">4 GND</text>
+            <line x1="185" y1="75" x2="560" y2="75" stroke="var(--wire-power)" stroke-width="3"/>
+            <line x1="185" y1="110" x2="330" y2="110" stroke="var(--wire-data)" stroke-width="3"/>
+            <line x1="330" y1="75" x2="330" y2="92" stroke="var(--wire-power)" stroke-width="3"/>
+            <polyline points="330,92 322,98 338,104 322,110 330,116" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+            <line x1="330" y1="116" x2="330" y2="110" stroke="var(--wire-data)" stroke-width="3"/>
+            <text x="345" y="102" font-size="12" fill="var(--accent)" font-weight="700">10k&#937; pull-up</text>
+            <line x1="330" y1="110" x2="560" y2="110" stroke="var(--wire-data)" stroke-width="3"/>
+            <line x1="185" y1="215" x2="560" y2="215" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <rect x="560" y="55" width="150" height="180" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+            <text x="635" y="80" text-anchor="middle" font-weight="700">D1 mini</text>
+            <line x1="560" y1="75" x2="600" y2="75" stroke="var(--wire-power)" stroke-width="3" marker-end="url(#arrow-dht)"/>
+            <text x="608" y="80" font-size="12">3V3</text>
+            <line x1="560" y1="110" x2="600" y2="110" stroke="var(--wire-data)" stroke-width="3" marker-end="url(#arrow-dht)"/>
+            <text x="608" y="115" font-size="12">D5</text>
+            <line x1="560" y1="215" x2="600" y2="215" stroke="var(--wire-gnd)" stroke-width="3" marker-end="url(#arrow-dht)"/>
+            <text x="608" y="220" font-size="12">G</text>
+          </g>
+        </svg>
+        <figcaption>
+          VCC&rarr;3V3, GND&rarr;G, DATA&rarr;D5. Pin 3 (NC) is left
+          unconnected. The 10k&#937; pull-up bridges the VCC rail and the DATA
+          line right at the sensor end — bare sensors like this one carry no
+          onboard pull-up, unlike a breakout PCB.
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="card wiring-card">
+      <div class="card-head"><h3>DS18B20</h3><span class="marking">TO-92, flat face toward you, pins down</span></div>
+      <figure>
+        <svg viewBox="0 0 860 300" style="aspect-ratio: 860 / 300;" role="img" aria-label="DS18B20 sensor pin 1 GND, pin 2 DQ data, pin 3 VDD, wired to a Wemos D1 mini: VDD to 3V3, DQ to D5 with a pull-up resistor to 3V3, GND to G.">
+          <defs>
+            <marker id="arrow-ds" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/>
+            </marker>
+          </defs>
+          <g font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--ink)">
+            <path d="M30,230 L30,110 A60,60 0 0 1 150,110 L150,230 Z" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+            <text x="90" y="150" text-anchor="middle" font-weight="700">DS18B20</text>
+            <text x="90" y="168" text-anchor="middle" fill="var(--ink-dim)" font-size="10">flat face, pins down</text>
+            <line x1="55" y1="230" x2="55" y2="255" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <text x="55" y="272" text-anchor="middle" font-size="11">1 GND</text>
+            <line x1="90" y1="230" x2="90" y2="255" stroke="var(--wire-data)" stroke-width="3"/>
+            <text x="90" y="272" text-anchor="middle" font-size="11">2 DQ</text>
+            <line x1="125" y1="230" x2="125" y2="255" stroke="var(--wire-power)" stroke-width="3"/>
+            <text x="125" y="272" text-anchor="middle" font-size="11">3 VDD</text>
+            <line x1="55" y1="255" x2="185" y2="255" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <line x1="185" y1="255" x2="185" y2="215" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <line x1="185" y1="215" x2="560" y2="215" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <line x1="90" y1="255" x2="220" y2="255" stroke="var(--wire-data)" stroke-width="3"/>
+            <line x1="220" y1="255" x2="220" y2="145" stroke="var(--wire-data)" stroke-width="3"/>
+            <line x1="125" y1="255" x2="260" y2="255" stroke="var(--wire-power)" stroke-width="3"/>
+            <line x1="260" y1="255" x2="260" y2="75" stroke="var(--wire-power)" stroke-width="3"/>
+            <line x1="260" y1="75" x2="560" y2="75" stroke="var(--wire-power)" stroke-width="3"/>
+            <line x1="330" y1="75" x2="330" y2="92" stroke="var(--wire-power)" stroke-width="3"/>
+            <polyline points="330,92 322,98 338,104 322,110 330,116" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+            <line x1="330" y1="116" x2="330" y2="145" stroke="var(--wire-data)" stroke-width="3"/>
+            <text x="345" y="102" font-size="12" fill="var(--accent)" font-weight="700">pull-up (10k&#937; used, 4.7k&#937; spec)</text>
+            <line x1="220" y1="145" x2="560" y2="145" stroke="var(--wire-data)" stroke-width="3"/>
+            <rect x="560" y="55" width="150" height="180" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+            <text x="635" y="80" text-anchor="middle" font-weight="700">D1 mini</text>
+            <line x1="560" y1="75" x2="600" y2="75" stroke="var(--wire-power)" stroke-width="3" marker-end="url(#arrow-ds)"/>
+            <text x="608" y="80" font-size="12">3V3</text>
+            <line x1="560" y1="145" x2="600" y2="145" stroke="var(--wire-data)" stroke-width="3" marker-end="url(#arrow-ds)"/>
+            <text x="608" y="150" font-size="12">D5</text>
+            <line x1="560" y1="215" x2="600" y2="215" stroke="var(--wire-gnd)" stroke-width="3" marker-end="url(#arrow-ds)"/>
+            <text x="608" y="220" font-size="12">G</text>
+          </g>
+        </svg>
+        <figcaption>
+          VDD&rarr;3V3, GND&rarr;G, DQ&rarr;D5 — same three D1 mini pins the
+          DHT22 uses, same pull-up placement. Datasheet-spec pull-up is
+          4.7k&#937;; the 10k&#937; already on the breadboard from the DHT22
+          wiring works fine left in place.
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="notes">
+      <div class="note"><b>Why 3V3, not 5V</b>Both sensors are happy on 3.3&ndash;6V, but the ESP8266's GPIOs are not 5V-tolerant (~3.6V absolute max). 3V3 keeps DATA/DQ's HIGH level matched to the ESP8266's own logic level.</div>
+      <div class="note"><b>Why D5 specifically</b>GPIO14 — one of the DHT library's own documented safe ESP8266 pins. D3/D4 (GPIO0/2) have boot-mode strapping behavior; D5 doesn't collide with I&sup2;C (D1/D2) or Mozzi's audio pin (D4).</div>
+      <div class="note"><b>Why the pull-up matters</b>Both sensors use a single data line that must be pulled high when idle. No pull-up (or one bridging the wrong lines) reads as total silence — indistinguishable from a dead sensor without a cross-check.</div>
+    </div>
+
+    <div class="callout">
+      <h4>What actually varies between them</h4>
+      Everything on the D1 mini side of both diagrams is identical — pins, pull-up
+      placement, ground rail. All that changes is the sensor's own physical pin
+      order. Swapping one sensor for the other is a drop-in test of the sensor
+      alone — exactly how <code>firmware/esp-wifi/ds18b20_test/</code> isolated a
+      dead DHT22 unit from an otherwise completely healthy circuit on 2026-09-04.
+    </div>
+  </section>
+
+  <!-- ============ SECTION 3: STATUS ICONS ============ -->
+  <section class="doc">
+    <div class="sheet-head">
+      <p class="eyebrow">station-5-synth &middot; esp_multi_synth_oled.ino</p>
+      <h2>Noizetoys status icons</h2>
+      <p>
+        8&times;8, one bit per pixel — the real constraint of the SSD1306 shield
+        wired to every board. These four are flashed and confirmed on real
+        hardware, right-aligned in the footer row of the synth board's display.
+      </p>
+    </div>
+
+    <div class="icon-grid-wrap">
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i>
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div><b>Heart</b><span>relay config fetched from real ATProto/HappyView</span></div>
+
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+      </div><b>Exclamation</b><span>DEFAULT_RELAY_HOST fallback in use</span></div>
+
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div><b>Link</b><span>downlink connected</span></div>
+
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i></i><i></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div><b>Broken link</b><span>downlink not connected</span></div>
+    </div>
+
+    <div class="icon-src">
+      Byte order matches <code>PROGMEM</code> arrays: one byte per row, MSB
+      first, top to bottom. Right-aligned in the footer row, opaque-masked
+      over the scrolling marquee text so it never shows through.
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    station-5-synth &middot; IOSP ATScience workshop, Leiden, October 2026 &middot;
+    compiled from published artifacts: Noizetoyz Pinouts, D5 Sensor Wiring, Noizetoys Status Icons.
+  </footer>
+</div>
