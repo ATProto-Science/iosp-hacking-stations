@@ -3,9 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎹🎶 Noizetoyz keys</title>
+  <title>🎹🎶 Noizetoyz — keys</title>
   <link rel="stylesheet" href="site.css">
   <style>
+    /* Noizetoyz brand pass — same token-override approach as make-noise.html:
+       redefine site.css's shared custom properties to this station's own
+       hardware-rack palette/type rather than forking the component
+       vocabulary, so every rule below (key/xy-pad/knob) that already reads
+       var(--fire) etc. picks up the new look for free. Matches
+       noizetoyz.atproto.music's own artifact. Single warm-panel theme, not
+       light/dark-adaptive, same as the rest of this site. */
+    @import url('https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+    :root {
+      --fire:   #d9601f;
+      --ember:  #a84a17;
+      --spark:  #0f8c82;
+      --smoke:  #5b4a3a;
+      --night:  #e4d8bb;
+      --ground: #f7f0e1;
+      --log:    #d9cbab;
+      --ash:    #241a12;
+
+      --font-display: 'Alfa Slab One', Georgia, serif;
+      --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+      --font-mono:    'IBM Plex Mono', 'Courier New', monospace;
+    }
+    .hearth { border-bottom-color: var(--log); }
+    .site-name {
+      font-size: clamp(2.2rem, 7vw, 3.4rem);
+      color: var(--ember);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(36,26,18,0.18);
+    }
+    .style-card {
+      border-radius: 10px;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 8px 20px -12px rgba(36,26,18,0.35);
+      position: relative;
+    }
+    .style-card::before, .style-card::after {
+      content: ""; position: absolute; top: 10px; width: 6px; height: 6px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #cfc3a4, #8a6a48);
+      box-shadow: 0 1px 1px rgba(0,0,0,0.3) inset;
+    }
+    .style-card::before { left: 10px; }
+    .style-card::after { right: 10px; }
+    .gathered { border-bottom-color: var(--log); }
+    .embers { border-top: 1px solid var(--log); }
+
     /* Piano keys + the relay-connection fields aren't covered by the
        shared Bonfire vocabulary (site.css) — everything else on this page
        (style-card, kindling-table, smoke-text, spark) reuses it directly,
@@ -89,8 +133,8 @@
 
   <header class="hearth">
     <div class="hearth-inner">
-      <h1 class="site-name">🎹🎶 Noizetoyz keys</h1>
-      <p class="site-tagline">Play a note here, hear it on a real Mozzi-driven board across the room — every keypress is a real ATProto record, shared live over the network.</p>
+      <h1 class="site-name">NOIZETOYZ</h1>
+      <p class="site-tagline">Keys — play a note here, hear it on a real Mozzi-driven board across the room — every keypress is a real ATProto record, shared live over the network.</p>
     </div>
   </header>
 
@@ -183,7 +227,7 @@
 
   <footer class="embers">
     <div class="embers-inner">
-      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a> · <a href="viewer.html" class="spark">Viewer</a> · <span class="rick-egg" id="rickEgg" title="you know the rules">♪</span></p>
+      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a> · <a href="viewer.html" class="spark">Viewer</a> · <a href="https://noizetoyz.atproto.music" class="spark">Brand page</a> · <span class="rick-egg" id="rickEgg" title="you know the rules">♪</span></p>
     </div>
   </footer>
 

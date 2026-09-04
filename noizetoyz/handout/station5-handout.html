@@ -1,16 +1,19 @@
 <title>Noizetoyz Handout</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
   /* Print-first, deliberately single-theme (light) — this page exists to be
      printed, and a dark-mode variant would just waste ink. Every color is
-     still painted explicitly per artifact convention, just once. */
+     still painted explicitly per artifact convention, just once. --accent
+     doubles as the brand's ember (matches noizetoyz.atproto.music/the
+     player) and the schematic's copper/audio-trace color below — same hue,
+     two real jobs, not a coincidence to fix. */
   :root {
     --paper: #eef1ee;
     --card: #ffffff;
     --ink: #1b2320;
     --ink-dim: #5c665f;
     --line: #c7cec8;
-    --accent: #b5651d;
+    --accent: #d9601f;
     --pwr: #c23b3b;
     --gnd: #5b655e;
     --sig: #1f7a6c;
@@ -61,10 +64,18 @@
     color: var(--accent);
     font-weight: 600;
   }
+  .cover .wordmark {
+    font-family: "Alfa Slab One", Georgia, serif;
+    font-size: clamp(30px, 6vw, 46px);
+    color: var(--accent);
+    margin: 6px 0 0;
+    letter-spacing: 0.01em;
+  }
   .cover h1 {
-    font-size: clamp(32px, 5vw, 48px);
-    font-weight: 700;
-    margin: 8px 0 14px;
+    font-size: clamp(20px, 3vw, 26px);
+    font-weight: 600;
+    color: var(--ink-dim);
+    margin: 2px 0 14px;
     letter-spacing: -0.01em;
   }
   .cover p {
@@ -309,7 +320,8 @@
 <div class="page">
 
   <div class="cover">
-    <p class="eyebrow">IOSP ATScience workshop &middot; 🎹🎶 Noizetoyz</p>
+    <p class="eyebrow">IOSP ATScience workshop &middot; Leiden</p>
+    <p class="wordmark">NOIZETOYZ</p>
     <h1>Hardware Handout</h1>
     <p>
       Three reference sheets for building and debugging this station's boards —
