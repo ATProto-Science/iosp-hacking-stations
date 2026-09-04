@@ -68,11 +68,11 @@ top-level repo README (deploys to hacking.tilde.style's "Code" section).
   `semble-mcp-helper.mjs` is the one exception (needs `npm install`, see its own
   `package.json`), kept deliberately separate so the zero-setup demo path
   (`node bot-skeleton.mjs`) never needs it.
-- **This repo is private on GitHub** (`ATProto-Science/iosp-hacking-stations`). Don't put
-  GitHub credentials on any shared/participant-facing infra (e.g. the gretel code-server
-  box) to work around this — sync via `rsync` from an already-authenticated local clone
-  instead, or make the repo public before the workshop (an open decision, see
-  `tracker-vss7`).
+- **This repo is public on GitHub** (`ATProto-Science/iosp-hacking-stations`) — confirmed
+  2026-09-05 via `gh repo view` (`isPrivate: false`), reversing the earlier "private, make
+  public before the workshop" open decision; no tracker entry recorded exactly when this
+  happened. Participants can clone it directly, no collaborator invites or `rsync`
+  workaround needed.
 - **Local commits only, same as tracker** — don't push without an explicit go-ahead each
   time, even mid-session.
 

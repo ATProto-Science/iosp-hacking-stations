@@ -32,21 +32,15 @@ Live Data Streaming's sensor pattern). ESP8266/ESP32 or Arduino UNO uplinks →
 `relay/synth_relay.py` → PDS → Jetstream, with a downlink that re-broadcasts every
 note to receive-only instruments and the browser player. See `noizetoyz/README.md`.
 
-## Station 4 — AI workflows over ATProto data (no longer Torsten's)
-
-`station-4-bots/` — a stripped-down, Chatto-agnostic extraction of
-[`sail-judge`](https://github.com/the-astrosky-ecosystem) *(placeholder link — actual
-home is `~/haiku.garden/scripts/chatto-realtime-demo/sail-judge.mjs`, not yet a public
-repo)*: the Thompson-sampling bandit + fact-store core that decides *when* and *how* an
-agent should act. Two example rewirings, matching IOSP's own copy for this station:
-a chat-response bot (`bot-skeleton.mjs`) and a paper-connection proposer for Semble
-(`connections-skeleton.mjs`) — console demo out of the box for both; wire in a real
-data source (Semble via MCP, a chat room, a firehose subscription) from there.
-
 ## Base station (shared login)
 
-Not code — see the workshop bean for the login-bridge (`atlogin`) + account-creation
-(Aster / pds.rip) plan.
+One identity gets participants into every station — `landing-page/index.html`'s "Get
+set up" section is the real, working entry point: **pds.rip** (zero-commitment, rate-
+limited), **memo.dog** (our own self-hosted test PDS, one-page signup at
+`memo-dog-signup.html`), or **Aster** (the new science PDS, pending its own launch —
+see `tracker-vss7`). A shared OAuth-to-OIDC login bridge (`atlogin`) is the longer-term
+plan for one identity working across every station's tooling without re-auth —
+described, not yet wired into the landing page.
 
 `unpin_default_feeds.py` — small helper for right after account creation: a
 fresh account comes with Discover and Video pinned by default (both Bluesky's
@@ -55,6 +49,6 @@ them, leaves Following alone. See the file's own docstring for usage.
 
 ## Hosting
 
-Primary: this GitHub repo. Mirrored to Tangled for an ATProto-native git host
-alongside the legacy one — same content, no participant needs anything nonstandard
-to clone either way.
+Primary: this GitHub repo (`ATProto-Science/iosp-hacking-stations`), **public**. A
+Tangled mirror (ATProto-native git host) was planned but isn't set up as of this
+writing — check `tracker-vss7` if that's changed since.
