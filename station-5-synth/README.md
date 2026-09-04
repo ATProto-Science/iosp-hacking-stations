@@ -493,26 +493,30 @@ a power-cycle recovered it cleanly with the committed config intact.
   station-2 sensor crossover) sketched but not wired in; see the
   `noizetoyz`/design conversation this came out of for the actual bitmap
   bytes if picking one up later.
-- ~~DHT22 humidity sensor (`firmware/esp-wifi/dht22_wifi/`)~~ — **root
-  cause found 2026-09-04: a dead/bad sensor unit.** Wired on a real board
-  2026-09-03 (bare sensor on a breadboard, not a breakout — DATA on
-  D5/GPIO14 with a 10kΩ pull-up to 3V3, standard bare-sensor wiring, later
-  confirmed correct against real photos) but read NaN on every attempt
-  across three rewires, a full relay-config fetch fix, and a router/IPv6
-  outage that stalled one retest. Every other layer got independently
-  proven innocent along the way: the relay/firmware/network path was
-  confirmed fully working by a real BMP180 board (same relay pipeline,
-  `dht22_wifi.ino`'s own sibling sketch) publishing correct readings
-  end-to-end through `wifi_sensor_relay.py` on robopi. Final test:
-  wired a DS18B20 onto the *exact same* D5/pull-up/3V3 wiring the DHT22
-  used (`firmware/esp-wifi/ds18b20_test/`, a standalone no-WiFi sketch
-  written specifically to isolate the sensor from everything else) — it
-  read correctly. Same wiring, same pin, same pull-up, different sensor,
-  working — the DHT22 unit itself is the fault, not the wiring, the pin
-  choice, the pull-up value, or anything firmware/relay-side. Also
-  checked and ruled out: a mislabeled/wrong-type unit (DHT11 sold or
-  packaged as DHT22, a real thing with cheap sensors) — flipping
-  `DHTTYPE` to `DHT11` against the same physical unit still read NaN, so
-  it's not a protocol/timing mismatch either. Swap the physical sensor
-  for a known-good DHT22 (or just keep the DS18B20 for temperature and
-  drop humidity) rather than rewiring the current one again.
+- ~~DHT22 humidity sensor (`firmware/esp-wifi/dht22_wifi/`)~~ — **closed
+  2026-09-04: confirmed dead unit, fully cross-checked, wiring/circuit
+  exonerated.** Wired on a real board 2026-09-03 (bare sensor on a
+  breadboard, not a breakout — DATA on D5/GPIO14 with a 10kΩ pull-up to
+  3V3, standard bare-sensor wiring, confirmed correct against real
+  photos) but read NaN on every attempt across three rewires. Every other
+  layer got independently proven innocent along the way: the
+  relay/firmware/network path confirmed fully working by a real BMP180
+  board (same relay pipeline, `dht22_wifi.ino`'s own sibling sketch)
+  publishing correct readings through `wifi_sensor_relay.py` on robopi;
+  a mislabeled/wrong-type unit ruled out by flipping `DHTTYPE` to `DHT11`
+  against the same physical sensor (still NaN); the sensor itself
+  confirmed a genuine ASAIR AM2302 (not a cheap knockoff) from a real
+  photo of its markings; a DS18B20 wired onto the *exact same*
+  D5/pull-up/3V3 topology (`firmware/esp-wifi/ds18b20_test/`, a
+  standalone no-WiFi sketch built to isolate the sensor from everything
+  else) reading correctly. **Final, decisive test**: swapped in a second,
+  identical ASAIR AM2302 unit onto that same unmodified wiring — it read
+  correctly immediately (`temp=25.8C humidity=68.7%`, publishing live
+  through robopi), and tracked a real deliberate humidity spike (breathed
+  on directly, jumped to 99.9% and back) in real time, confirming it's
+  not just plausible-looking values but a genuinely responsive sensor.
+  Two identical units on the same untouched circuit, one dead one
+  healthy — conclusively the first unit, not the wiring, pin, pull-up,
+  sensor type, or firmware/relay path. Swap the dead unit for good (or
+  keep the DS18B20 for temperature if humidity isn't needed) rather than
+  re-debugging this circuit again.
