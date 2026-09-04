@@ -5,13 +5,15 @@
     relay discovery via music.atproto.noizetoyz.synth.relayConfig, the
     same wire-line format, the same "no ATProto logic on the MCU" split.
 
-    Sensor: a 4-pin DHT22/AM2302 breakout module (VCC, DATA, NC, GND when
-    facing the sensor's vent holes — confirmed against the physical module
-    in hand 2026-09-03, not the bare 3-pin sensor some wiring guides show).
-    4-pin modules like this one already carry the DATA-line pull-up
-    resistor on the small breakout PCB — no external 10k resistor needed,
-    unlike the bare-sensor wiring the DHT_sensor_library's own example
-    comments describe.
+    Sensor: correction 2026-09-04 — this is the **bare DHT22/AM2302
+    sensor on a breadboard**, not a breakout board (the original note here
+    was wrong). Pin order VCC, DATA, NC, GND facing the vent holes, per
+    the standard DHT22 pinout — but bare sensors like this one do *not*
+    carry an onboard DATA pull-up, unlike a breakout PCB. A 10kΩ pull-up
+    between VCC and DATA is wired externally on the breadboard, matching
+    exactly what the DHT_sensor_library's own example comments call for
+    on bare-sensor wiring — correct as wired, don't remove it thinking
+    it's redundant.
 
     Power VCC from the Wemos's 3V3 pin, NOT 5V — the opposite gotcha from
     station-5's own LM386 amp (which specifically needs 5V for current

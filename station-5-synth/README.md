@@ -344,6 +344,11 @@ alongside `relay/`, `ops.sh`'s `pipenv run`-or-plain-`python3` auto-detect
 `pip3 install --user` setup — so `relay`, `jetstream`, and `landing` all
 run from the one already-networked box, `tmux attach -t station5-tasks`
 same as on a laptop. Its MOTD reminds anyone who SSHes in how to attach.
+robopi also runs `station-2-live-data/wifi_sensor_relay.py` now, in its own
+`sensor` tmux window — the actual station-2/5 sensor crossover, confirmed
+working 2026-09-04 with a real BMP180 board publishing live readings; see
+that station's own README.md ("wifi_sensor_relay.py drops nebra") for why
+that needed its own `nebra`-removal fix, separate from the two rounds above.
 
 **Real bug, root-caused and fixed 2026-09-03/04, board-side, in two
 rounds**: `esp_multi_synth.ino` (and every sibling sketch with an HTTPS
@@ -488,18 +493,26 @@ a power-cycle recovered it cleanly with the committed config intact.
   station-2 sensor crossover) sketched but not wired in; see the
   `noizetoyz`/design conversation this came out of for the actual bitmap
   bytes if picking one up later.
-- DHT22 humidity sensor (`firmware/esp-wifi/dht22_wifi/`) — a
-  station-2/5 crossover, sends into `station-2-live-data/wifi_sensor_relay.py`'s
-  new `humidity` handling, not a station-5 relay path. Wired on a real
-  board 2026-09-03 (DATA on D5/GPIO14, VCC on 3V3, plus an external
-  pull-up between VCC/DATA added 2026-09-04 — redundant with the 4-pin
-  breakout's own onboard pull-up per this file's header comment, two
-  resistors in parallel, not expected to be the actual problem on its
-  own) but reads NaN on every attempt so far, across three separate
-  rewires — see the sketch's own header comment for the troubleshooting
-  checklist (power LED, onboard pull-up, multimeter check). Retest
-  attempted 2026-09-04 via the flash+immediate-serial-capture technique
-  (see OPS.md) but coincided with the router/IPv6 outage documented above
-  and never got past the WiFi-connect stage in the capture window —
-  inconclusive, still open. Firmware/relay code itself isn't suspected;
-  this remains a physical-wiring-or-dead-module question.
+- ~~DHT22 humidity sensor (`firmware/esp-wifi/dht22_wifi/`)~~ — **root
+  cause found 2026-09-04: a dead/bad sensor unit.** Wired on a real board
+  2026-09-03 (bare sensor on a breadboard, not a breakout — DATA on
+  D5/GPIO14 with a 10kΩ pull-up to 3V3, standard bare-sensor wiring, later
+  confirmed correct against real photos) but read NaN on every attempt
+  across three rewires, a full relay-config fetch fix, and a router/IPv6
+  outage that stalled one retest. Every other layer got independently
+  proven innocent along the way: the relay/firmware/network path was
+  confirmed fully working by a real BMP180 board (same relay pipeline,
+  `dht22_wifi.ino`'s own sibling sketch) publishing correct readings
+  end-to-end through `wifi_sensor_relay.py` on robopi. Final test:
+  wired a DS18B20 onto the *exact same* D5/pull-up/3V3 wiring the DHT22
+  used (`firmware/esp-wifi/ds18b20_test/`, a standalone no-WiFi sketch
+  written specifically to isolate the sensor from everything else) — it
+  read correctly. Same wiring, same pin, same pull-up, different sensor,
+  working — the DHT22 unit itself is the fault, not the wiring, the pin
+  choice, the pull-up value, or anything firmware/relay-side. Also
+  checked and ruled out: a mislabeled/wrong-type unit (DHT11 sold or
+  packaged as DHT22, a real thing with cheap sensors) — flipping
+  `DHTTYPE` to `DHT11` against the same physical unit still read NaN, so
+  it's not a protocol/timing mismatch either. Swap the physical sensor
+  for a known-good DHT22 (or just keep the DS18B20 for temperature and
+  drop humidity) rather than rewiring the current one again.
