@@ -88,11 +88,11 @@
               <span class="handle-suffix">.memo.dog</span>
             </div>
 
-            <label for="password">Password</label>
-            <input id="password" type="password" required minlength="8" autocomplete="new-password">
+            <label for="password">Password (needs an uppercase letter)</label>
+            <input id="password" type="password" required minlength="8" pattern="(?=.*[A-Z]).{8,}" autocomplete="new-password">
 
             <label for="invite">Invite code</label>
-            <input id="invite" placeholder="XXXXXXXX-XXXXXXXX" required>
+            <input id="invite" placeholder="memo-dog-xxxxx-xxxxx" required>
 
             <button type="submit">Create account</button>
           </form>
