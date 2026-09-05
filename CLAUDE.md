@@ -49,12 +49,22 @@ yet confirmed whether `station-4-bots/` is still the actual basis for it. See `t
   directory). Merged into this repo via `git subtree` on 2026-07-19 (was a standalone
   repo at `~/hacking.tilde.style`, now gone — full history preserved under this prefix,
   `git log -- landing-page` shows it). `index.html` is the front door; `viewer.html`
-  reads Live Data Streaming/station 4 records back out through HappyView; `memo-dog-signup.html` is the
-  one-page memo.dog account-creation form; `kiosk.html` is the on-screen check-in
-  display for the station (dog/aster/garden emoji per account track); `checkin.html`
-  is the staff-only console for logging Aster/Bluesky check-ins (no public link — hand
-  the URL to whoever's staffing the desk). All four read/write real ATProto records,
-  no separate backend of their own.
+  reads Live Data Streaming/station 4 records back out through HappyView; `kiosk.html`
+  is the on-screen check-in display for the station (dog/aster/garden emoji per
+  account track, plus a "recently connected via youandme.at" feed). Reads/writes real
+  ATProto records, no separate backend of its own.
+- **`kiosk-onboard/`** — deployed as its *own* Cloudflare Pages project at
+  `kiosk.tilde.style` (separate from `landing-page/`'s `hacking.tilde.style`, since the
+  two domains need different root content). `index.html` is the one-page memo.dog
+  account-creation form (moved here 2026-09-05, was `memo-dog-signup.html` under
+  `landing-page/`) — reads an `?invite=` URL query param to pre-fill the invite-code
+  field, so the desk's printed/displayed QR code (encoding a single multi-use invite
+  code, minted via cocoon's `create-invite-code --uses N` — never committed to this
+  public repo) needs zero typing; a bare `kiosk.tilde.style` link is the manual-entry
+  fallback. `staff.html` (at `kiosk.tilde.style/staff`, moved here same day, was
+  `checkin.html` under `landing-page/`) is the staff-only console for logging Aster/
+  Bluesky/self-hosted check-ins — no public link, hand the URL to whoever's staffing
+  the desk.
 
 `WORKSHEET.md` (repo root) is the actual participant-facing worksheet — every station's
 setup instructions, account options, and stretch goals in one place. `README.md` is the

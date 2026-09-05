@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create a memo.dog account — IOSP 2026</title>
-  <link rel="stylesheet" href="site.css">
+  <title>Create your memo.dog account — IOSP 2026</title>
+  <link rel="stylesheet" href="https://hacking.tilde.style/site.css">
   <style>
     /* Form elements aren't part of site.css yet — scoped here, same token palette. */
     .signup-form { max-width: 30rem; }
@@ -59,13 +59,6 @@
     details.fallback summary { cursor: pointer; color: var(--spark); }
     details.fallback ol { padding-left: 1.25em; margin-top: 0.75rem; }
     details.fallback ol li { margin-bottom: 0.5em; }
-    .codes-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
-    .code-cell {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 1.75rem; height: 1.75rem; border-radius: 4px;
-      border: 1px solid var(--log); color: var(--smoke); font-size: 1rem;
-    }
-    .code-cell.taken { border-color: var(--fire); background-color: var(--night); }
   </style>
 </head>
 <body class="clearing">
@@ -82,10 +75,11 @@
       <div class="gathered-inner">
         <div class="style-card">
           <h3>Account details</h3>
-          <p>Needs a single-use invite code from the station — ask if you
-          don't have one yet. This talks directly to memo.dog's PDS
-          (<code>com.atproto.server.createAccount</code>), the same API the
-          Bluesky app itself uses, just without its multi-screen flow.</p>
+          <p>Needs an invite code from the station — scanning the desk's QR
+          code fills it in automatically; ask staff if it's blank. This talks
+          directly to memo.dog's PDS (<code>com.atproto.server.createAccount</code>),
+          the same API the Bluesky app itself uses, just without its
+          multi-screen flow.</p>
 
           <form id="signup-form" class="signup-form">
             <label for="prefix">Handle</label>
@@ -118,11 +112,8 @@
         </div>
 
         <div class="style-card">
-          <h3>Invite codes claimed</h3>
-          <p class="smoke-text">20 single-use codes total, filled in as they're
-          used — anonymized (order only, not which code), so this never shows
-          the actual codes. <span id="codes-status">loading…</span></p>
-          <div class="codes-grid" id="codes-grid"></div>
+          <h3>Joined so far</h3>
+          <p class="smoke-text" id="joined-status">loading…</p>
         </div>
       </div>
     </section>
@@ -130,74 +121,34 @@
 
   <footer class="embers">
     <div class="embers-inner">
-      <p><a href="index.html" class="spark">← Back to hacking.tilde.style</a></p>
+      <p><a href="https://hacking.tilde.style/" class="spark">← Back to hacking.tilde.style</a></p>
     </div>
   </footer>
 
   <script>
     const PDS_URL = "https://memo.dog";
-    // Read-only, rate-limited key, same one viewer.html already uses — no new secret.
+    // Read-only, rate-limited key, same one the rest of the landing page uses.
     const HAPPYVIEW_URL = "https://happyview.werk.museum";
     const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc";
     const CHECKIN_COLLECTION = "style.tilde.hacking.checkin";
-    const TOTAL_CODES = 20;
 
-    function escapeHtml(s) {
-      return s.replace(/[&<>"']/g, (c) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-      })[c]);
-    }
+    // The desk's QR code encodes ?invite=<code> so this never needs typing —
+    // one shared multi-use code (cocoon `create-invite-code --uses N`), never
+    // committed to this (public) repo's source.
+    const inviteFromUrl = new URLSearchParams(location.search).get("invite");
+    if (inviteFromUrl) document.getElementById("invite").value = inviteFromUrl;
 
-    function renderCodesGrid(titles) {
-      const cells = [];
-      for (let i = 0; i < TOTAL_CODES; i++) {
-        cells.push(
-          i < titles.length
-            ? `<span class="code-cell taken" title="${escapeHtml(titles[i])}">🐕</span>`
-            : '<span class="code-cell" title="available">·</span>'
-        );
-      }
-      document.getElementById("codes-grid").innerHTML = cells.join("");
-    }
-
-    // did -> handle, resolved lazily via memo.dog itself (single PDS, so
-    // every memo.dog checkin's DID lives there) and kept warm across the
-    // 5s poll so we're not re-resolving the same handles over and over.
-    const handleCache = new Map();
-
-    async function resolveHandle(did) {
-      if (handleCache.has(did)) return handleCache.get(did);
+    async function loadJoinedCount() {
+      const statusEl = document.getElementById("joined-status");
       try {
         const res = await fetch(
-          `${PDS_URL}/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}`
-        );
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        handleCache.set(did, data.handle);
-        return data.handle;
-      } catch {
-        return did; // fall back to the DID if handle resolution fails
-      }
-    }
-
-    async function loadCodesProgress() {
-      const statusEl = document.getElementById("codes-status");
-      try {
-        const res = await fetch(
-          `${HAPPYVIEW_URL}/xrpc/style.tilde.hacking.listCheckins?limit=100`,
+          `${HAPPYVIEW_URL}/xrpc/style.tilde.hacking.listCheckins?limit=200`,
           { headers: { "X-Client-Key": CLIENT_KEY } }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const records = data.records ?? [];
-        const taken = records
-          .filter((r) => r.track === "memo.dog")
-          .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        statusEl.textContent = `${Math.min(taken.length, TOTAL_CODES)} of ${TOTAL_CODES} claimed`;
-        const titles = await Promise.all(
-          taken.map((r) => resolveHandle(r.uri.split("/")[2]))
-        );
-        renderCodesGrid(titles);
+        const count = (data.records ?? []).filter((r) => r.track === "memo.dog").length;
+        statusEl.textContent = `${count} memo.dog account${count === 1 ? "" : "s"} created`;
       } catch (err) {
         statusEl.textContent = `couldn't load (${err.message})`;
       }
@@ -229,11 +180,11 @@
       } catch (err) {
         console.warn("checkin record failed:", err.message);
       }
-      loadCodesProgress();
+      loadJoinedCount();
     }
 
-    loadCodesProgress();
-    setInterval(loadCodesProgress, 5000);
+    loadJoinedCount();
+    setInterval(loadJoinedCount, 5000);
 
     document.getElementById("signup-form").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -272,6 +223,7 @@
           DID: <code>${data.did}</code>
         </div>`;
         e.target.reset();
+        if (inviteFromUrl) document.getElementById("invite").value = inviteFromUrl;
 
         if (data.accessJwt) {
           recordCheckin(data.did, data.accessJwt, "memo.dog");
