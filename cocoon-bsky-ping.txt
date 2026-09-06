@@ -1,0 +1,1 @@
+Hey @hailey.at! 👋 Running cocoon for a workshop PDS (memo.dog) and found a crash: a PAR request with a complete, valid client-metadata doc panics handleOauthPar (nil-pointer dereference) instead of erroring. Switching to tranquil-pds meanwhile so we are not blocked. Happy to share the repro!
