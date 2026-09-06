@@ -10,21 +10,28 @@
        page needs — no new component, just the empty-state color. */
     .empty { color: var(--smoke); font-style: italic; }
     .last-note { font-family: var(--font-display); font-size: 2.5rem; color: var(--spark); margin: 0.3em 0; }
+    .section-nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 0.75rem; }
+    .section-nav a { scroll-behavior: smooth; }
   </style>
 </head>
 <body class="clearing">
 
   <header class="hearth">
     <div class="hearth-inner">
-      <h1 class="site-name">📡🌡️ Live Data Streaming + station 4, one substrate</h1>
+      <h1 class="site-name">📡🌡️ Live Data Streaming + 🎹🎶 Noizetoyz — one substrate</h1>
       <p class="site-tagline">Both stations read/write real ATProto records through the same HappyView AppView — no separate backends.</p>
+      <nav class="section-nav">
+        <a href="#sensors" class="spark">📡🌡️ Sensor readings</a>
+        <a href="#checkins" class="spark">Who's checked in</a>
+        <a href="#notes" class="spark">🎹🎶 Noizetoyz</a>
+      </nav>
     </div>
   </header>
 
   <main>
     <section class="gathered">
       <div class="gathered-inner">
-        <div class="style-card">
+        <div class="style-card" id="sensors">
           <h3>📡🌡️ Live Data Streaming — live sensor readings</h3>
           <p class="smoke-text" id="status-sensors">loading…</p>
           <table class="kindling-table">
@@ -33,16 +40,7 @@
           </table>
         </div>
 
-        <div class="style-card">
-          <h3>Station 4 — SAITO agent facts</h3>
-          <p class="smoke-text" id="status-facts">loading…</p>
-          <table class="kindling-table">
-            <thead><tr><th>subject</th><th>predicate</th><th>object</th><th>conf.</th><th>when</th></tr></thead>
-            <tbody id="rows-facts"></tbody>
-          </table>
-        </div>
-
-        <div class="style-card">
+        <div class="style-card" id="checkins">
           <h3>Who's checked in — memo.dog / Aster / Bluesky / self-hosted</h3>
           <p class="smoke-text" id="status-checkins">loading…</p>
           <table class="kindling-table">
@@ -51,7 +49,7 @@
           </table>
         </div>
 
-        <div class="style-card">
+        <div class="style-card" id="notes">
           <h3>🎹🎶 Noizetoyz — last played note</h3>
           <p class="smoke-text" id="status-notes">loading…</p>
           <p class="last-note" id="last-note-display">—</p>
@@ -107,31 +105,6 @@
               )
               .join("")
           : `<tr><td colspan="4" class="empty">no readings yet</td></tr>`;
-      } catch (err) {
-        statusEl.textContent = `error: ${err.message}`;
-      }
-    }
-
-    async function loadFacts() {
-      const statusEl = document.getElementById("status-facts");
-      const rowsEl = document.getElementById("rows-facts");
-      try {
-        const records = await fetchRecords("run.saito.listFacts");
-        statusEl.textContent = `${records.length} fact(s)`;
-        rowsEl.innerHTML = records.length
-          ? records
-              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-              .map(
-                (r) => `<tr>
-                  <td>${truncate(r.subject, 40)}</td>
-                  <td>${r.predicate}</td>
-                  <td>${truncate(r.object, 30)}</td>
-                  <td>${r.confidence}%</td>
-                  <td>${new Date(r.createdAt).toLocaleTimeString()}</td>
-                </tr>`
-              )
-              .join("")
-          : `<tr><td colspan="5" class="empty">no facts yet</td></tr>`;
       } catch (err) {
         statusEl.textContent = `error: ${err.message}`;
       }
@@ -195,7 +168,6 @@
 
     function loadAll() {
       loadSensors();
-      loadFacts();
       loadCheckins();
       loadLastNote();
     }
