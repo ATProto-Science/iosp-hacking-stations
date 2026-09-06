@@ -1,0 +1,587 @@
+<title>Worksheet Handout — Sensors, Noizetoyz &amp; Toons</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  /* Same visual system as noizetoyz/handout/noizetoyz-hardware-handout.html (colors,
+     type, @page/print rules, card grid) — reused deliberately so every
+     printed handout from this workshop reads as one family, not restyled
+     from scratch per station. Print-first, single (light) theme. */
+  :root {
+    --paper: #eef1ee;
+    --card: #ffffff;
+    --ink: #1b2320;
+    --ink-dim: #5c665f;
+    --line: #c7cec8;
+    --accent: #d9601f;
+    --pwr: #c23b3b;
+    --gnd: #5b655e;
+    --sig: #1f7a6c;
+    --bus: #5b57c9;
+    --shadow: rgba(27, 35, 32, 0.10);
+    --wire-power: #b8862f;
+    --wire-data: #2f6f5e;
+    --wire-gnd: #4a4640;
+  }
+
+  @page { size: A4; margin: 16mm 14mm; }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    margin: 0;
+  }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 40px 24px 60px; }
+
+  section.doc { padding: 40px 0; }
+  section.doc:first-of-type { padding-top: 0; }
+
+  @media print {
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    section.doc { page-break-before: always; padding-top: 0; }
+    section.doc:first-of-type { page-break-before: avoid; }
+    .page { max-width: none; padding: 0; }
+  }
+
+  .cover { padding: 60px 0 40px; border-bottom: 3px solid var(--ink); margin-bottom: 8px; }
+  .cover .eyebrow {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); font-weight: 600;
+  }
+  .cover .wordmark {
+    font-family: "Alfa Slab One", Georgia, serif; font-size: clamp(30px, 6vw, 46px);
+    color: var(--accent); margin: 6px 0 0; letter-spacing: 0.01em;
+  }
+  .cover h1 { font-size: clamp(20px, 3vw, 26px); font-weight: 600; color: var(--ink-dim); margin: 2px 0 14px; letter-spacing: -0.01em; }
+  .cover p { max-width: 68ch; color: var(--ink-dim); font-size: 1rem; line-height: 1.6; margin: 0 0 20px; }
+  .cover ol { margin: 0; padding-left: 1.3em; color: var(--ink); font-size: 0.95rem; line-height: 1.9; }
+  .cover ol code {
+    font-family: "IBM Plex Mono", monospace; background: color-mix(in srgb, var(--line) 40%, transparent);
+    padding: 0.1em 0.4em; border-radius: 4px;
+  }
+
+  .sheet-head { margin-bottom: 1.6rem; }
+  .sheet-head .eyebrow {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--accent); font-weight: 600;
+  }
+  .sheet-head h2 { font-size: 1.7rem; font-weight: 700; margin: 6px 0 8px; letter-spacing: -0.01em; }
+  .sheet-head p { font-size: 0.95rem; line-height: 1.55; color: var(--ink-dim); margin: 0; max-width: 72ch; }
+  .sheet-head strong { color: var(--ink); font-weight: 600; }
+
+  .sheet { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.4rem; align-items: start; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 1.3rem 1.4rem 1.2rem; box-shadow: 0 1px 2px var(--shadow); break-inside: avoid;
+  }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
+  .card-head h3 { font-size: 1rem; font-weight: 600; margin: 0; letter-spacing: -0.005em; }
+  .card-head .marking { font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; color: var(--ink-dim); white-space: nowrap; }
+  .card > p.lead { margin: 0 0 0.9rem; font-size: 0.85rem; line-height: 1.55; color: var(--ink-dim); }
+
+  code {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.85em; color: var(--ink);
+    background: color-mix(in srgb, var(--line) 40%, transparent); padding: 0.05em 0.35em; border-radius: 4px;
+  }
+  pre {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; line-height: 1.5; color: var(--ink);
+    background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+    padding: 0.7em 0.9em; margin: 0.6em 0; overflow-x: auto; white-space: pre-wrap;
+  }
+
+  /* Task checklists — a plain unicode ballot box instead of <input type=checkbox>,
+     which renders inconsistently (and is inert) in a printed PDF. */
+  ul.tasklist { list-style: none; margin: 0; padding: 0; }
+  ul.tasklist li {
+    position: relative; padding-left: 1.7em; margin-bottom: 0.65em;
+    font-size: 0.9rem; line-height: 1.5; color: var(--ink);
+  }
+  ul.tasklist li::before {
+    content: "\2610"; position: absolute; left: 0; top: -0.05em; color: var(--accent); font-size: 1.05em;
+  }
+  ul.tasklist li:last-child { margin-bottom: 0; }
+
+  .callout {
+    margin-top: 20px; background: var(--card); border: 1.5px dashed var(--accent); border-radius: 10px;
+    padding: 16px 18px; font-size: 0.87rem; line-height: 1.6;
+  }
+  .callout h4 { margin: 0 0 6px; font-size: 1rem; color: var(--accent); }
+  .callout.checkpoint h4::before { content: "\2713  "; }
+
+  .notes { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .note {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 11px 13px;
+    font-size: 0.8rem; line-height: 1.55; color: var(--ink); break-inside: avoid;
+  }
+  .note b { display: block; font-size: 0.78rem; letter-spacing: 0.02em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; font-weight: 700; }
+
+  .subhead { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-dim); margin: 1.5rem 0 0.7rem; }
+  .subhead:first-child { margin-top: 0; }
+
+  /* --- OLED icon appendix --- */
+  .icon-grid-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .icon-card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; text-align: center; break-inside: avoid; }
+  .icon-grid {
+    display: grid; grid-template-columns: repeat(8, 8px); grid-template-rows: repeat(8, 8px); gap: 1px;
+    margin: 0 auto 10px; width: fit-content; background: #0e1210; padding: 6px; border-radius: 3px;
+  }
+  .icon-grid i { display: block; background: #1c2620; }
+  .icon-grid i.on { background: #eafff2; }
+  .icon-card b { display: block; font-size: 0.85rem; margin-bottom: 3px; }
+  .icon-card .emoji-map { font-size: 0.95rem; margin: 2px 0; }
+  .icon-card span { font-size: 0.72rem; color: var(--ink-dim); line-height: 1.4; display: block; }
+  .icon-src { margin-top: 10px; font-size: 0.72rem; color: var(--ink-dim); font-family: "IBM Plex Mono", monospace; }
+
+  /* --- DHT22 wiring appendix (reused verbatim from noizetoyz-hardware-handout.html) --- */
+  .wiring-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 0.78rem; color: var(--ink-dim); font-family: "IBM Plex Mono", monospace; }
+  .wiring-legend span { display: flex; align-items: center; gap: 6px; }
+  .wiring-legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; }
+  .wl-power { background: var(--wire-power); }
+  .wl-data { background: var(--wire-data); }
+  .wl-gnd { background: var(--wire-gnd); }
+
+  footer.doc-footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.72rem; color: var(--ink-dim); line-height: 1.6; }
+</style>
+
+<div class="page">
+
+  <div class="cover">
+    <p class="eyebrow">IOSP ATScience workshop &middot; Leiden</p>
+    <p class="wordmark">WORKSHEET</p>
+    <h1>Sensors, Noizetoyz &amp; Toons Handout</h1>
+    <p>
+      Your reference for three parts of today's hacking session — task
+      checklists, checkpoints, and troubleshooting, so you're not stuck
+      reading a screen the whole time. Work through these at your own pace,
+      in any order, on just a laptop (some hardware is a bonus, not a
+      requirement). Print double-sided; each section starts on its own page.
+    </p>
+    <ol>
+      <li>📡🌡️ Live Data Streaming — sensor tasks</li>
+      <li>🎹🎶 Noizetoyz — play a live synth</li>
+      <li>🎪 Airglow Toons — build a custom feed automation</li>
+      <li>Appendix — OLED status icons &amp; DHT22 sensor wiring</li>
+    </ol>
+  </div>
+
+  <!-- ============ SECTION 1: SENSOR TASKS ============ -->
+  <section class="doc">
+    <div class="sheet-head">
+      <p class="eyebrow">📡🌡️ Live Data Streaming</p>
+      <h2>Sensor Tasks</h2>
+      <p>
+        A Raspberry Pi or Wemos board + sensor writes readings as ATProto
+        records via <strong>Nebra</strong>; a separate consumer reads them
+        back out, Matadisco-style. No hardware needed to try this — the
+        producer simulates a reading by default.
+        <code>cd live-data</code> for everything below.
+      </p>
+    </div>
+
+    <div class="sheet">
+      <div class="card">
+        <div class="card-head"><h3>Setup</h3><span class="marking">Python &ge;3.11</span></div>
+        <ul class="tasklist">
+          <li><code>pipenv install &amp;&amp; pipenv shell</code> (or <code>pip install nebra</code> directly)</li>
+          <li>Set your identity: <code>NEBRA_HANDLE</code>, <code>NEBRA_PASSWORD</code>,
+            and <code>NEBRA_BASE_URL</code> (the PDS your account actually lives on —
+            skip only if you're on <code>bsky.social</code> itself)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Run it</h3><span class="marking">two terminals</span></div>
+        <ul class="tasklist">
+          <li>Terminal A: <code>./run_producer.sh</code> — a new simulated reading every 5s, each sent as a real ATProto record</li>
+          <li>Terminal B: <code>./run_consumer.sh</code> — connects to the public Jetstream firehose, prints back the same readings within seconds</li>
+          <li><code>Ctrl-C</code> stops either loop for good</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout checkpoint">
+      <h4>Checkpoint</h4>
+      Terminal B's lines match Terminal A's <code>deviceId</code>/<code>value</code>/<code>unit</code> —
+      sensor &rarr; PDS record &rarr; Jetstream &rarr; consumer, working end to end over the
+      same public infrastructure Bluesky posts travel over.
+    </div>
+
+    <p class="subhead">Real (non-simulated) data sources — pick one</p>
+    <div class="notes">
+      <div class="note"><b>Raspberry Pi or Wemos board</b><strong>Pi:</strong> wire a real DS18B20 temperature probe to a GPIO pin (<code>w1thermsensor</code>), replace <code>read_sensor()</code>'s simulated value — see the Appendix for wiring. <strong>Wemos/ESP8266:</strong> flash <code>noizetoyz/firmware/esp-wifi/bmp180_wifi/</code>, then run <code>live-data/wifi_sensor_relay.py</code> — same <code>style.tilde.hacking.sensorReading</code> collection, no code changes needed.</div>
+      <div class="note"><b>Webcam</b>Four readings (brightness, saturation, hue, contrast), no Pi or Python image library needed — <code>live-data/WEBCAM-SENSORS.md</code>. On the Toons wall these show as a colored shape instead of a fixed icon: a circle in whatever color the camera actually sees, a black/white square for brightness.</div>
+      <div class="note"><b>Laptop / no hardware</b>CPU temperature, weather, ping latency, uptime — already wired into <code>read_sensor()</code>/<code>UNIT</code>, just set <code>SENSOR_TYPE</code> — <code>live-data/LOCAL-SENSORS.md</code>. <code>./run_local_sensors.sh start</code> runs these plus all 4 webcam readings at once instead of one at a time — see <code>live-data/OPS.md</code>.</div>
+      <div class="note"><b>Something else</b><code>SENSOR_TYPE</code>/<code>UNIT</code> are just strings — relabel to match whatever you're actually measuring.</div>
+    </div>
+
+    <p class="subhead">If something breaks</p>
+    <div class="notes">
+      <div class="note"><b>No module named 'nebra'</b>Not in the pipenv shell / didn't <code>pip install nebra</code>, or Python &lt;3.11.</div>
+      <div class="note"><b>Nothing in Terminal B</b>Double-check <code>NEBRA_HANDLE</code>/<code>PASSWORD</code> in Terminal A, and both terminals hit the same Jetstream instance.</div>
+      <div class="note"><b>401 Invalid identifier/password</b>Set <code>NEBRA_BASE_URL</code> to your account's actual PDS — Nebra defaults to <code>bsky.social</code>.</div>
+      <div class="note"><b>400 ... got 23.8</b>A raw float — AT Protocol has no float type. This skeleton already works around it (scaled-integer <code>value</code>/<code>valueScale</code>).</div>
+    </div>
+
+    <p class="subhead">Stretch goals</p>
+    <ul class="tasklist">
+      <li>Replace <code>consumer_viewer.py</code>'s <code>print()</code> with something visual — a terminal sparkline, or a tiny live-charting page</li>
+      <li>Stream a different collection to prove "one substrate" yourself — try <code>cx.vmx.matadisco</code> instead of <code>style.tilde.hacking.sensorReading</code></li>
+      <li>Propose a real NSID for the sensor-reading lexicon (currently a placeholder) and say why</li>
+      <li>Watch the same stream with a different tool — <code>goat firehose --ops -c style.tilde.hacking.sensorReading</code></li>
+      <li>Deploy the producer as a Cloudflare Worker on a cron trigger instead of a local script (Matadisco's own <code>sentinel-to-atproto</code> pattern)</li>
+    </ul>
+  </section>
+
+  <!-- ============ SECTION 2: NOIZETOYZ ============ -->
+  <section class="doc">
+    <div class="sheet-head">
+      <p class="eyebrow">🎹🎶 Noizetoyz</p>
+      <h2>Play a Live Synth</h2>
+      <p>
+        A small Mozzi-based synth anyone in the room can play — browser or
+        real hardware. Every note-on publishes a real
+        <code>music.atproto.noizetoyz.synth.note</code> record; a relay writes
+        it to a PDS and re-broadcasts it to every board in the room.
+      </p>
+    </div>
+
+    <div class="sheet">
+      <div class="card">
+        <div class="card-head"><h3>No hardware? Just play</h3><span class="marking">any laptop/phone</span></div>
+        <ul class="tasklist">
+          <li>Join the <code>noizetoyz</code> WiFi network (password <code>synthbeep</code>) — or use <code>hacking.tilde.style/player.html</code>, which detects and falls back to the local link itself</li>
+          <li>Open <code>player.html</code> (or <code>make-noise.html</code> for the fuller how-to-play first)</li>
+          <li>Play a note, then try <strong>scrub</strong>, <strong>wavefold</strong>, <strong>filter</strong>, or <strong>fm</strong> — drag each card's XY pad</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Got an ESP8266/ESP32/UNO?</h3><span class="marking">real hardware</span></div>
+        <ul class="tasklist">
+          <li>Join the <code>noizetoyz</code> WiFi network</li>
+          <li><code>cd noizetoyz/firmware &amp;&amp; ./flash.sh</code> — waits for your board, gives a numbered sketch menu</li>
+          <li>Power it up — it plays back everyone else's notes, yours too</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout checkpoint">
+      <h4>Checkpoint</h4>
+      An instant local preview (tone/fold modes only), then moments later
+      hear it played back on a real speaker somewhere in the room. Open
+      <code>viewer.html</code> to see your note land as a real record.
+    </div>
+
+    <p class="subhead">If something breaks</p>
+    <div class="notes">
+      <div class="note"><b>Board never enumerates</b>Swap the USB cable first — most kit cables are charge-only (LED lights up, never registers as serial).</div>
+      <div class="note"><b>Flashes fine, no sound</b>Double-check you're on <code>noizetoyz</code> WiFi, not your phone's data or the venue's main network.</div>
+      <div class="note"><b>Player shows no relay address</b>The venue's relay address changes between setups — ask at the station.</div>
+    </div>
+
+    <p class="subhead">Stretch goals</p>
+    <ul class="tasklist">
+      <li>Run your own relay: <code>cd noizetoyz/relay</code>, set <code>ATPROTO_HANDLE</code>/<code>PASSWORD</code>, <code>./run_relay.sh</code> — watch with <code>synth_console_viewer.py</code></li>
+      <li>Read <code>lexicon/music.atproto.noizetoyz.synth.note.json</code> and propose a real Mozzi patch (filters, a real ADSR envelope) in place of the current <code>fxType=tremolo</code> placeholder</li>
+      <li>Full architecture and hardware war stories: <code>noizetoyz/README.md</code>, <code>noizetoyz/OPS.md</code></li>
+    </ul>
+  </section>
+
+  <!-- ============ SECTION 3: AIRGLOW TOONS ============ -->
+  <section class="doc">
+    <div class="sheet-head">
+      <p class="eyebrow">🎪 Airglow Toons</p>
+      <h2>Build a custom feed automation</h2>
+      <p>
+        <strong>airglow.run</strong> is a no-code "if this ATProto event
+        happens, do that" automation platform — already the plumbing behind
+        hacking.tilde.style's "recently connected via youandme.at" feed. Build
+        your own, and it flies across <strong>toons.tilde.style</strong>, the
+        workshop's big-screen wall — no code, no waiting on anyone else.
+      </p>
+    </div>
+
+    <div class="sheet">
+      <div class="card">
+        <div class="card-head"><h3>Setup</h3><span class="marking">airglow.run</span></div>
+        <ul class="tasklist">
+          <li>Sign in to <a href="https://airglow.run">airglow.run</a> with your ATProto handle</li>
+          <li>Browse <a href="https://airglow.run/u/tilde.style">airglow.run/u/tilde.style</a> — this workshop's own working toon examples, clonable with one click</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Build it</h3><span class="marking">trigger &middot; condition &middot; action</span></div>
+        <ul class="tasklist">
+          <li>Pick a <strong>trigger</strong>: any ATProto record type you care about</li>
+          <li>(Optional) a <strong>condition</strong> — only fire on a field match</li>
+          <li><strong>Action</strong>: create a record, collection <code>style.tilde.hacking.toon</code>, fields <code>emoji</code> (required), <code>label</code> (optional), <code>createdAt</code> = <code>{{event.commit.record.createdAt}}</code></li>
+          <li>Save, enable, trigger it for real</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout checkpoint">
+      <h4>Checkpoint</h4>
+      Your own emoji flies across the top lane of <code>toons.tilde.style</code>
+      within a few seconds — purely from an automation <em>you</em> built.
+    </div>
+
+    <p class="subhead">If something breaks</p>
+    <div class="notes">
+      <div class="note"><b>"Lexicon's schema could not be resolved"</b>Harmless — type the condition field path in by hand: <code>event.commit.record.&lt;fieldName&gt;</code> (e.g. <code>event.commit.record.sensorType</code>).</div>
+      <div class="note"><b>Nothing shows up</b>Double-check the collection name is exactly <code>style.tilde.hacking.toon</code> — a typo won't error, it'll just write somewhere nobody's watching.</div>
+      <div class="note"><b>Wall shows &#10024; instead of your emoji</b>The <code>emoji</code> field is missing or misnamed — &#10024; is the wall's fallback.</div>
+      <div class="note"><b>Still nothing, automation looks right</b>Check it's saved <em>active</em> (not a draft), and that you triggered a genuinely new event after saving — an event from before won't retroactively fire it.</div>
+    </div>
+
+    <p class="subhead">Stretch goals</p>
+    <ul class="tasklist">
+      <li>Give your automation a real condition — filter to a keyword, author, or field value</li>
+      <li>Chain two automations — a narrow one and a duller catch-all — so specificity shows live on the wall</li>
+      <li>Read <code>landing-page/lexicon/style.tilde.hacking.toon.json</code> and <code>.connection.json</code> for the pattern already in production use</li>
+    </ul>
+  </section>
+
+  <!-- ============ APPENDIX: OLED ICONS + DHT22 WIRING ============ -->
+  <section class="doc">
+    <div class="sheet-head">
+      <p class="eyebrow">Appendix &middot; esp_multi_synth_oled.ino</p>
+      <h2>OLED status icons &amp; how they map to Toons</h2>
+      <p>
+        8&times;8, one bit per pixel — the real constraint of the SSD1306
+        shield wired to every Noizetoyz board. Every icon here also has an
+        emoji equivalent used on the <strong>toons.tilde.style</strong> wall
+        and in <code>viewer.html</code>'s pulse banner, chosen to match —
+        same icon language, hardware screen to big screen.
+      </p>
+    </div>
+
+    <div class="icon-grid-wrap">
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i>
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div><b>Heart</b><span class="emoji-map">no Toons emoji</span><span>relay config fetched from real ATProto/HappyView</span></div>
+
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+      </div><b>Exclamation</b><span class="emoji-map">no Toons emoji</span><span><code>DEFAULT_RELAY_HOST</code> fallback in use</span></div>
+
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div><b>Link</b><span class="emoji-map">no Toons emoji</span><span>downlink connected</span></div>
+
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i></i><i></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div><b>Broken link</b><span class="emoji-map">no Toons emoji</span><span>downlink not connected</span></div>
+
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i>
+        <i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i>
+      </div><b>Note-in</b><span class="emoji-map">&rarr; 🎵 tone / 🧽 scrub / 🥐 fold / &#9749; filter / &#128250; fm / &#127928; pluck</span><span>a note just arrived over the downlink</span></div>
+
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+        <i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i>
+        <i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i>
+        <i class="on"></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i>
+        <i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i class="on"></i>
+        <i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i>
+        <i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i>
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+      </div><b>Pressure</b><span class="emoji-map">&rarr; &#129517;</span><span>barometer dial — new 2026-09-04</span></div>
+
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+      </div><b>Temperature</b><span class="emoji-map">&rarr; 🌡️</span><span>same bytes as the Noizetoyz icon sheet</span></div>
+
+      <div class="icon-card"><div class="icon-grid">
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i>
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+        <i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+        <i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+      </div><b>Humidity</b><span class="emoji-map">&rarr; 💧</span><span>same bytes as the Noizetoyz icon sheet</span></div>
+    </div>
+
+    <div class="icon-src">
+      Byte order matches the firmware's own <code>PROGMEM</code> arrays: one byte per row, MSB first, top
+      to bottom — reproduced exactly, not redrawn. <b>Pressure/Temperature/Humidity</b> also appear
+      in <code>SENSOR_EMOJI</code>; <b>Note-in</b>'s emoji varies by the note's <code>mode</code>
+      (<code>NOTE_EMOJI</code>) — see <code>toons/index.html</code> and <code>viewer.html</code>.
+    </div>
+
+    <p class="subhead">DS18B20 sensor wiring — Raspberry Pi or Wemos</p>
+    <div class="sheet">
+    <div class="card">
+      <div class="card-head"><h3>DS18B20</h3><span class="marking">TO-92, flat face toward you, pins down &rarr; Raspberry Pi GPIO</span></div>
+      <div class="wiring-legend">
+        <span><i class="wl-power"></i> power</span>
+        <span><i class="wl-data"></i> data + pull-up</span>
+        <span><i class="wl-gnd"></i> ground</span>
+      </div>
+      <figure style="margin: 14px 0 0;">
+        <svg viewBox="0 0 860 300" style="aspect-ratio: 860 / 300; display: block; width: 100%;" role="img" aria-label="DS18B20 sensor pin 1 GND, pin 2 DQ data, pin 3 VDD, wired to a Raspberry Pi: VDD to 3V3 (physical pin 1), DQ to GPIO4 (physical pin 7) with a pull-up resistor to 3V3, GND to GND (physical pin 6).">
+          <defs>
+            <marker id="arrow-ds" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/>
+            </marker>
+          </defs>
+          <g font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--ink)">
+            <path d="M30,230 L30,110 A60,60 0 0 1 150,110 L150,230 Z" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+            <text x="90" y="150" text-anchor="middle" font-weight="700">DS18B20</text>
+            <text x="90" y="168" text-anchor="middle" fill="var(--ink-dim)" font-size="10">flat face, pins down</text>
+            <line x1="55" y1="230" x2="55" y2="240" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <text x="55" y="272" text-anchor="middle" font-size="11">1 GND</text>
+            <line x1="90" y1="230" x2="90" y2="252" stroke="var(--wire-data)" stroke-width="3"/>
+            <text x="90" y="272" text-anchor="middle" font-size="11">2 DQ</text>
+            <line x1="125" y1="230" x2="125" y2="264" stroke="var(--wire-power)" stroke-width="3"/>
+            <text x="125" y="272" text-anchor="middle" font-size="11">3 VDD</text>
+            <line x1="55" y1="240" x2="170" y2="240" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <line x1="170" y1="240" x2="170" y2="215" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <line x1="170" y1="215" x2="560" y2="215" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <line x1="90" y1="252" x2="230" y2="252" stroke="var(--wire-data)" stroke-width="3"/>
+            <line x1="230" y1="252" x2="230" y2="165" stroke="var(--wire-data)" stroke-width="3"/>
+            <line x1="125" y1="264" x2="290" y2="264" stroke="var(--wire-power)" stroke-width="3"/>
+            <line x1="290" y1="264" x2="290" y2="110" stroke="var(--wire-power)" stroke-width="3"/>
+            <line x1="290" y1="110" x2="560" y2="110" stroke="var(--wire-power)" stroke-width="3"/>
+            <line x1="430" y1="110" x2="430" y2="122" stroke="var(--wire-power)" stroke-width="3"/>
+            <polyline points="430,122 422,128 438,134 422,140 430,146" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+            <line x1="430" y1="146" x2="430" y2="165" stroke="var(--wire-data)" stroke-width="3"/>
+            <text x="445" y="132" font-size="12" fill="var(--accent)" font-weight="700">4.7k&#937; pull-up</text>
+            <line x1="230" y1="165" x2="560" y2="165" stroke="var(--wire-data)" stroke-width="3"/>
+            <rect x="560" y="45" width="180" height="200" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+            <text x="650" y="66" text-anchor="middle" font-weight="700">Raspberry Pi</text>
+            <text x="650" y="80" text-anchor="middle" fill="var(--ink-dim)" font-size="10">40-pin GPIO header</text>
+            <line x1="560" y1="110" x2="600" y2="110" stroke="var(--wire-power)" stroke-width="3" marker-end="url(#arrow-ds)"/>
+            <text x="608" y="114" font-size="12">3V3 (pin 1)</text>
+            <line x1="560" y1="165" x2="600" y2="165" stroke="var(--wire-data)" stroke-width="3" marker-end="url(#arrow-ds)"/>
+            <text x="608" y="169" font-size="12">GPIO4 (pin 7)</text>
+            <line x1="560" y1="215" x2="600" y2="215" stroke="var(--wire-gnd)" stroke-width="3" marker-end="url(#arrow-ds)"/>
+            <text x="608" y="219" font-size="12">GND (pin 6)</text>
+          </g>
+        </svg>
+      </figure>
+      <p class="lead" style="margin-top: 0.9rem;">
+        VDD&rarr;3V3 (pin 1), GND&rarr;GND (pin 6), DQ&rarr;GPIO4 (pin 7) — the Pi's default
+        1-Wire pin, matching <code>w1thermsensor</code>'s out-of-the-box config (enable via
+        <code>raspi-config</code>'s 1-Wire option, or <code>dtoverlay=w1-gpio</code> in
+        <code>/boot/config.txt</code>). Datasheet-spec pull-up is 4.7k&#937;, bridging VDD and DQ
+        right at the sensor end. Mini breadboard, jumper wires, and a pull-up resistor are all
+        available at the station — no need to bring your own.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>DS18B20</h3><span class="marking">TO-92, flat face toward you, pins down &rarr; Wemos D1 mini</span></div>
+      <div class="wiring-legend">
+        <span><i class="wl-power"></i> power</span>
+        <span><i class="wl-data"></i> data + pull-up</span>
+        <span><i class="wl-gnd"></i> ground</span>
+      </div>
+      <figure style="margin: 14px 0 0;">
+        <svg viewBox="0 0 860 300" style="aspect-ratio: 860 / 300; display: block; width: 100%;" role="img" aria-label="DS18B20 sensor pin 1 GND, pin 2 DQ data, pin 3 VDD, wired to a Wemos D1 mini: VDD to 3V3, DQ to D5 with a pull-up resistor to 3V3, GND to G.">
+          <defs>
+            <marker id="arrow-ds-wemos" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/>
+            </marker>
+          </defs>
+          <g font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--ink)">
+            <path d="M30,230 L30,110 A60,60 0 0 1 150,110 L150,230 Z" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+            <text x="90" y="150" text-anchor="middle" font-weight="700">DS18B20</text>
+            <text x="90" y="168" text-anchor="middle" fill="var(--ink-dim)" font-size="10">flat face, pins down</text>
+            <line x1="55" y1="230" x2="55" y2="240" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <text x="55" y="272" text-anchor="middle" font-size="11">1 GND</text>
+            <line x1="90" y1="230" x2="90" y2="252" stroke="var(--wire-data)" stroke-width="3"/>
+            <text x="90" y="272" text-anchor="middle" font-size="11">2 DQ</text>
+            <line x1="125" y1="230" x2="125" y2="264" stroke="var(--wire-power)" stroke-width="3"/>
+            <text x="125" y="272" text-anchor="middle" font-size="11">3 VDD</text>
+            <line x1="55" y1="240" x2="170" y2="240" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <line x1="170" y1="240" x2="170" y2="215" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <line x1="170" y1="215" x2="560" y2="215" stroke="var(--wire-gnd)" stroke-width="3"/>
+            <line x1="90" y1="252" x2="230" y2="252" stroke="var(--wire-data)" stroke-width="3"/>
+            <line x1="230" y1="252" x2="230" y2="165" stroke="var(--wire-data)" stroke-width="3"/>
+            <line x1="125" y1="264" x2="290" y2="264" stroke="var(--wire-power)" stroke-width="3"/>
+            <line x1="290" y1="264" x2="290" y2="110" stroke="var(--wire-power)" stroke-width="3"/>
+            <line x1="290" y1="110" x2="560" y2="110" stroke="var(--wire-power)" stroke-width="3"/>
+            <line x1="430" y1="110" x2="430" y2="122" stroke="var(--wire-power)" stroke-width="3"/>
+            <polyline points="430,122 422,128 438,134 422,140 430,146" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+            <line x1="430" y1="146" x2="430" y2="165" stroke="var(--wire-data)" stroke-width="3"/>
+            <text x="445" y="132" font-size="12" fill="var(--accent)" font-weight="700">10k&#937; pull-up</text>
+            <line x1="230" y1="165" x2="560" y2="165" stroke="var(--wire-data)" stroke-width="3"/>
+            <rect x="560" y="55" width="150" height="180" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+            <text x="635" y="75" text-anchor="middle" font-weight="700">D1 mini</text>
+            <line x1="560" y1="110" x2="600" y2="110" stroke="var(--wire-power)" stroke-width="3" marker-end="url(#arrow-ds-wemos)"/>
+            <text x="608" y="114" font-size="12">3V3</text>
+            <line x1="560" y1="165" x2="600" y2="165" stroke="var(--wire-data)" stroke-width="3" marker-end="url(#arrow-ds-wemos)"/>
+            <text x="608" y="169" font-size="12">D5</text>
+            <line x1="560" y1="215" x2="600" y2="215" stroke="var(--wire-gnd)" stroke-width="3" marker-end="url(#arrow-ds-wemos)"/>
+            <text x="608" y="219" font-size="12">G</text>
+          </g>
+        </svg>
+      </figure>
+      <p class="lead" style="margin-top: 0.9rem;">
+        VDD&rarr;3V3, GND&rarr;G, DQ&rarr;D5 — same target pins used for a bare DHT22 too, see
+        <code>noizetoyz/handout/noizetoyz-hardware-handout.html</code> for that variant. Datasheet-spec
+        pull-up is 4.7k&#937;; a 10k&#937; from the resistor box works fine too. No ready-made
+        WiFi-networked sketch for DS18B20 yet (<code>ds18b20_test.ino</code> is a local-only smoke
+        test) — the Wemos/ESP8266 networked option in the note above (BMP180) is the one that
+        publishes over WiFi out of the box today.
+      </p>
+    </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    IOSP ATScience workshop, Leiden, October 2026 &middot; compiled from Sensor Tasks,
+    Noizetoyz, and Airglow Toons &middot; code and full instructions:
+    <code>github.com/ATProto-Science/iosp-hacking-stations</code> &middot;
+    live pages: <code>hacking.tilde.style</code>, <code>toons.tilde.style</code>.
+  </footer>
+</div>

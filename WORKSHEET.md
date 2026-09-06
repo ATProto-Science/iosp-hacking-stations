@@ -4,7 +4,9 @@ Work through this at your own pace during the hacking session. It's checkboxes,
 not a lecture — tick things off as you go, and skip straight to whichever
 station interests you (you don't need to do all of them). Station 4 (AI
 workflows) is also covered below for anyone pairing on it, though it's Ronen's
-station now, not Torsten's.
+station now, not Torsten's. There's also a bonus no-code task (§3, Airglow
+Toons) that works no matter which station you're at — build a custom
+automation and watch it show up live on the workshop's big-screen wall.
 
 Time budget: roughly 90 minutes of hands-on time before the show-and-tell.
 Nothing here requires more than a laptop — the Raspberry Pi + sensor hardware
@@ -72,7 +74,7 @@ producer simulates a sensor reading by default.
 ### Run it
 
 Open two terminals (or split one with `tmux`/your terminal's own split —
-`tmux new -s station2` then `Ctrl-b %`). Both scripts run forever, so run
+`tmux new -s live-data` then `Ctrl-b %`). Both scripts run forever, so run
 them via `run_producer.sh`/`run_consumer.sh` — these wrap the pipenv/env
 boilerplate *and* auto-restart the loop if a websocket drops or something
 throws, instead of quietly stopping:
@@ -117,10 +119,9 @@ infrastructure Bluesky posts travel over.
 
 ### If you have a Raspberry Pi + sensor
 
-- [ ] Wire up a real sensor (e.g. a DHT22 on a GPIO pin,
-      `adafruit-circuitpython-dht`) and replace `read_sensor()`'s simulated
-      value with a real reading — marked `TODO(station-2)` in
-      `sensor_producer.py`.
+- [ ] Wire up a real sensor (e.g. a DS18B20 temperature probe on a GPIO
+      pin, `w1thermsensor`) and replace `read_sensor()`'s simulated value
+      with a real reading — marked `TODO(live-data)` in `sensor_producer.py`.
 
 ### If you don't — other real (non-simulated) data sources
 
@@ -128,13 +129,22 @@ No Pi, no problem — `read_sensor()` just needs to return a number from
 somewhere real. Pick whichever's easiest to grab from where you're sitting:
 
 - [ ] **Webcam as a sensor** — four readings (brightness, saturation, hue,
-      contrast), no Python image library needed. See
-      `live-data/WEBCAM-SENSORS.md` for the readings table and
-      the exact `read_sensor()`/`UNIT` wiring.
+      contrast), no Python image library needed, already wired into
+      `read_sensor()`/`UNIT` — just set `SENSOR_TYPE`. See
+      `live-data/WEBCAM-SENSORS.md` for the readings table. These four are
+      the one sensor family that shows up on the Toons wall
+      (`toons.tilde.style`) as a colored shape instead of a fixed icon — a
+      circle in whatever color your webcam is actually seeing, a
+      black/white square for brightness, and so on.
 - [ ] **CPU temperature, weather, ping latency, uptime** — four more
-      readings, no Pi or webcam needed either. See
-      `live-data/LOCAL-SENSORS.md` for the readings table and
-      the exact `read_sensor()`/`UNIT` wiring.
+      readings, no Pi or webcam needed either, already wired into
+      `read_sensor()`/`UNIT` — just set `SENSOR_TYPE`. See
+      `live-data/LOCAL-SENSORS.md` for the readings table.
+- [ ] All of the above at once, instead of one `SENSOR_TYPE` at a time:
+      `./run_local_sensors.sh start` (`stop`/`status`/`intervals` too) —
+      6 drivers (5 local sensors + 1 webcam driver that grabs one frame
+      and publishes all 4 webcam readings from it) — see
+      `live-data/OPS.md`.
 - [ ] Something else entirely — `SENSOR_TYPE`/`UNIT` are just strings,
       `read_sensor()` just needs to return a number. Relabel to match
       whatever you're actually measuring (your own keyboard/mouse event
@@ -148,12 +158,9 @@ somewhere real. Pick whichever's easiest to grab from where you're sitting:
 - [ ] Stream a *different* collection just to prove the "one substrate"
       point yourself — try `nebra.stream`-style reading (well, the fixed
       version — see `stream_records()`) against `cx.vmx.matadisco` instead
-      of `science.iosp.sensor.reading`.
-- [ ] Propose a real NSID for the sensor-reading lexicon (currently a
-      placeholder, `science.iosp.sensor.reading` — see the `_comment` in
-      `lexicon/science.iosp.sensor.reading.json`) and say why.
+      of `style.tilde.hacking.sensorReading`.
 - [ ] Try watching the same stream a different way — one line with
-      `goat` (`goat firehose --ops -c science.iosp.sensor.reading`), or
+      `goat` (`goat firehose --ops -c style.tilde.hacking.sensorReading`), or
       look at `tab`/`ngerakines/atproto-tools` in the README's "Alternative
       ways to watch the stream" section. Same records, different tools —
       that's the "one substrate" point again, from the reading side.
@@ -226,7 +233,94 @@ to see your note land as a real record, same live feed the player's own table re
 
 ---
 
-## 3. Station 4 — AI workflows over ATProto data (no longer Torsten's)
+## 3. 🎪 Airglow Toons — build a custom feed automation
+
+**The idea**: [airglow.run](https://airglow.run) is a no-code "if this ATProto
+event happens, do that" automation platform — already the plumbing behind
+hacking.tilde.style's "recently connected via youandme.at" feed on
+`kiosk.html`. Build your own automation, point its action at a shared
+lexicon, and it shows up live as a flying emoji on **Toons**
+(`toons.tilde.style`), the workshop's big-screen wall — no code, no waiting
+on anyone else to wire your feed in.
+
+### Setup
+
+- [ ] Go to [airglow.run](https://airglow.run) and sign in with your ATProto
+      handle from step 0.
+- [ ] Browse [airglow.run/u/tilde.style](https://airglow.run/u/tilde.style)
+      — this workshop's own working examples, each clonable straight into
+      your own account with one click ("Sign in to use"), no need to build
+      from scratch. Pick any one close to what you want and adapt its
+      trigger/condition/action instead of typing one from zero.
+
+### Steps
+
+- [ ] Pick a **trigger**: any ATProto record type you care about — a keyword
+      in your own posts, a reply to you, a new record in some collection
+      you're watching, anything real that happens on your account or one
+      you follow.
+- [ ] (Optional) Add a **condition** — e.g. only fire when a specific field
+      matches something.
+- [ ] Add an **action**: create a record in your own repo, collection
+      `style.tilde.hacking.toon`, with:
+  - `emoji` (required) — the emoji that flies across the wall for this
+    event, e.g. `🎉`
+  - `label` (optional) — short text shown as its tooltip, e.g.
+    `"someone replied to me!"`
+  - `tier` (optional) — `avatar` (default, a character that wanders around
+    the screen — pick this if your trigger fires rarely, once per person
+    or so) or `item` (hops across and fades — pick this if your trigger
+    fires often, e.g. mirroring a sensor or another frequent source; too
+    many avatars at once clutters the wall)
+  - `createdAt` — the triggering event's own timestamp: `{{event.commit.record.createdAt}}`
+    (confirmed working; `{{now}}` is a fine fallback if your trigger's
+    record doesn't have its own timestamp)
+- [ ] Save and enable the automation.
+- [ ] Trigger it for real (do the thing your trigger watches for) and watch
+      [toons.tilde.style](https://toons.tilde.style) — your emoji should fly
+      across the top lane within a few seconds. (Not live yet? Use
+      `https://toons-tilde-style.pages.dev` directly.)
+
+**Checkpoint**: your own emoji shows up on the big screen, distinct from
+anyone else's, purely from an automation *you* built — no code, no
+station-4-bots hand-off, no one else's help needed to add your feed to the
+wall.
+
+### If something breaks
+
+- **"This lexicon's schema could not be resolved"** — harmless, ignore it.
+  It just means airglow.run can't auto-suggest field names for your
+  condition; type the field path in by hand instead, in the form
+  `event.commit.record.<fieldName>` (e.g. `event.commit.record.sensorType`)
+  — condition and trigger both still work fine with a manually-typed path.
+- **Nothing shows up on the wall** — double-check the collection name is
+  exactly `style.tilde.hacking.toon` (a typo won't error inside airglow.run,
+  it'll just write to a collection nobody's watching).
+- **Wall shows ✨ instead of your emoji** — the `emoji` field is missing or
+  misnamed on the record airglow.run is writing; ✨ is the wall's fallback
+  for a record with no usable `emoji`.
+- **Automation looks right but still nothing happens** — this really did
+  trip us up once while building the reference examples: airglow.run's
+  own **Description** field on the automation can be left blank when you
+  build by hand, which is harmless — but if you're troubleshooting, check
+  the automation is actually **active** (not saved as a draft/inactive)
+  and that you triggered a *genuinely new* matching event after saving,
+  not one that already existed beforehand.
+
+### Stretch goals
+
+- [ ] Give your automation a real condition instead of "any event of this
+      type" — filter to a specific keyword, author, or field value.
+- [ ] Chain two automations — a narrow one on a specific keyword, and a
+      duller catch-all — so your event flow reflects specificity live on
+      the wall.
+- [ ] Read `landing-page/lexicon/style.tilde.hacking.toon.json` and
+      `style.tilde.hacking.connection.json` for the pattern already in
+      production use (the youandme.at relay) — same shape you just built.
+
+---
+
+## 4. Station 4 — AI workflows over ATProto data (no longer Torsten's)
 
 **The idea**: an agent that decides *how* to act using a bandit algorithm
 (Thompson sampling) instead of always doing the same thing, and remembers
@@ -357,8 +451,8 @@ in-process FactStore array.
   same HappyView AppView instance. The remaining stretch is the deeper
   version: if someone posts on Bluesky citing a sensor reading ("check out
   this temperature spike!"), a bot classifying that post as `evidence` could
-  resolve `queryTool()`'s lookup to an *actual* station-2 record —
-  `com.atproto.repo.listRecords` against a known station-2 handle's
+  resolve `queryTool()`'s lookup to an *actual* Live Data Streaming record —
+  `com.atproto.repo.listRecords` against a known Live Data Streaming handle's
   collection, not a Semble search — and link the resulting fact to that
   record's real `at://` URI. Worth doing live specifically because both
   stations are in the same room: a genuine demonstration of two teams
@@ -367,7 +461,7 @@ in-process FactStore array.
 
 ---
 
-## 4. Show-and-tell — come with answers to these
+## 5. Show-and-tell — come with answers to these
 
 - What did you actually get running? (Screenshot or terminal output is fine.)
 - What surprised you — about ATProto, about Nebra/Matadisco, about the

@@ -9,10 +9,7 @@
     /* Kiosk view is meant for a big screen at the station — everything runs
        larger than the rest of the site's own type scale. */
     body.clearing { font-size: 1.15rem; }
-    .kiosk-tracks { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5rem; }
-    @media (max-width: 1300px) { .kiosk-tracks { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 800px) { .kiosk-tracks { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 500px) { .kiosk-tracks { grid-template-columns: 1fr; } }
+    .kiosk-tracks { display: grid; grid-template-columns: 1fr; grid-auto-rows: auto; gap: 1.5rem; }
     .track-card h3 { font-size: 1.6rem; }
     .track-count { font-size: 3rem; line-height: 1; margin: 0.5rem 0; }
     .codes-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }

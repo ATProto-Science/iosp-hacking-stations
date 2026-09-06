@@ -12,9 +12,80 @@
     .last-note { font-family: var(--font-display); font-size: 2.5rem; color: var(--spark); margin: 0.3em 0; }
     .section-nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 0.75rem; }
     .section-nav a { scroll-behavior: smooth; }
+
+    /* Cartoonish "workshop pulse" banner — a strip of emoji that hop across
+       whenever a new sensor reading / check-in / note lands, so the room can
+       tell the substrate is alive without reading a table. Purely decorative
+       (aria-hidden emoji), label text carries the meaning. */
+    .pulse-banner {
+      position: relative;
+      overflow: hidden;
+      height: 3.25rem;
+      display: flex;
+      align-items: center;
+      background: linear-gradient(90deg, var(--ember), var(--fire));
+      border-bottom: 2px solid var(--log);
+    }
+    /* A slow-drifting, tightly-packed ("glued together") row of gardening +
+       sky emoji behind the label and the hopping-emoji layer — pure texture,
+       doubled up back-to-back so the -50% translate loops seamlessly. */
+    .pulse-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      font-size: 1.5rem;
+      letter-spacing: 0;
+      opacity: 0.3;
+      animation: pulse-bg-drift 50s linear infinite;
+    }
+    @keyframes pulse-bg-drift {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    .pulse-label {
+      position: relative;
+      z-index: 2;
+      margin: 0 1rem;
+      color: var(--ash);
+      font-weight: 700;
+      white-space: nowrap;
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+    }
+    .pulse-emoji {
+      position: absolute;
+      left: 0;
+      bottom: 0.35rem;
+      font-size: 1.6rem;
+      z-index: 1;
+      animation-name: pulse-hop;
+      animation-timing-function: ease-in-out;
+      animation-fill-mode: forwards;
+      pointer-events: none;
+    }
+    @keyframes pulse-hop {
+      0%   { transform: translate(0, 10px) scale(0.4) rotate(-15deg); opacity: 0; }
+      10%  { opacity: 1; }
+      25%  { transform: translate(22vw, -16px) scale(1.2) rotate(12deg); }
+      50%  { transform: translate(45vw, 4px) scale(1) rotate(-8deg); }
+      75%  { transform: translate(68vw, -14px) scale(1.1) rotate(10deg); }
+      100% { transform: translate(92vw, 6px) scale(0.8) rotate(-6deg); opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-emoji { animation: none; opacity: 0; }
+      .pulse-bg { animation: none; }
+    }
   </style>
 </head>
 <body class="clearing">
+
+  <div class="pulse-banner" id="pulse-banner" aria-hidden="true">
+    <p class="pulse-bg">🌻🌿☁️🦋🌱☁️🌸🦋🌿☁️🌻🌱☁️🦋🌿🌻☁️🌱🦋🌿☁️🌻🌱🦋☁️🌿🌻🌱☁️🦋🌿☁️🌻🌱🦋🌿☁️🌻🌱🦋☁️🌿🌻🌱🦋☁️🌿🌻🌱🦋☁️🌿🌻🌻🌿☁️🦋🌱☁️🌸🦋🌿☁️🌻🌱☁️🦋🌿🌻☁️🌱🦋🌿☁️🌻🌱🦋☁️🌿🌻🌱☁️🦋🌿☁️🌻🌱🦋🌿☁️🌻🌱🦋☁️🌿🌻🌱🦋☁️🌿🌻</p>
+    <p class="pulse-label">🎉 workshop pulse — live activity, one emoji at a time</p>
+  </div>
 
   <header class="hearth">
     <div class="hearth-inner">
@@ -44,7 +115,7 @@
           <h3>🐕🌸🦋🌻🏠 Who's checked in — memo.dog / Aster / Bluesky / BYOH / self-hosted</h3>
           <p class="smoke-text" id="status-checkins">loading…</p>
           <table class="kindling-table">
-            <thead><tr><th>track</th><th>repo</th><th>when</th></tr></thead>
+            <thead><tr><th>track</th><th>handle</th><th>when</th></tr></thead>
             <tbody id="rows-checkins"></tbody>
           </table>
         </div>
@@ -77,6 +148,115 @@
       return s && s.length > n ? s.slice(0, n - 1) + "…" : s;
     }
 
+    // Cartoonish activity banner: spawns a hopping emoji for each genuinely
+    // new record (by uri) across the three feeds, so the room sees the
+    // substrate move without staring at a table. First poll just primes the
+    // "seen" sets silently — otherwise the banner would launch 150 emoji at
+    // once on page load.
+    const bannerEl = document.getElementById("pulse-banner");
+    const seenUris = { sensors: new Set(), checkins: new Set(), notes: new Set() };
+    const primed = { sensors: false, checkins: false, notes: false };
+
+    function spawnPulse(emoji, title, delayMs) {
+      setTimeout(() => {
+        const span = document.createElement("span");
+        span.className = "pulse-emoji";
+        span.textContent = emoji;
+        span.title = title;
+        span.style.animationDuration = `${3 + Math.random() * 1.5}s`;
+        span.style.bottom = `${0.2 + Math.random() * 1.4}rem`;
+        bannerEl.appendChild(span);
+        span.addEventListener("animationend", () => span.remove());
+      }, delayMs);
+    }
+
+    // Returns the records genuinely new since the last poll for this feed
+    // (by `uri`, falling back to a synthetic key if a record lacks one) and
+    // updates that feed's seen-set in place. Silent (no emoji) on the very
+    // first call so page load doesn't dump the whole backlog into the banner.
+    function trackNew(feed, records, keyOf) {
+      const seen = seenUris[feed];
+      const wasPrimed = primed[feed];
+      const fresh = [];
+      for (const r of records) {
+        const key = keyOf(r);
+        if (!seen.has(key)) {
+          seen.add(key);
+          if (wasPrimed) fresh.push(r);
+        }
+      }
+      primed[feed] = true;
+      return fresh;
+    }
+
+    // Matches the OLED status-bar glyphs where one exists (ICON_TEMPERATURE,
+    // ICON_PRESSURE, ICON_HUMIDITY — see esp_multi_synth_oled.ino) so the
+    // banner reads as the same icon language as the hardware's own screen.
+    const SENSOR_EMOJI = {
+      temperature: "🌡️", // ICON_TEMPERATURE
+      pressure: "🧭", // ICON_PRESSURE — dial-with-needle, read as a barometer
+      "weather-humidity": "💧", // ICON_HUMIDITY
+      "weather-temperature": "🌦️", // outdoor/API-sourced, kept distinct from the device thermometer
+      "cpu-temperature": "🖥️",
+      "ping-latency": "🏓",
+      uptime: "⏱️",
+    };
+
+    // Webcam sensors render as colored geometric emoji instead of a fixed
+    // icon — shape by sensorType, color/orientation by the reading's own
+    // value — see toons/index.html's identical WEBCAM_EMOJI for the full
+    // rationale; kept in sync by hand across both files.
+    const WEBCAM_EMOJI = {
+      hue: (v) => {
+        const h = ((v % 360) + 360) % 360;
+        if (h < 15 || h >= 345) return "🔴";
+        if (h < 45) return "🟠";
+        if (h < 75) return "🟡";
+        if (h < 165) return "🟢";
+        if (h < 255) return "🔵";
+        return "🟣";
+      },
+      brightness: (v) => (v < 127.5 ? "⬛" : "⬜"),
+      saturation: (v) => (v < 90 ? "🔻" : "🔺"),
+      contrast: (v) => (v < 127.5 ? "🔷" : "🔶"),
+    };
+
+    // Keyed by the note record's `mode` (music.atproto.noizetoyz.synth.note's
+    // enum) rather than one flat note emoji, since ICON_NOTE_IN only signals
+    // "a note arrived" — not which Mozzi technique produced it.
+    const NOTE_EMOJI = {
+      tone: "🎵", // default/absent mode — matches ICON_NOTE_IN
+      scrub: "🧽", // sample scrubbing
+      fold: "🥐", // wavefolding — literally folded
+      filter: "☕", // coffee-filter pun
+      fm: "📻",
+      pluck: "🎸",
+    };
+
+    function pulseSensors(records) {
+      const fresh = trackNew("sensors", records, (r) => r.uri ?? `${r.deviceId}-${r.createdAt}`);
+      fresh.slice(-5).forEach((r, i) => {
+        const webcam = WEBCAM_EMOJI[r.sensorType];
+        const emoji = webcam ? webcam(r.value / r.valueScale) : SENSOR_EMOJI[r.sensorType] ?? "📡";
+        spawnPulse(emoji, `${r.sensorType}: ${(r.value / r.valueScale).toFixed(1)} ${r.unit}`, i * 220);
+      });
+    }
+
+    function pulseCheckins(records) {
+      const fresh = trackNew("checkins", records, (r) => r.uri ?? `${r.track}-${r.createdAt}`);
+      fresh.slice(-5).forEach((r, i) => {
+        spawnPulse(TRACK_EMOJI[r.track] ?? "🎉", `${r.track} checked in`, i * 220);
+      });
+    }
+
+    function pulseNotes(records) {
+      const fresh = trackNew("notes", records, (r) => r.uri ?? `${r.deviceId}-${r.createdAt}`);
+      fresh.slice(-5).forEach((r, i) => {
+        const emoji = NOTE_EMOJI[r.mode ?? "tone"] ?? "🎵";
+        spawnPulse(emoji, `${r.mode ?? "tone"} note played on ${r.deviceId ?? "?"}`, i * 220);
+      });
+    }
+
     async function fetchRecords(nsid) {
       const res = await fetch(`${HAPPYVIEW_URL}/xrpc/${nsid}?limit=50`, {
         headers: { "X-Client-Key": CLIENT_KEY },
@@ -90,8 +270,9 @@
       const statusEl = document.getElementById("status-sensors");
       const rowsEl = document.getElementById("rows-sensors");
       try {
-        const records = await fetchRecords("science.iosp.sensor.listReadings");
+        const records = await fetchRecords("style.tilde.hacking.listSensorReadings");
         statusEl.textContent = `${records.length} reading(s)`;
+        pulseSensors(records);
         rowsEl.innerHTML = records.length
           ? records
               .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -112,26 +293,50 @@
 
     const TRACK_EMOJI = { "memo.dog": "🐕", aster: "🌸", bluesky: "🦋", byoh: "🌻", selfhosted: "🏠" };
 
+    // did -> handle, resolved lazily via the public Bluesky AppView (no auth
+    // needed for public profiles) since style.tilde.hacking.checkin only
+    // stores the checked-in account's DID (via its record uri), not a handle.
+    const handleCache = new Map();
+
+    async function resolveHandle(did) {
+      if (handleCache.has(did)) return handleCache.get(did);
+      try {
+        const res = await fetch(
+          `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`
+        );
+        const handle = res.ok ? (await res.json()).handle : did;
+        handleCache.set(did, handle);
+        return handle;
+      } catch {
+        return did;
+      }
+    }
+
     async function loadCheckins() {
       const statusEl = document.getElementById("status-checkins");
       const rowsEl = document.getElementById("rows-checkins");
       try {
         const records = await fetchRecords("style.tilde.hacking.listCheckins");
         statusEl.textContent = `${records.length} check-in(s)`;
-        rowsEl.innerHTML = records.length
-          ? records
-              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-              .map((r) => {
-                const did = r.uri.split("/")[2];
-                const emoji = TRACK_EMOJI[r.track] ?? "❓";
-                return `<tr>
-                  <td>${emoji} ${r.track}</td>
-                  <td><a href="https://pdsls.dev/at://${did}" class="spark">${truncate(did, 24)}</a></td>
-                  <td>${new Date(r.createdAt).toLocaleTimeString()}</td>
-                </tr>`;
-              })
-              .join("")
-          : `<tr><td colspan="3" class="empty">no check-ins yet</td></tr>`;
+        pulseCheckins(records);
+        if (!records.length) {
+          rowsEl.innerHTML = `<tr><td colspan="3" class="empty">no check-ins yet</td></tr>`;
+          return;
+        }
+        const sorted = records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const dids = sorted.map((r) => r.uri.split("/")[2]);
+        const handles = await Promise.all(dids.map(resolveHandle));
+        rowsEl.innerHTML = sorted
+          .map((r, i) => {
+            const did = dids[i];
+            const emoji = TRACK_EMOJI[r.track] ?? "❓";
+            return `<tr>
+              <td>${emoji} ${r.track}</td>
+              <td><a href="https://pdsls.dev/at://${did}" class="spark">${truncate(handles[i], 24)}</a></td>
+              <td>${new Date(r.createdAt).toLocaleTimeString()}</td>
+            </tr>`;
+          })
+          .join("");
       } catch (err) {
         statusEl.textContent = `error: ${err.message}`;
       }
@@ -152,6 +357,7 @@
       try {
         const records = await fetchRecords("music.atproto.noizetoyz.synth.listNotes");
         statusEl.textContent = `${records.length} note(s) recently`;
+        pulseNotes(records);
         if (records.length) {
           const latest = records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
           displayEl.textContent = midiNoteName(latest.note);
