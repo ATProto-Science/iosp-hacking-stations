@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOSP 2026 — Toons</title>
+<style>
+  /* Self-contained (own Cloudflare Pages project/domain, no cross-origin
+     dependency on landing-page/site.css) — palette copied from that file's
+     :root so it still reads as the same "hearth" visual family. */
+  :root {
+    --fire:   #E8651A;
+    --ember:  #C44B10;
+    --spark:  #F5A623;
+    --smoke:  #B7ADA3;
+    --night:  #141210;
+    --ground: #221E1A;
+    --log:    #3A3028;
+    --ash:    #EDE8E2;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--night);
+    color: var(--ash);
+    font-family: system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+  body { display: flex; flex-direction: column; }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .lane {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    border-bottom: 2px dashed var(--log);
+    background: var(--ground);
+  }
+  .lane:nth-child(odd) { background: var(--night); }
+  .lane::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0.75rem;
+    top: 0.5rem;
+    z-index: 3;
+    font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+    font-weight: 700;
+    color: var(--ash);
+    background: rgba(0, 0, 0, 0.35);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+
+  .toon {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    animation-name: toon-hop;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+    pointer-events: none;
+  }
+  @keyframes toon-hop {
+    0%   { transform: translate(-5vw, -50%) scale(0.3) rotate(-20deg); opacity: 0; }
+    8%   { opacity: 1; }
+    22%  { transform: translate(20vw, calc(-50% - 3rem)) scale(1.3) rotate(14deg); }
+    40%  { transform: translate(40vw, calc(-50% + 1.5rem)) scale(1) rotate(-10deg); }
+    58%  { transform: translate(60vw, calc(-50% - 2.5rem)) scale(1.15) rotate(12deg); }
+    76%  { transform: translate(80vw, calc(-50% + 1rem)) scale(1) rotate(-8deg); }
+    100% { transform: translate(105vw, -50%) scale(0.7) rotate(10deg); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toon { animation: none; opacity: 0; }
+  }
+
+  /* Avatar tier — rare, one-per-person events (check-ins, connections,
+     participant automations). Unlike .toon, an avatar doesn't fly across
+     and vanish: it fades in somewhere in its lane, idle-bobs in place, and
+     wanders to a new spot every few seconds — `left`/`top` drive the
+     wander (transitioned), while the inner .avatar-bob's own `transform`
+     keyframe drives the idle bob, so the two never fight over one
+     property. */
+  .avatar {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    transition: left 3s ease-in-out, top 3s ease-in-out, opacity 1.4s ease;
+  }
+  .avatar.visible { opacity: 1; }
+  .avatar-bob {
+    display: inline-block;
+    font-size: clamp(2.75rem, 5.5vw, 5rem);
+    transform-origin: 50% 85%;
+    animation: avatar-idle 2.4s ease-in-out infinite;
+  }
+  @keyframes avatar-idle {
+    0%, 100% { transform: translateY(0) rotate(-6deg); }
+    50%      { transform: translateY(-10px) rotate(6deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .avatar-bob { animation: none; }
+    .avatar { transition: opacity 1.4s ease; }
+  }
+
+  /* Title lives in the footer, not a header — the venue's own IOSP banner
+     already occupies the top of the screen, so this page keeps that space
+     clear and puts its own branding at the bottom instead. */
+  footer {
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    background: radial-gradient(ellipse at bottom, var(--ember) 0%, var(--night) 70%);
+    border-top: 3px solid var(--log);
+  }
+  footer h1 {
+    margin: 0 0 0.25rem;
+    font-size: clamp(1.5rem, 2.6vw, 2.5rem);
+    color: var(--spark);
+    text-shadow: 0 2px 0 rgba(0,0,0,0.35);
+  }
+  footer .tagline {
+    margin: 0 0 0.5rem;
+    color: var(--smoke);
+    font-size: clamp(0.85rem, 1.2vw, 1.1rem);
+  }
+  footer .note {
+    margin: 0;
+    color: var(--smoke);
+    font-size: clamp(0.75rem, 0.95vw, 0.9rem);
+  }
+  footer strong { color: var(--ash); }
+</style>
+</head>
+<body>
+
+  <main id="lanes">
+    <div class="lane" id="lane-toons" data-label="🎨 your airglow.run automations"></div>
+    <div class="lane" id="lane-connections" data-label="🤝 airglow.run → youandme.at connections"></div>
+    <div class="lane" id="lane-checkins" data-label="🐕🌸🦋🌻🏠 station check-ins"></div>
+    <div class="lane" id="lane-sensors" data-label="📡🌡️ live data streaming"></div>
+    <div class="lane" id="lane-notes" data-label="🎹🎶 noizetoyz notes"></div>
+  </main>
+
+  <footer>
+    <h1>🎪 Toons</h1>
+    <p class="tagline">Airglow Cartoon Wall — every custom automation and live station feed at IOSP 2026, one flying emoji at a time.</p>
+    <p class="note">
+      Built your own <strong>airglow.run</strong> automation this workshop? Point its action at
+      <strong>style.tilde.hacking.toon</strong> (fields: <code>emoji</code>, optional <code>label</code>,
+      <code>createdAt</code>) and it shows up in the top lane within seconds — no need to ask staff.
+    </p>
+  </footer>
+
+  <script>
+    // Same read-only HappyView client key the rest of hacking.tilde.style
+    // uses — this page just fans the same records out across bigger, louder
+    // lanes instead of a table.
+    const HAPPYVIEW_URL = "https://happyview.werk.museum";
+    const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc";
+    const POLL_MS = 4000;
+
+    async function fetchRecords(nsid) {
+      try {
+        const res = await fetch(`${HAPPYVIEW_URL}/xrpc/${nsid}?limit=50`, {
+          headers: { "X-Client-Key": CLIENT_KEY },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return data.records ?? [];
+      } catch (err) {
+        console.warn(`fetch failed for ${nsid}:`, err.message);
+        return [];
+      }
+    }
+
+    // One lane per stream. `key` picks a stable identity for de-duping across
+    // polls; `emoji`/`title` describe how a fresh record shows up. The first
+    // poll for a lane just primes its seen-set silently, so the wall doesn't
+    // dump the whole backlog in at once on load.
+    const TRACK_EMOJI = { "memo.dog": "🐕", aster: "🌸", bluesky: "🦋", byoh: "🌻", selfhosted: "🏠" };
+    // Matches the OLED status-bar glyphs where one exists (ICON_TEMPERATURE,
+    // ICON_PRESSURE, ICON_HUMIDITY — see esp_multi_synth_oled.ino) so the
+    // wall reads as the same icon language as the hardware's own screen.
+    const SENSOR_EMOJI = {
+      temperature: "🌡️", // ICON_TEMPERATURE
+      pressure: "🧭", // ICON_PRESSURE — dial-with-needle, read as a barometer
+      "weather-humidity": "💧", // ICON_HUMIDITY
+      "weather-temperature": "🌦️", // outdoor/API-sourced, kept distinct from the device thermometer
+      "cpu-temperature": "🖥️",
+      "ping-latency": "🏓",
+      uptime: "⏱️",
+    };
+
+    // Webcam sensors (live-data/WEBCAM-SENSORS.md) are the one sensor
+    // family shown as colored geometric emoji instead of a fixed icon —
+    // shape by sensorType, color/orientation by the reading's own value
+    // (ranges from webcam-grab.sh's own signalstats table), so the wall
+    // shows roughly the color/tone the camera is actually seeing rather
+    // than just "a webcam reading happened". One function per sensorType,
+    // each takes the raw (unscaled) numeric value.
+    const WEBCAM_EMOJI = {
+      // hue: 0-360° color-wheel angle -> nearest colored circle. The one
+      // reading that's literally a color, so it gets the most direct
+      // "what color is the camera seeing" mapping of the four.
+      hue: (v) => {
+        const h = ((v % 360) + 360) % 360;
+        if (h < 15 || h >= 345) return "🔴";
+        if (h < 45) return "🟠";
+        if (h < 75) return "🟡";
+        if (h < 165) return "🟢";
+        if (h < 255) return "🔵";
+        return "🟣";
+      },
+      // brightness: 0-255 average luma -> black or white square.
+      brightness: (v) => (v < 127.5 ? "⬛" : "⬜"),
+      // saturation: 0-~180 colorfulness -> which way the triangle points
+      // (down = flat/grey, up = vivid) — no colored triangle emoji exists,
+      // so direction carries the meaning instead of color here.
+      saturation: (v) => (v < 90 ? "🔻" : "🔺"),
+      // contrast: 0-255 luma spread -> diamond, blue (flat) or orange
+      // (high-contrast/dramatic).
+      contrast: (v) => (v < 127.5 ? "🔷" : "🔶"),
+    };
+
+    // Keyed by the note record's `mode` (music.atproto.noizetoyz.synth.note's
+    // enum) rather than one flat note emoji, since ICON_NOTE_IN only signals
+    // "a note arrived" — not which Mozzi technique produced it.
+    const NOTE_EMOJI = {
+      tone: "🎵", // default/absent mode — matches ICON_NOTE_IN
+      scrub: "🧽", // sample scrubbing
+      fold: "🥐", // wavefolding — literally folded
+      filter: "☕", // coffee-filter pun
+      fm: "📻",
+      pluck: "🎸",
+    };
+
+    const LANES = [
+      {
+        // Generic lane: any participant's own airglow.run automation writes
+        // directly to this collection (see the footer note) — the emoji and
+        // label come from their record, not a fixed mapping like the other
+        // lanes below.
+        id: "lane-toons",
+        // Per-record, not per-lane — this collection mixes rare custom
+        // automations (should wander like an avatar) with any automation
+        // built to mirror a high-frequency source (should hop-and-fade
+        // like an item, or it'd flood the wall with avatars). Defaults to
+        // avatar, the common case this lexicon was designed for.
+        tier: (r) => (r.tier === "item" ? "item" : "avatar"),
+        nsid: "style.tilde.hacking.listToons",
+        key: (r) => r.uri ?? `${r.emoji}-${r.createdAt}`,
+        emoji: (r) => r.emoji || "✨",
+        title: (r) => r.label || "an airglow.run automation fired",
+      },
+      {
+        id: "lane-connections",
+        tier: "avatar", // rare — one per person who scans the QR code
+        nsid: "style.tilde.hacking.listConnections",
+        key: (r) => r.uri ?? `${r.connectorDid}-${r.createdAt}`,
+        emoji: () => "🤝",
+        title: (r) => `connection via youandme.at`,
+      },
+      {
+        id: "lane-checkins",
+        tier: "avatar", // rare — one per person, ever
+        nsid: "style.tilde.hacking.listCheckins",
+        key: (r) => r.uri ?? `${r.track}-${r.createdAt}`,
+        emoji: (r) => TRACK_EMOJI[r.track] ?? "🎉",
+        title: (r) => `${r.track} checked in`,
+      },
+      {
+        id: "lane-sensors",
+        tier: "item", // frequent — ~24/min per active board
+        nsid: "style.tilde.hacking.listSensorReadings",
+        key: (r) => r.uri ?? `${r.deviceId}-${r.createdAt}`,
+        emoji: (r) => {
+          const webcam = WEBCAM_EMOJI[r.sensorType];
+          if (webcam) return webcam(r.value / r.valueScale);
+          return SENSOR_EMOJI[r.sensorType] ?? "📡";
+        },
+        title: (r) => `${r.sensorType}: ${(r.value / r.valueScale).toFixed(1)} ${r.unit}`,
+      },
+      {
+        id: "lane-notes",
+        tier: "item", // frequent — a new note every few seconds while someone plays
+        nsid: "music.atproto.noizetoyz.synth.listNotes",
+        key: (r) => r.uri ?? `${r.deviceId}-${r.createdAt}`,
+        emoji: (r) => NOTE_EMOJI[r.mode ?? "tone"] ?? "🎵",
+        title: (r) => `${r.mode ?? "tone"} note played on ${r.deviceId ?? "?"}`,
+      },
+    ];
+
+    const seen = new Map(LANES.map((l) => [l.id, new Set()]));
+    const primed = new Map(LANES.map((l) => [l.id, false]));
+
+    function spawnToon(laneEl, emoji, title) {
+      const span = document.createElement("span");
+      span.className = "toon";
+      span.textContent = emoji;
+      span.title = title;
+      span.style.animationDuration = `${5 + Math.random() * 2.5}s`;
+      laneEl.appendChild(span);
+      span.addEventListener("animationend", () => span.remove());
+    }
+
+    // Avatar tier, first iteration: fade in at a random spot, idle-bob in
+    // place, wander to a new spot every few seconds, stick around for a
+    // while (these are rare — one per person — so there's no density
+    // problem to solve), then fade out and remove itself.
+    const AVATAR_LIFETIME_MS = 32000;
+    const AVATAR_WANDER_MS = 4500;
+
+    function spawnAvatar(laneEl, emoji, title) {
+      const wrap = document.createElement("div");
+      wrap.className = "avatar";
+      wrap.title = title;
+      const bob = document.createElement("span");
+      bob.className = "avatar-bob";
+      bob.textContent = emoji;
+      wrap.appendChild(bob);
+
+      const pad = 60; // clear of the lane label pill and edges
+      function randomSpot() {
+        const rect = laneEl.getBoundingClientRect();
+        const maxX = Math.max(0, rect.width - pad * 2);
+        const maxY = Math.max(0, rect.height - pad * 1.5);
+        return { left: pad + Math.random() * maxX, top: pad + Math.random() * maxY };
+      }
+
+      const start = randomSpot();
+      wrap.style.left = `${start.left}px`;
+      wrap.style.top = `${start.top}px`;
+      laneEl.appendChild(wrap);
+      requestAnimationFrame(() => wrap.classList.add("visible"));
+
+      const wanderTimer = setInterval(() => {
+        const next = randomSpot();
+        wrap.style.left = `${next.left}px`;
+        wrap.style.top = `${next.top}px`;
+      }, AVATAR_WANDER_MS + Math.random() * 1500);
+
+      setTimeout(() => {
+        clearInterval(wanderTimer);
+        wrap.classList.remove("visible");
+        wrap.addEventListener("transitionend", () => wrap.remove(), { once: true });
+      }, AVATAR_LIFETIME_MS);
+    }
+
+    async function pollLane(lane) {
+      const laneEl = document.getElementById(lane.id);
+      const records = await fetchRecords(lane.nsid);
+      const laneSeen = seen.get(lane.id);
+      const wasPrimed = primed.get(lane.id);
+      const fresh = [];
+      for (const r of records) {
+        const k = lane.key(r);
+        if (!laneSeen.has(k)) {
+          laneSeen.add(k);
+          if (wasPrimed) fresh.push(r);
+        }
+      }
+      primed.set(lane.id, true);
+      fresh.slice(-6).forEach((r, i) => {
+        const tier = typeof lane.tier === "function" ? lane.tier(r) : lane.tier;
+        const spawn = tier === "avatar" ? spawnAvatar : spawnToon;
+        setTimeout(() => spawn(laneEl, lane.emoji(r), lane.title(r)), i * 260);
+      });
+    }
+
+    function pollAll() {
+      LANES.forEach(pollLane);
+    }
+
+    pollAll();
+    setInterval(pollAll, POLL_MS);
+  </script>
+</body>
+</html>

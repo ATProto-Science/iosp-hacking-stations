@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root {
+      --fire: #E8651A; --ember: #C44B10; --spark: #F5A623;
+      --smoke: #B7ADA3; --night: #141210; --ground: #221E1A;
+      --log: #3A3028; --ash: #EDE8E2;
+    }
+    body { margin: 0; background: var(--night); color: var(--ash); font-family: "IBM Plex Sans", system-ui, sans-serif; }
+    .mono { font-family: "IBM Plex Mono", monospace; }
+    .step { display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .stepbox { width:110px; height:110px; border:2px dashed var(--log); border-radius:10px; display:flex; align-items:center; justify-content:center; background:var(--night); }
+  </style>
+</helmet>
+
+<div style="width:760px; padding:24px 26px 30px; box-sizing:border-box; display:flex; flex-direction:column; gap:14px;">
+
+  <div style="display:flex; flex-direction:column; gap:4px;">
+    <div class="mono" style="font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--spark); font-weight:600;">item tier &middot; sketch</div>
+    <div style="font-size:22px; font-weight:700;">Lightweight default: spawn &rarr; bob &rarr; fade</div>
+    <div style="font-size:13px; color:var(--smoke);">The default this tier falls back to when nothing more specific applies &mdash; exact per-sensor-type behavior drafts below.</div>
+  </div>
+
+  <div style="border:2px solid var(--log); border-radius:10px; background:var(--ground); padding:24px 20px;">
+    <div style="display:flex; align-items:center; justify-content:center; gap:22px;">
+
+      <div class="step">
+        <div class="stepbox" style="transform:scale(0.7);"><span style="font-size:30px;">🌡️</span></div>
+        <div class="mono" style="font-size:11px; color:var(--smoke);">spawn (scale up)</div>
+      </div>
+
+      <svg width="34" height="16"><path d="M2,8 H30 M24,2 L32,8 L24,14" fill="none" stroke="var(--smoke)" stroke-width="2"/></svg>
+
+      <div class="step">
+        <div class="stepbox"><span style="font-size:34px;">🌡️</span></div>
+        <div class="mono" style="font-size:11px; color:var(--smoke);">idle bob in place</div>
+      </div>
+
+      <svg width="34" height="16"><path d="M2,8 H30 M24,2 L32,8 L24,14" fill="none" stroke="var(--smoke)" stroke-width="2"/></svg>
+
+      <div class="step">
+        <div class="stepbox" style="opacity:0.35;"><span style="font-size:34px;">🌡️</span></div>
+        <div class="mono" style="font-size:11px; color:var(--smoke);">fade out</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="position:relative; height:150px; border:2px solid var(--log); border-radius:10px; background:var(--ground); overflow:hidden;">
+    <div class="mono" style="position:absolute; left:14px; top:10px; font-size:11px; color:var(--smoke);">density, same moment &mdash; one active board</div>
+    <div style="position:absolute; left:60px;  top:60px;  font-size:26px; opacity:0.9;">🌡️</div>
+    <div style="position:absolute; left:140px; top:40px;  font-size:22px; opacity:0.7;">💧</div>
+    <div style="position:absolute; left:220px; top:80px;  font-size:28px; opacity:1;">🌡️</div>
+    <div style="position:absolute; left:300px; top:50px;  font-size:20px; opacity:0.5;">💧</div>
+    <div style="position:absolute; left:380px; top:75px;  font-size:26px; opacity:0.85;">🌡️</div>
+    <div style="position:absolute; left:460px; top:45px;  font-size:22px; opacity:0.6;">💧</div>
+    <div style="position:absolute; left:540px; top:70px;  font-size:24px; opacity:0.9;">🌡️</div>
+    <div style="position:absolute; left:620px; top:55px;  font-size:20px; opacity:0.4;">💧</div>
+  </div>
+
+  <div class="mono" style="font-size:12px; color:var(--ash); background:rgba(0,0,0,0.3); border-radius:8px; padding:8px 10px;">
+    ~24 records/min from ONE active board (paired reading every ~5.0s) &middot; plan for 3&ndash;5 boards live &rarr; up to ~120/min combined
+  </div>
+
+  <div class="mono" style="font-size:12px; color:var(--smoke); border-top:1px solid var(--log); padding-top:10px;">
+    open: lifetime, size, and whether items stack/overlap or get spread out &mdash; needs to stay legible at ~120/min, not just look nice at one
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

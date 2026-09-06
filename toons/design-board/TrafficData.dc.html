@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root {
+      --fire: #E8651A; --ember: #C44B10; --spark: #F5A623;
+      --smoke: #B7ADA3; --night: #141210; --ground: #221E1A;
+      --log: #3A3028; --ash: #EDE8E2;
+    }
+    body { margin: 0; background: var(--night); color: var(--ash); font-family: "IBM Plex Sans", system-ui, sans-serif; }
+    .mono { font-family: "IBM Plex Mono", monospace; }
+    .stat { border-left:3px solid var(--log); padding-left:10px; }
+    .num { font-size:20px; font-weight:700; font-family:"IBM Plex Mono", monospace; }
+  </style>
+</helmet>
+
+<div style="width:380px; padding:22px 20px 28px; box-sizing:border-box; display:flex; flex-direction:column; gap:16px;">
+
+  <div style="display:flex; flex-direction:column; gap:4px;">
+    <div class="mono" style="font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--spark); font-weight:600;">reference</div>
+    <div style="font-size:19px; font-weight:700;">Traffic numbers</div>
+    <div style="font-size:12px; color:var(--smoke);">From the real 777-record analysis, plus the workshop plan.</div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:14px;">
+
+    <div class="stat" style="border-color:var(--spark);">
+      <div class="num">~24/min</div>
+      <div style="font-size:12px; color:var(--smoke);">per active sensor board &mdash; paired reading every ~5.0s (observed: 576 records/24.1min on one board, 200/8.2min on another)</div>
+    </div>
+
+    <div class="stat" style="border-color:var(--spark);">
+      <div class="num">3&ndash;5 boards</div>
+      <div style="font-size:12px; color:var(--smoke);">planned live at once &rarr; roughly <strong style="color:var(--ash);">72&ndash;120 sensor records/min</strong> combined, item tier's real design load</div>
+    </div>
+
+    <div class="stat" style="border-color:var(--fire);">
+      <div class="num">30 participants</div>
+      <div style="font-size:12px; color:var(--smoke);">total &rarr; at most 30 check-ins across the whole ~90min session, ~1 every 3min on average (likely front-loaded, not even)</div>
+    </div>
+
+    <div class="stat" style="border-color:var(--fire);">
+      <div class="num">1 / 5</div>
+      <div style="font-size:12px; color:var(--smoke);">connections / check-ins recorded so far (check-ins still test duplicates, pending cleanup)</div>
+    </div>
+
+    <div class="stat" style="border-color:var(--log);">
+      <div class="num" style="font-size:16px;">~1 / 5.7s</div>
+      <div style="font-size:12px; color:var(--smoke);">noizetoyz notes, in one test burst (100 records) &mdash; item-tier pace, not yet analyzed as deeply as sensors</div>
+    </div>
+
+  </div>
+
+  <div class="mono" style="font-size:11px; color:var(--smoke); border-top:1px solid var(--log); padding-top:10px;">
+    everything above is real, already-observed data &mdash; nothing projected beyond the board-count and participant-count you gave
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

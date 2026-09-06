@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toons — local test harness (not deployed)</title>
+<style>
+  /* Dev-only local test harness for the Toons wall — NOT part of the
+     deployed site (nothing in this directory gets pushed to
+     toons-tilde-style). Runs fully offline: no HappyView fetch, no real
+     ATProto writes. Lane CSS/markup and spawnAvatar()/spawnToon() below
+     are copied verbatim from ../index.html (kept in sync by hand — this
+     harness is small and short-lived enough that a shared include isn't
+     worth the extra indirection). Drivers reuse the same DATA SHAPES as
+     the repo's existing real generators rather than inventing new ones:
+     sensor value ranges/UNIT mirror live-data/sensor_producer.py's
+     read_sensor(); note mode/fx/sample combos are lifted straight from
+     noizetoyz/relay/test_modes.py's build_cases(). */
+  :root {
+    --fire:   #E8651A;
+    --ember:  #C44B10;
+    --spark:  #F5A623;
+    --smoke:  #B7ADA3;
+    --night:  #141210;
+    --ground: #221E1A;
+    --log:    #3A3028;
+    --ash:    #EDE8E2;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--night);
+    color: var(--ash);
+    font-family: system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+  body { display: flex; flex-direction: column; }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .lane {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    border-bottom: 2px dashed var(--log);
+    background: var(--ground);
+  }
+  .lane:nth-child(odd) { background: var(--night); }
+  .lane::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0.75rem;
+    top: 0.5rem;
+    z-index: 3;
+    font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+    font-weight: 700;
+    color: var(--ash);
+    background: rgba(0, 0, 0, 0.35);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+  .lane .count {
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+    z-index: 3;
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 0.8rem;
+    color: var(--smoke);
+    background: rgba(0, 0, 0, 0.35);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+
+  .toon {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    animation-name: toon-hop;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+    pointer-events: none;
+  }
+  @keyframes toon-hop {
+    0%   { transform: translate(-5vw, -50%) scale(0.3) rotate(-20deg); opacity: 0; }
+    8%   { opacity: 1; }
+    22%  { transform: translate(20vw, calc(-50% - 3rem)) scale(1.3) rotate(14deg); }
+    40%  { transform: translate(40vw, calc(-50% + 1.5rem)) scale(1) rotate(-10deg); }
+    58%  { transform: translate(60vw, calc(-50% - 2.5rem)) scale(1.15) rotate(12deg); }
+    76%  { transform: translate(80vw, calc(-50% + 1rem)) scale(1) rotate(-8deg); }
+    100% { transform: translate(105vw, -50%) scale(0.7) rotate(10deg); opacity: 0; }
+  }
+
+  .avatar {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    transition: left 3s ease-in-out, top 3s ease-in-out, opacity 1.4s ease;
+  }
+  .avatar.visible { opacity: 1; }
+  .avatar-bob {
+    display: inline-block;
+    font-size: clamp(2.75rem, 5.5vw, 5rem);
+    transform-origin: 50% 85%;
+    animation: avatar-idle 2.4s ease-in-out infinite;
+  }
+  @keyframes avatar-idle {
+    0%, 100% { transform: translateY(0) rotate(-6deg); }
+    50%      { transform: translateY(-10px) rotate(6deg); }
+  }
+
+  /* ---- control panel (replaces the real footer for this harness) ---- */
+  footer {
+    padding: 0.6rem 1rem;
+    background: var(--log);
+    border-top: 3px solid var(--fire);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 0.8rem;
+  }
+  footer .group { display: flex; align-items: center; gap: 0.4rem; }
+  footer label { color: var(--smoke); }
+  footer input[type="number"] { width: 3.5rem; }
+  footer button {
+    font-family: inherit; font-size: 0.8rem; cursor: pointer;
+    background: var(--fire); color: var(--night); border: none;
+    border-radius: 6px; padding: 0.35rem 0.7rem; font-weight: 700;
+  }
+  footer button.secondary { background: transparent; color: var(--ash); border: 1px solid var(--smoke); font-weight: 400; }
+  footer .status { color: var(--spark); margin-left: auto; }
+</style>
+</head>
+<body>
+
+  <main id="lanes">
+    <div class="lane" id="lane-toons" data-label="🎨 your airglow.run automations"><span class="count" id="count-lane-toons">0</span></div>
+    <div class="lane" id="lane-connections" data-label="🤝 airglow.run → youandme.at connections"><span class="count" id="count-lane-connections">0</span></div>
+    <div class="lane" id="lane-checkins" data-label="🐕🌸🦋🌻🏠 station check-ins"><span class="count" id="count-lane-checkins">0</span></div>
+    <div class="lane" id="lane-sensors" data-label="📡🌡️ live data streaming"><span class="count" id="count-lane-sensors">0</span></div>
+    <div class="lane" id="lane-notes" data-label="🎹🎶 noizetoyz notes"><span class="count" id="count-lane-notes">0</span></div>
+  </main>
+
+  <footer>
+    <div class="group">
+      <label for="speed">speed&times;</label>
+      <input type="number" id="speed" value="12" min="1" max="200" step="1">
+    </div>
+    <div class="group">
+      <label for="boards">boards</label>
+      <input type="number" id="boards" value="4" min="1" max="8" step="1">
+    </div>
+    <div class="group">
+      <label for="participants">participants</label>
+      <input type="number" id="participants" value="30" min="1" max="100" step="1">
+    </div>
+    <div class="group">
+      <label for="localSensors">local sensors</label>
+      <input type="checkbox" id="localSensors" checked>
+    </div>
+    <button id="start">start session</button>
+    <button id="pause" class="secondary">pause</button>
+    <button id="reset" class="secondary">reset</button>
+    <span class="group">|</span>
+    <button class="secondary" data-fire="lane-toons">fire: toon</button>
+    <button class="secondary" data-fire="lane-connections">fire: connection</button>
+    <button class="secondary" data-fire="lane-checkins">fire: check-in</button>
+    <button class="secondary" data-fire="lane-sensors">fire: sensor</button>
+    <button class="secondary" data-fire="lane-notes">fire: note</button>
+    <span class="status" id="status">idle — a 90min session at speed&times;12 plays out in ~7.5min</span>
+  </footer>
+
+  <script>
+    // ============ rendering (verbatim from ../index.html) ============
+    function spawnToon(laneEl, emoji, title) {
+      const span = document.createElement("span");
+      span.className = "toon";
+      span.textContent = emoji;
+      span.title = title;
+      span.style.animationDuration = `${5 + Math.random() * 2.5}s`;
+      laneEl.appendChild(span);
+      span.addEventListener("animationend", () => span.remove());
+    }
+
+    const AVATAR_LIFETIME_MS = 32000;
+    const AVATAR_WANDER_MS = 4500;
+
+    function spawnAvatar(laneEl, emoji, title) {
+      const wrap = document.createElement("div");
+      wrap.className = "avatar";
+      wrap.title = title;
+      const bob = document.createElement("span");
+      bob.className = "avatar-bob";
+      bob.textContent = emoji;
+      wrap.appendChild(bob);
+
+      const pad = 60;
+      function randomSpot() {
+        const rect = laneEl.getBoundingClientRect();
+        const maxX = Math.max(0, rect.width - pad * 2);
+        const maxY = Math.max(0, rect.height - pad * 1.5);
+        return { left: pad + Math.random() * maxX, top: pad + Math.random() * maxY };
+      }
+
+      const start = randomSpot();
+      wrap.style.left = `${start.left}px`;
+      wrap.style.top = `${start.top}px`;
+      laneEl.appendChild(wrap);
+      requestAnimationFrame(() => wrap.classList.add("visible"));
+
+      const wanderTimer = setInterval(() => {
+        const next = randomSpot();
+        wrap.style.left = `${next.left}px`;
+        wrap.style.top = `${next.top}px`;
+      }, AVATAR_WANDER_MS + Math.random() * 1500);
+
+      setTimeout(() => {
+        clearInterval(wanderTimer);
+        wrap.classList.remove("visible");
+        wrap.addEventListener("transitionend", () => wrap.remove(), { once: true });
+      }, AVATAR_LIFETIME_MS);
+    }
+
+    const TRACK_EMOJI = { "memo.dog": "🐕", aster: "🌸", bluesky: "🦋", byoh: "🌻", selfhosted: "🏠" };
+    const SENSOR_EMOJI = {
+      temperature: "🌡️", pressure: "🧭", "weather-humidity": "💧",
+      "weather-temperature": "🌦️", "cpu-temperature": "🖥️", "ping-latency": "🏓", uptime: "⏱️",
+    };
+    const NOTE_EMOJI = { tone: "🎵", scrub: "🧽", fold: "🥐", filter: "☕", fm: "📻", pluck: "🎸" };
+
+    const counts = { "lane-toons": 0, "lane-connections": 0, "lane-checkins": 0, "lane-sensors": 0, "lane-notes": 0 };
+    function fire(laneId, tier, emoji, title) {
+      const laneEl = document.getElementById(laneId);
+      (tier === "avatar" ? spawnAvatar : spawnToon)(laneEl, emoji, title);
+      counts[laneId]++;
+      document.getElementById(`count-${laneId}`).textContent = counts[laneId];
+    }
+
+    // ============ simulated workshop drivers ============
+    // Rates below are from the real 777-sensor-reading traffic analysis
+    // (2026-09-06): ~24 records/min per active board (a paired reading
+    // every ~5.0s), plan for 3-5 boards live. 30 participants, ~90min
+    // session. Timers are scaled by `speed` so a full session can be
+    // watched in a few minutes instead of an hour and a half.
+    let speed = 12;
+    let running = false;
+    let sessionMs = 90 * 60 * 1000;
+    let timers = []; // every setTimeout/setInterval handle, so pause/reset can clear them all
+
+    function simDelay(realMs) { return realMs / speed; }
+    function track(fn, handle) { timers.push(handle); return handle; }
+
+    // --- sensors: N independent boards, each firing a temp+X pair ~every
+    // 5s — mirrors live-data/sensor_producer.py's read_sensor() ranges
+    // (temperature 18-24C; percent-ish 30-60 for humidity/pressure-as-%
+    // stand-in) rather than inventing new ones. ---
+    const BOARD_TYPE_PAIRS = [
+      ["temperature", "weather-humidity"], // dht22-style board
+      ["temperature", "pressure"],          // bmp180-style board
+    ];
+    function simSensorValue(sensorType) {
+      if (sensorType === "temperature") return +(18 + Math.random() * 6).toFixed(1);
+      if (sensorType === "pressure") return Math.round(98000 + Math.random() * 4000); // pascal, matches wifi_sensor_relay.py
+      return +(30 + Math.random() * 30).toFixed(1); // humidity-as-percent
+    }
+    function unitFor(sensorType) {
+      if (sensorType === "temperature" || sensorType === "weather-temperature" || sensorType === "cpu-temperature") return "celsius";
+      if (sensorType === "pressure") return "pascal";
+      if (sensorType === "ping-latency") return "ms";
+      if (sensorType === "uptime") return "seconds";
+      return "percent";
+    }
+    function startSensorDrivers(boardCount) {
+      for (let i = 0; i < boardCount; i++) {
+        const [typeA, typeB] = BOARD_TYPE_PAIRS[i % BOARD_TYPE_PAIRS.length];
+        const runBoard = () => {
+          if (!running) return;
+          for (const t of [typeA, typeB]) {
+            const v = simSensorValue(t);
+            fire("lane-sensors", "item", SENSOR_EMOJI[t] ?? "📡", `${t}: ${v} ${unitFor(t)}`);
+          }
+          track(null, setTimeout(runBoard, simDelay(4800 + Math.random() * 400)));
+        };
+        track(null, setTimeout(runBoard, Math.random() * simDelay(5000)));
+      }
+    }
+
+    // --- local sensors: a laptop running all 5 real (non-simulated in
+    // production, but simulated here) local_sensors.py types, each its own
+    // independent ./run_producer.sh process — so unlike a hardware board's
+    // fixed pair, these 5 fire on 5 INDEPENDENT ~5s timers, not one combined
+    // loop. Value ranges are plausible stand-ins for a real laptop/API read,
+    // not measured from anywhere. ---
+    const LOCAL_SENSOR_TYPES = ["cpu-temperature", "weather-temperature", "weather-humidity", "ping-latency", "uptime"];
+    function simLocalSensorValue(sensorType) {
+      if (sensorType === "cpu-temperature") return +(35 + Math.random() * 25).toFixed(1);
+      if (sensorType === "weather-temperature") return +(15 + Math.random() * 10).toFixed(1);
+      if (sensorType === "weather-humidity") return +(40 + Math.random() * 40).toFixed(1);
+      if (sensorType === "ping-latency") return +(5 + Math.random() * 40).toFixed(1);
+      if (sensorType === "uptime") return Math.round(1000 + Math.random() * 500000);
+    }
+    function startLocalSensorDriver() {
+      for (const t of LOCAL_SENSOR_TYPES) {
+        const runType = () => {
+          if (!running) return;
+          const v = simLocalSensorValue(t);
+          fire("lane-sensors", "item", SENSOR_EMOJI[t] ?? "📡", `${t}: ${v} ${unitFor(t)}`);
+          track(null, setTimeout(runType, simDelay(4800 + Math.random() * 400)));
+        };
+        track(null, setTimeout(runType, Math.random() * simDelay(5000)));
+      }
+    }
+
+    // --- notes: cases lifted straight from
+    // noizetoyz/relay/test_modes.py's build_cases() (mode/fxType/sampleId
+    // combos), fired in occasional "play session" bursts (~1 every 5.7s,
+    // matching the one real test-runner burst observed) rather than the
+    // steady drip sensors get — noizetoyz only makes noise while someone's
+    // actually at the keyboard. ---
+    const NOTE_CASES = [
+      { mode: "tone" }, { mode: "tone" }, { mode: "tone" },
+      { mode: "scrub" }, { mode: "scrub" }, { mode: "scrub" },
+      { mode: "fold" }, { mode: "fold" },
+      { mode: "filter" }, { mode: "filter" },
+      { mode: "fm" }, { mode: "fm" },
+      { mode: "pluck" },
+    ];
+    function startNotesDriver() {
+      function maybeStartPlaySession() {
+        if (!running) return;
+        const willPlay = Math.random() < 0.5; // roughly half the time someone's playing
+        if (willPlay) {
+          const notes = 4 + Math.floor(Math.random() * 10);
+          for (let n = 0; n < notes; n++) {
+            track(null, setTimeout(() => {
+              if (!running) return;
+              const c = NOTE_CASES[Math.floor(Math.random() * NOTE_CASES.length)];
+              fire("lane-notes", "item", NOTE_EMOJI[c.mode] ?? "🎵", `${c.mode} note played on d1mini-a`);
+            }, simDelay(n * 5700)));
+          }
+        }
+        track(null, setTimeout(maybeStartPlaySession, simDelay((willPlay ? 60000 : 20000) + Math.random() * 30000)));
+      }
+      maybeStartPlaySession();
+    }
+
+    // --- check-ins: up to `participants` total, front-loaded across the
+    // session (people trickle in, not evenly) — no existing driver script
+    // for this one (checkins come from the real kiosk-onboard signup
+    // flow), so this is new, weighted toward memo.dog since that's the
+    // on-site self-serve option. ---
+    const TRACK_WEIGHTS = [["memo.dog", 5], ["aster", 2], ["bluesky", 2], ["byoh", 1], ["selfhosted", 1]];
+    function weightedTrack() {
+      const total = TRACK_WEIGHTS.reduce((s, [, w]) => s + w, 0);
+      let r = Math.random() * total;
+      for (const [track, w] of TRACK_WEIGHTS) { if ((r -= w) <= 0) return track; }
+      return TRACK_WEIGHTS[0][0];
+    }
+    function startCheckinsDriver(participantCount) {
+      for (let i = 0; i < participantCount; i++) {
+        const at = Math.pow(Math.random(), 1.6) * sessionMs; // front-loaded
+        track(null, setTimeout(() => {
+          if (!running) return;
+          const t = weightedTrack();
+          fire("lane-checkins", "avatar", TRACK_EMOJI[t] ?? "🎉", `${t} checked in`);
+        }, simDelay(at)));
+      }
+    }
+
+    // --- connections: rarer than check-ins (an extra optional step) —
+    // model as ~40% of participants also connecting via youandme.at. ---
+    function startConnectionsDriver(participantCount) {
+      const connectorCount = Math.round(participantCount * 0.4);
+      for (let i = 0; i < connectorCount; i++) {
+        const at = Math.pow(Math.random(), 1.4) * sessionMs;
+        track(null, setTimeout(() => {
+          if (!running) return;
+          fire("lane-connections", "avatar", "🤝", "connection via youandme.at");
+        }, simDelay(at)));
+      }
+    }
+
+    // --- generic airglow.run automations (the top lane): rarest of all —
+    // only some participants build one (WORKSHEET.md §3 is a stretch
+    // task), a handful of sample emoji standing in for whatever they
+    // actually pick. ---
+    const SAMPLE_TOON_EVENTS = [
+      ["🎉", "someone replied to me!"], ["🔥", "keyword match"], ["📎", "new record in my watched collection"],
+    ];
+    function startToonsDriver(participantCount) {
+      const builders = Math.min(3, Math.round(participantCount * 0.1));
+      for (let i = 0; i < builders; i++) {
+        const at = 0.3 * sessionMs + Math.random() * 0.6 * sessionMs; // these take a while to build, so later
+        track(null, setTimeout(() => {
+          if (!running) return;
+          const [emoji, label] = SAMPLE_TOON_EVENTS[Math.floor(Math.random() * SAMPLE_TOON_EVENTS.length)];
+          fire("lane-toons", "avatar", emoji, label);
+        }, simDelay(at)));
+      }
+    }
+
+    function clearAllTimers() {
+      timers.forEach((h) => { clearTimeout(h); clearInterval(h); });
+      timers = [];
+    }
+
+    function startSession() {
+      if (running) return;
+      speed = Math.max(1, +document.getElementById("speed").value || 12);
+      const boardCount = Math.max(1, +document.getElementById("boards").value || 4);
+      const participantCount = Math.max(1, +document.getElementById("participants").value || 30);
+      const localSensors = document.getElementById("localSensors").checked;
+      running = true;
+      document.getElementById("status").textContent =
+        `running — ${boardCount} board(s)${localSensors ? " + local sensors" : ""}, ${participantCount} participant(s), speed×${speed} (~${(90 / speed).toFixed(1)}min)`;
+      startSensorDrivers(boardCount);
+      if (localSensors) startLocalSensorDriver();
+      startNotesDriver();
+      startCheckinsDriver(participantCount);
+      startConnectionsDriver(participantCount);
+      startToonsDriver(participantCount);
+    }
+
+    function pauseSession() {
+      running = false;
+      clearAllTimers();
+      document.getElementById("status").textContent = "paused";
+    }
+
+    function resetSession() {
+      pauseSession();
+      document.querySelectorAll(".toon, .avatar").forEach((el) => el.remove());
+      Object.keys(counts).forEach((k) => {
+        counts[k] = 0;
+        document.getElementById(`count-${k}`).textContent = "0";
+      });
+      document.getElementById("status").textContent = "idle — a 90min session at speed×12 plays out in ~7.5min";
+    }
+
+    document.getElementById("start").addEventListener("click", startSession);
+    document.getElementById("pause").addEventListener("click", pauseSession);
+    document.getElementById("reset").addEventListener("click", resetSession);
+    document.querySelectorAll("[data-fire]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const laneId = btn.dataset.fire;
+        if (laneId === "lane-checkins") { const t = weightedTrack(); fire(laneId, "avatar", TRACK_EMOJI[t], `${t} checked in`); }
+        else if (laneId === "lane-connections") fire(laneId, "avatar", "🤝", "connection via youandme.at");
+        else if (laneId === "lane-toons") { const [e, l] = SAMPLE_TOON_EVENTS[Math.floor(Math.random() * SAMPLE_TOON_EVENTS.length)]; fire(laneId, "avatar", e, l); }
+        else if (laneId === "lane-sensors") { const t = Math.random() < 0.5 ? "temperature" : "weather-humidity"; fire(laneId, "item", SENSOR_EMOJI[t], `${t}: ${simSensorValue(t)} ${unitFor(t)}`); }
+        else if (laneId === "lane-notes") { const c = NOTE_CASES[Math.floor(Math.random() * NOTE_CASES.length)]; fire(laneId, "item", NOTE_EMOJI[c.mode], `${c.mode} note played on d1mini-a`); }
+      });
+    });
+  </script>
+</body>
+</html>

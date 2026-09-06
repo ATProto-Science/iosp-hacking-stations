@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root { --fire:#E8651A; --spark:#F5A623; --smoke:#B7ADA3; --night:#141210; --ground:#221E1A; --log:#3A3028; --ash:#EDE8E2; }
+    body { margin: 0; background: var(--night); color: var(--ash); font-family: "IBM Plex Sans", system-ui, sans-serif; }
+    .mono { font-family: "IBM Plex Mono", monospace; }
+  </style>
+</helmet>
+
+<div style="width:420px; height:500px; box-sizing:border-box; padding:20px; display:flex; flex-direction:column; gap:12px;">
+
+  <div style="display:flex; align-items:center; gap:10px;">
+    <span style="font-size:26px;">🎵🧽🥐☕📻🎸</span>
+    <div>
+      <div style="font-size:16px; font-weight:700;">noizetoyz notes</div>
+      <div class="mono" style="font-size:11px; color:var(--smoke);">music.atproto.noizetoyz.synth.note</div>
+    </div>
+  </div>
+
+  <div class="mono" style="display:inline-block; align-self:flex-start; font-size:11px; color:var(--spark); border:1px solid var(--spark); border-radius:999px; padding:3px 10px;">tier: item</div>
+
+  <div style="flex:1; border:2px dashed var(--log); border-radius:10px; display:flex; align-items:center; justify-content:center; text-align:center; padding:20px;">
+    <div class="mono" style="font-size:13px; color:var(--smoke);">item behavior TBD, per mode<br><br>~1 per 5.7s in test bursts &mdash; live pace unknown until people actually play</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

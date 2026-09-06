@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root {
+      --fire: #E8651A; --ember: #C44B10; --spark: #F5A623;
+      --smoke: #B7ADA3; --night: #141210; --ground: #221E1A;
+      --log: #3A3028; --ash: #EDE8E2;
+    }
+    body { margin: 0; background: var(--night); color: var(--ash); font-family: "IBM Plex Sans", system-ui, sans-serif; }
+    .mono { font-family: "IBM Plex Mono", monospace; }
+    .tag {
+      position:absolute; font-size:12px; font-family:"IBM Plex Mono", monospace; color:var(--fire);
+      background:var(--night); border:1px solid var(--fire); border-radius:6px; padding:4px 8px; max-width:170px; line-height:1.4;
+    }
+  </style>
+</helmet>
+
+<div style="width:760px; padding:24px 26px 30px; box-sizing:border-box; display:flex; flex-direction:column; gap:14px;">
+
+  <div style="display:flex; flex-direction:column; gap:4px;">
+    <div class="mono" style="font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--fire); font-weight:600;">avatar tier &middot; sketch</div>
+    <div style="font-size:22px; font-weight:700;">A check-in isn't a hop-and-vanish</div>
+    <div style="font-size:13px; color:var(--smoke);">One idea for the shape &mdash; not the exact curve/timing, that's for the per-lane draft below.</div>
+  </div>
+
+  <div style="position:relative; height:420px; border:2px solid var(--log); border-radius:10px; background:var(--ground); overflow:hidden;">
+
+    <!-- wander path -->
+    <svg viewBox="0 0 720 420" width="720" height="420" style="position:absolute; inset:0;">
+      <path d="M 150 260 C 260 180, 340 340, 460 240 S 580 140, 560 260" fill="none" stroke="var(--fire)" stroke-width="2" stroke-dasharray="6 8" opacity="0.55"/>
+      <circle cx="150" cy="260" r="4" fill="var(--fire)"/>
+      <path d="M552,252 L566,258 L554,270 Z" fill="var(--fire)" opacity="0.7"/>
+    </svg>
+
+    <!-- bob loop around the sprite -->
+    <svg viewBox="0 0 720 420" width="720" height="420" style="position:absolute; inset:0;">
+      <ellipse cx="150" cy="255" rx="26" ry="14" fill="none" stroke="var(--spark)" stroke-width="2" stroke-dasharray="3 5" opacity="0.8"/>
+    </svg>
+
+    <div style="position:absolute; left:128px; top:222px; font-size:56px;">🐕</div>
+
+    <div class="tag" style="left:20px; top:150px;">idle bob &mdash; small vertical loop while it waits</div>
+    <div class="tag" style="left:230px; top:110px;">wanders to a new spot every so often, not a straight fly-through</div>
+    <div class="tag" style="left:420px; top:300px;">stays on screen a while &mdash; minutes, not seconds</div>
+    <div class="tag" style="left:520px; top:60px; color:var(--spark); border-color:var(--spark);">arrival moment can be bigger/louder &mdash; a real person just joined</div>
+
+  </div>
+
+  <div class="mono" style="font-size:12px; color:var(--smoke); border-top:1px solid var(--log); padding-top:10px;">
+    exact motion curve, idle timing, despawn rule (if any): drafting per-pane, not decided here
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

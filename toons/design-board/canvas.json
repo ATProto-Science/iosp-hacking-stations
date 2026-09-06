@@ -1,0 +1,26 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1000, "h": 780 },
+    { "file": "TierConcept.dc.html", "x": 1080, "y": 0, "w": 1000, "h": 780 },
+
+    { "file": "AvatarSketch.dc.html", "x": 0, "y": 900, "w": 760, "h": 640 },
+    { "file": "ItemSketch.dc.html", "x": 840, "y": 900, "w": 760, "h": 700 },
+    { "file": "TrafficData.dc.html", "x": 1680, "y": 900, "w": 380, "h": 700 },
+
+    { "file": "DraftToons.dc.html", "x": 0, "y": 1720, "w": 420, "h": 500 },
+    { "file": "DraftConnections.dc.html", "x": 500, "y": 1720, "w": 420, "h": 500 },
+    { "file": "DraftCheckins.dc.html", "x": 1000, "y": 1720, "w": 420, "h": 500 },
+    { "file": "DraftSensors.dc.html", "x": 1500, "y": 1720, "w": 420, "h": 500 },
+    { "file": "DraftNotes.dc.html", "x": 2000, "y": 1720, "w": 420, "h": 500 }
+  ],
+  "annotations": [
+    {
+      "id": "idea-collision",
+      "x": 1080,
+      "y": -160,
+      "w": 320,
+      "text": "IDEA (open, not resolved): avatars colliding with items — e.g. a memo.dog 🐕 bumping into a temperature 🌡️. Today they'd live in separate lanes, so this doesn't work as-is. Would need shared space across (or instead of) the per-lane strips. Flagging here so we don't lose it — draft pane-by-pane below first, come back to this after."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

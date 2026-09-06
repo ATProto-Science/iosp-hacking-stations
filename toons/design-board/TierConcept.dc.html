@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root {
+      --fire: #E8651A; --ember: #C44B10; --spark: #F5A623;
+      --smoke: #B7ADA3; --night: #141210; --ground: #221E1A;
+      --log: #3A3028; --ash: #EDE8E2;
+    }
+    body { margin: 0; background: var(--night); color: var(--ash); font-family: "IBM Plex Sans", system-ui, sans-serif; }
+    a { color: var(--spark); } a:hover { color: var(--fire); }
+    .mono { font-family: "IBM Plex Mono", monospace; }
+    .col { flex:1; border-radius:12px; padding:20px 22px; display:flex; flex-direction:column; gap:14px; }
+    .row { display:flex; align-items:baseline; gap:10px; }
+    .em { font-size:22px; }
+  </style>
+</helmet>
+
+<div style="width:1000px; padding:28px 32px 36px; box-sizing:border-box; display:flex; flex-direction:column; gap:18px;">
+
+  <div style="display:flex; flex-direction:column; gap:4px;">
+    <div class="mono" style="font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--spark); font-weight:600;">the redesign</div>
+    <div style="font-size:26px; font-weight:700;">Two behavior tiers, not one</div>
+    <div style="font-size:14px; color:var(--smoke); max-width:78ch;">"Turn each emoji into a bobbing or interactive avatar/item." Rare, one-per-person moments get a character. Frequent, bursty readings get a lightweight default. Which lane goes where, and why &mdash; the exact motion/interaction per lane gets drafted on its own frame below.</div>
+  </div>
+
+  <div style="display:flex; gap:20px;">
+
+    <div class="col" style="background:var(--ground); border:2px solid var(--fire);">
+      <div style="font-size:18px; font-weight:700; color:var(--fire);">AVATAR tier</div>
+      <div style="font-size:13px; color:var(--smoke);">rare &middot; one-shot per person &middot; deserves presence</div>
+
+      <div style="display:flex; flex-direction:column; gap:8px; padding-top:4px;">
+        <div class="row"><span class="em">🐕🌸🦋🌻🏠</span><span style="font-size:13px;">station check-ins</span></div>
+        <div class="row"><span class="em">🤝</span><span style="font-size:13px;">youandme.at connections</span></div>
+        <div class="row"><span class="em">🎨</span><span style="font-size:13px;">airglow.run automations &mdash; <span style="color:var(--spark);">maybe, TBD (rate unknown until participants build some)</span></span></div>
+      </div>
+
+      <div style="font-size:13px; color:var(--smoke); border-top:1px solid var(--log); padding-top:10px;">
+        Direction (not locked): persistent-ish, wanders/bobs around the screen, idle motion between arrivals, a bigger moment when it lands since each one represents an actual person.
+      </div>
+
+      <div class="mono" style="font-size:12px; color:var(--ash); background:rgba(0,0,0,0.3); border-radius:8px; padding:8px 10px;">
+        today: 1 connection total &middot; 5 check-ins total (test data)
+      </div>
+    </div>
+
+    <div class="col" style="background:var(--ground); border:2px solid var(--spark);">
+      <div style="font-size:18px; font-weight:700; color:var(--spark);">ITEM tier</div>
+      <div style="font-size:13px; color:var(--smoke);">frequent &middot; same source repeats &middot; needs to survive density</div>
+
+      <div style="display:flex; flex-direction:column; gap:8px; padding-top:4px;">
+        <div class="row"><span class="em">🌡️🧭💧🌦️🖥️🏓⏱️</span><span style="font-size:13px;">sensor readings</span></div>
+        <div class="row"><span class="em">🎵🧽🥐☕📻🎸</span><span style="font-size:13px;">noizetoyz notes</span></div>
+      </div>
+
+      <div style="font-size:13px; color:var(--smoke); border-top:1px solid var(--log); padding-top:10px;">
+        Direction (not locked): lightweight default &mdash; spawn, brief bob/interaction, fade. Many can exist at once; the default needs to stay legible under real load, not just look nice for a single spawn.
+      </div>
+
+      <div class="mono" style="font-size:12px; color:var(--ash); background:rgba(0,0,0,0.3); border-radius:8px; padding:8px 10px;">
+        today: ~24 readings/min per active sensor board &middot; notes ~1 per 5.7s in test bursts
+      </div>
+    </div>
+
+  </div>
+
+  <div class="mono" style="font-size:12px; color:var(--smoke); border-top:1px solid var(--log); padding-top:10px;">
+    full traffic reference &rarr; TrafficData frame &middot; per-lane drafts &rarr; the five Draft&hellip; frames
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
