@@ -11,7 +11,7 @@ Real API (pip install nebra):
 
 Auth via env vars: NEBRA_HANDLE, NEBRA_PASSWORD, NEBRA_BASE_URL (optional).
 
-TODO(station-2): swap `read_sensor()`'s simulated value for a real one — e.g.
+TODO(live-data): swap `read_sensor()`'s simulated value for a real one — e.g.
 Adafruit's CircuitPython DHT library (`adafruit-circuitpython-dht`) reading a
 DHT22 wired to a GPIO pin. Kept simulated here so this runs on a laptop with no
 hardware attached, for testing the ATProto side independently of the sensor side.
@@ -92,7 +92,7 @@ RECORD_TYPE = "science.iosp.sensor.reading"
 
 
 def read_sensor():
-    """TODO(station-2): replace with a real GPIO/DHT read. Simulated for now."""
+    """TODO(live-data): replace with a real GPIO/DHT read. Simulated for now."""
     if SENSOR_TYPE == "temperature":
         return round(random.uniform(18.0, 24.0), 1)
     return round(random.uniform(30.0, 60.0), 1)
@@ -111,15 +111,15 @@ def make_record(value):
 
 
 def main():
-    print(f"[station-2] streaming simulated {SENSOR_TYPE} readings as {RECORD_TYPE} every {INTERVAL_SECONDS}s")
-    print("[station-2] requires NEBRA_HANDLE / NEBRA_PASSWORD env vars set to a real ATProto account")
+    print(f"[live-data] streaming simulated {SENSOR_TYPE} readings as {RECORD_TYPE} every {INTERVAL_SECONDS}s")
+    print("[live-data] requires NEBRA_HANDLE / NEBRA_PASSWORD env vars set to a real ATProto account")
 
     handle, password, base_url = get_credentials()
     client = get_client(handle, password, base_url=base_url, reuse_session=True)
     repo_did = client.com.atproto.identity.resolve_handle(
         models.ComAtprotoIdentityResolveHandle.Params(handle=handle)
     ).did
-    print(f"[station-2] resolved {handle} -> {repo_did}")
+    print(f"[live-data] resolved {handle} -> {repo_did}")
 
     while True:
         value = read_sensor()
@@ -127,7 +127,7 @@ def main():
         client.com.atproto.repo.create_record(
             models.ComAtprotoRepoCreateRecord.Data(collection=record["$type"], record=record, repo=repo_did)
         )
-        print(f"[station-2] sent: {record}")
+        print(f"[live-data] sent: {record}")
         time.sleep(INTERVAL_SECONDS)
 
 

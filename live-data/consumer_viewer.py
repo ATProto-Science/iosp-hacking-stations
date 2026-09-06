@@ -31,7 +31,7 @@ same websocket, no dictionary needed. Confirmed working end-to-end against
 `wss://jetstream1.us-east.bsky.network` — real messages, correct
 `commit.record.$type` shape.
 
-TODO(station-2): replace print() in on_record with an actual live chart (e.g.
+TODO(live-data): replace print() in on_record with an actual live chart (e.g.
 a small Flask/websocket page, or a terminal sparkline) — this just proves the
 read side works before building a real viewer on top of it.
 """
@@ -54,7 +54,7 @@ def stream_records(collections, geo="us-east", instance=1):
     base_url = get_public_jetstream_base_url(geo, instance)
     url = get_jetstream_query_url(base_url, collections, dids=[], cursor=0, compress=False)
 
-    print(f"[station-2] subscription URL: {url}")
+    print(f"[live-data] subscription URL: {url}")
     with connect_ws(url) as ws:
         while True:
             yield json.loads(ws.receive_text())
@@ -69,7 +69,7 @@ def on_record(message):
 
 
 def main():
-    print(f"[station-2] watching Jetstream for {COLLECTION} records...")
+    print(f"[live-data] watching Jetstream for {COLLECTION} records...")
     for message in stream_records(collections=[COLLECTION]):
         # Jetstream also sends periodic "identity"/"account" messages
         # unrelated to any collection filter — skip anything that isn't an

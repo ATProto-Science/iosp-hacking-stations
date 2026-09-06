@@ -25,7 +25,7 @@ def stream_records(collections, dids=None, geo="us-east", instance=1):
     base_url = get_public_jetstream_base_url(geo, instance)
     url = get_jetstream_query_url(base_url, collections, dids=dids or [], cursor=0, compress=False)
 
-    print(f"[station-5] subscription URL: {url}")
+    print(f"[noizetoyz] subscription URL: {url}")
     with connect_ws(url) as ws:
         while True:
             yield json.loads(ws.receive_text())
@@ -72,7 +72,7 @@ def main():
     args = parser.parse_args()
 
     scope = f"DID(s) {', '.join(args.dids)}" if args.dids else "everyone"
-    print(f"[station-5] watching Jetstream for {COLLECTION} records from {scope}...")
+    print(f"[noizetoyz] watching Jetstream for {COLLECTION} records from {scope}...")
     for message in stream_records(collections=[COLLECTION], dids=args.dids):
         if message.get("kind") != "commit":
             continue

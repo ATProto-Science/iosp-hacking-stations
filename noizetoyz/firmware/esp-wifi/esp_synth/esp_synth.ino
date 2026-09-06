@@ -102,13 +102,13 @@ void setup() {
   for (uint8_t i = 0; i < 3; i++) pinMode(BUTTON_PINS[i], INPUT_PULLUP);
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("[station-5] connecting to WiFi");
+  Serial.print("[noizetoyz] connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
     delay(300);
     Serial.print(".");
   }
   Serial.println();
-  Serial.print("[station-5] WiFi up, IP=");
+  Serial.print("[noizetoyz] WiFi up, IP=");
   Serial.println(WiFi.localIP());
 
   startMozzi();
@@ -122,7 +122,7 @@ float midiToFreq(int note) {
 void sendNoteEvent(int note) {
   WiFiClient client;
   if (!client.connect(RELAY_HOST, RELAY_PORT)) {
-    Serial.println("[station-5] relay connect failed");
+    Serial.println("[noizetoyz] relay connect failed");
     return;
   }
   // One write, not several — CONFIRMED on real hardware 2026-09-01
@@ -151,7 +151,7 @@ void updateControl() {
       sounding = true;
       noteOffAt = millis() + 400;
       sendNoteEvent(NOTES[i]);
-      Serial.print("[station-5] note on: ");
+      Serial.print("[noizetoyz] note on: ");
       Serial.println(NOTES[i]);
     }
     lastState[i] = !pressed;

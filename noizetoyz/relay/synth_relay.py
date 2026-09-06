@@ -98,7 +98,7 @@ def publish_note(fields):
         _client.com.atproto.repo.create_record(
             models.ComAtprotoRepoCreateRecord.Data(collection=RECORD_TYPE, record=record, repo=_repo_did)
         )
-    print(f"[station-5] published: {record}")
+    print(f"[noizetoyz] published: {record}")
 
 
 def parse_line(line):
@@ -193,7 +193,7 @@ def jetstream_downlink_loop():
         try:
             base_url = get_public_jetstream_base_url("us-east", 1)
             url = get_jetstream_query_url(base_url, [RECORD_TYPE], dids=[], cursor=0, compress=False)
-            print(f"[station-5] downlink subscription URL: {url}")
+            print(f"[noizetoyz] downlink subscription URL: {url}")
             with connect_ws(url) as ws:
                 while True:
                     message = json.loads(ws.receive_text())
@@ -203,7 +203,7 @@ def jetstream_downlink_loop():
                     if record:
                         broadcast_record(record)
         except Exception as exc:
-            print(f"[station-5] downlink subscription dropped ({exc}), reconnecting in 3s")
+            print(f"[noizetoyz] downlink subscription dropped ({exc}), reconnecting in 3s")
             time.sleep(3)
 
 
@@ -217,7 +217,7 @@ class LineHandler(socketserver.StreamRequestHandler):
             try:
                 publish_note(parse_line(line))
             except Exception as exc:
-                print(f"[station-5] TCP publish from {peer} failed: {exc}")
+                print(f"[noizetoyz] TCP publish from {peer} failed: {exc}")
 
 
 class NoteHTTPHandler(BaseHTTPRequestHandler):
@@ -244,7 +244,7 @@ class NoteHTTPHandler(BaseHTTPRequestHandler):
             publish_note(json.loads(body))
             self.send_response(204)
         except Exception as exc:
-            print(f"[station-5] HTTP publish failed: {exc}")
+            print(f"[noizetoyz] HTTP publish failed: {exc}")
             self.send_response(400)
         self._cors()
         self.end_headers()
@@ -255,17 +255,17 @@ class NoteHTTPHandler(BaseHTTPRequestHandler):
 
 def main():
     global _client, _repo_did
-    print(f"[station-5] TCP line listener on :{TCP_PORT} (ESP direct WiFi, or Arduino UNO via OpenWrt bridge)")
-    print(f"[station-5] HTTP POST /note listener on :{HTTP_PORT} (webapp/index.html)")
-    print(f"[station-5] broadcast (downlink) listener on :{BROADCAST_PORT} (e.g. the firetruck)")
-    print("[station-5] requires ATPROTO_HANDLE / ATPROTO_PASSWORD env vars set to a real ATProto account")
+    print(f"[noizetoyz] TCP line listener on :{TCP_PORT} (ESP direct WiFi, or Arduino UNO via OpenWrt bridge)")
+    print(f"[noizetoyz] HTTP POST /note listener on :{HTTP_PORT} (webapp/index.html)")
+    print(f"[noizetoyz] broadcast (downlink) listener on :{BROADCAST_PORT} (e.g. the firetruck)")
+    print("[noizetoyz] requires ATPROTO_HANDLE / ATPROTO_PASSWORD env vars set to a real ATProto account")
 
     handle, password, base_url = get_credentials()
     _client = get_client(handle, password, base_url=base_url)
     _repo_did = _client.com.atproto.identity.resolve_handle(
         models.ComAtprotoIdentityResolveHandle.Params(handle=handle)
     ).did
-    print(f"[station-5] resolved {handle} -> {_repo_did}")
+    print(f"[noizetoyz] resolved {handle} -> {_repo_did}")
 
     # allow_reuse_address (unset by default on socketserver.TCPServer) —
     # without it, restarting this process quickly after a previous run can

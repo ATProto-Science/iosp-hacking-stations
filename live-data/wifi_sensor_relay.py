@@ -68,7 +68,7 @@ def publish_reading(sensor_type, value, value_scale, unit, device_id):
         _client.com.atproto.repo.create_record(
             models.ComAtprotoRepoCreateRecord.Data(collection=RECORD_TYPE, record=record, repo=_repo_did)
         )
-    print(f"[station-2] published: {record}")
+    print(f"[live-data] published: {record}")
 
 
 def parse_line(line):
@@ -101,20 +101,20 @@ class LineHandler(socketserver.StreamRequestHandler):
             try:
                 handle_reading(parse_line(line))
             except Exception as exc:
-                print(f"[station-2] publish from {peer} failed: {exc}")
+                print(f"[live-data] publish from {peer} failed: {exc}")
 
 
 def main():
     global _client, _repo_did
-    print(f"[station-2] WiFi sensor relay: TCP line listener on :{TCP_PORT}")
-    print("[station-2] requires NEBRA_HANDLE / NEBRA_PASSWORD env vars set to a real ATProto account")
+    print(f"[live-data] WiFi sensor relay: TCP line listener on :{TCP_PORT}")
+    print("[live-data] requires NEBRA_HANDLE / NEBRA_PASSWORD env vars set to a real ATProto account")
 
     handle, password, base_url = get_credentials()
     _client = get_client(handle, password, base_url=base_url)
     _repo_did = _client.com.atproto.identity.resolve_handle(
         models.ComAtprotoIdentityResolveHandle.Params(handle=handle)
     ).did
-    print(f"[station-2] resolved {handle} -> {_repo_did}")
+    print(f"[live-data] resolved {handle} -> {_repo_did}")
 
     # allow_reuse_address (unset by default) — without it, restarting this
     # process quickly after a previous run can fail to rebind with

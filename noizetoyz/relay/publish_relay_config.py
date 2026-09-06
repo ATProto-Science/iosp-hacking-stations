@@ -94,7 +94,7 @@ def main():
     client.com.atproto.repo.put_record(
         models.ComAtprotoRepoPutRecord.Data(collection=RECORD_TYPE, record=record, repo=repo_did, rkey="current")
     )
-    print(f"[station-5] published relayConfig: {record}")
+    print(f"[noizetoyz] published relayConfig: {record}")
 
 
 if __name__ == "__main__":

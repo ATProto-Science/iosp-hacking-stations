@@ -29,9 +29,9 @@ yet confirmed whether `station-4-bots/` is still the actual basis for it. See `t
   `webcam_sensors.py`/`local_sensors.py` are no-Pi-required fallbacks (webcam via ffmpeg,
   CPU temp, weather, ping latency, uptime) — see `WEBCAM-SENSORS.md`/`LOCAL-SENSORS.md`.
 - **`noizetoyz/`** — an ATProto-networked Mozzi synth (plus a temp/humidity sibling
-  reusing station-2's sensor pattern). ESP8266/ESP32 or Arduino UNO uplinks → 
-  `relay/synth_relay.py` (same auth/DID/cocoon-quirk logic as station-2's producer, copied
-  verbatim) → PDS → Jetstream; a downlink thread re-broadcasts every note to receive-only
+  reusing Live Data Streaming's sensor pattern). ESP8266/ESP32 or Arduino UNO uplinks → 
+  `relay/synth_relay.py` (same auth/DID/cocoon-quirk logic as Live Data Streaming's producer,
+  copied verbatim) → PDS → Jetstream; a downlink thread re-broadcasts every note to receive-only
   instruments and to `../landing-page/player.html`. Records are
   `music.atproto.noizetoyz.synth.note`. See `noizetoyz/README.md` and `OPS.md` for the
   full architecture, hardware variants, and `ops.sh` tooling.
