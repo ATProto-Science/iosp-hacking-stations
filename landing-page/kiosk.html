@@ -14,13 +14,6 @@
     @media (max-width: 600px) { .kiosk-tracks { grid-template-columns: 1fr; } }
     .track-card h3 { font-size: 1.6rem; }
     .track-count { font-size: 3rem; line-height: 1; margin: 0.5rem 0; }
-    .codes-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
-    .code-cell {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 2.25rem; height: 2.25rem; border-radius: 5px;
-      border: 1px solid var(--log); color: var(--smoke); font-size: 1.3rem;
-    }
-    .code-cell.taken { border-color: var(--fire); background-color: var(--night); }
     .checkin-log { list-style: none; margin: 1rem 0 0; padding: 0; max-height: 60vh; overflow-y: auto; }
     .checkin-log li {
       display: flex; align-items: baseline; gap: 0.75rem;
@@ -29,6 +22,7 @@
     }
     .checkin-log .emoji { font-size: 1.5rem; }
     .checkin-log .when { color: var(--smoke); font-size: 0.9rem; margin-left: auto; }
+    .connection-log .handle { font-weight: 600; }
   </style>
 </head>
 <body class="clearing">
@@ -47,8 +41,7 @@
           <div class="style-card track-card">
             <h3>🐕 memo.dog</h3>
             <p class="track-count" id="count-memo.dog">–</p>
-            <p class="smoke-text" id="codes-status">loading…</p>
-            <div class="codes-grid" id="codes-grid"></div>
+            <p class="smoke-text">Self-service at kiosk.tilde.style.</p>
           </div>
           <div class="style-card track-card">
             <h3>🌸 Aster</h3>
@@ -73,6 +66,14 @@
             <li class="smoke-text">loading…</li>
           </ul>
         </div>
+
+        <div class="style-card" style="margin-top: 1.5rem;">
+          <h3>🤝 Recently connected via youandme.at</h3>
+          <p class="smoke-text">Scan @atproto.science's QR code to show up here.</p>
+          <ul class="checkin-log connection-log" id="connection-log">
+            <li class="smoke-text">loading…</li>
+          </ul>
+        </div>
       </div>
     </section>
   </main>
@@ -86,22 +87,9 @@
   <script>
     const HAPPYVIEW_URL = "https://happyview.werk.museum";
     const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc";
-    const TOTAL_CODES = 20;
     const POLL_MS = 4000;
 
     const TRACK_EMOJI = { "memo.dog": "🐕", "aster": "🌸", "bsky": "🌻", "selfhosted": "🏠" };
-
-    function renderCodesGrid(takenCount) {
-      const cells = [];
-      for (let i = 0; i < TOTAL_CODES; i++) {
-        cells.push(
-          i < takenCount
-            ? '<span class="code-cell taken">🐕</span>'
-            : '<span class="code-cell">·</span>'
-        );
-      }
-      document.getElementById("codes-grid").innerHTML = cells.join("");
-    }
 
     function renderLog(records) {
       const logEl = document.getElementById("checkin-log");
@@ -115,6 +103,41 @@
           const emoji = TRACK_EMOJI[r.track] ?? "❓";
           const when = new Date(r.createdAt).toLocaleTimeString();
           return `<li><span class="emoji">${emoji}</span><span>${r.track}</span><span class="when">${when}</span></li>`;
+        })
+        .join("");
+    }
+
+    // did -> handle, resolved lazily via the public Bluesky AppView (no auth
+    // needed for public profiles) since style.tilde.hacking.connection only
+    // stores the connector's DID, not a handle.
+    const handleCache = new Map();
+
+    async function resolveHandle(did) {
+      if (handleCache.has(did)) return handleCache.get(did);
+      try {
+        const res = await fetch(
+          `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`
+        );
+        const handle = res.ok ? (await res.json()).handle : did;
+        handleCache.set(did, handle);
+        return handle;
+      } catch {
+        return did;
+      }
+    }
+
+    async function renderConnections(records) {
+      const logEl = document.getElementById("connection-log");
+      if (!records.length) {
+        logEl.innerHTML = '<li class="smoke-text">no connections yet</li>';
+        return;
+      }
+      const recent = records.slice(0, 20);
+      const handles = await Promise.all(recent.map((r) => resolveHandle(r.connectorDid)));
+      logEl.innerHTML = recent
+        .map((r, i) => {
+          const when = new Date(r.createdAt).toLocaleTimeString();
+          return `<li><span class="emoji">🤝</span><span class="handle">@${handles[i]}</span><span class="when">${when}</span></li>`;
         })
         .join("");
     }
@@ -140,12 +163,25 @@
         document.getElementById("count-aster").textContent = counts.aster;
         document.getElementById("count-bsky").textContent = counts.bsky;
         document.getElementById("count-selfhosted").textContent = counts.selfhosted;
-        document.getElementById("codes-status").textContent =
-          `${Math.min(counts["memo.dog"], TOTAL_CODES)} of ${TOTAL_CODES} invite codes claimed`;
-        renderCodesGrid(counts["memo.dog"]);
         renderLog(records);
       } catch (err) {
-        document.getElementById("codes-status").textContent = `couldn't load (${err.message})`;
+        console.warn("checkin refresh failed:", err.message);
+      }
+
+      try {
+        const res = await fetch(
+          `${HAPPYVIEW_URL}/xrpc/style.tilde.hacking.listConnections?limit=100`,
+          { headers: { "X-Client-Key": CLIENT_KEY } }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const connections = (data.records ?? []).sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        await renderConnections(connections);
+      } catch (err) {
+        document.getElementById("connection-log").innerHTML =
+          `<li class="smoke-text">couldn't load (${err.message})</li>`;
       }
     }
 

@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "style.tilde.hacking.connection",
+  "_comment": "NSID authority: style.tilde.hacking (same reversed-domain authority as the existing style.tilde.hacking.checkin, already DNS-_lexicon-proven for hacking.tilde.style — no new DNS step needed). One record per youandme.at (at.youandme.connection) 'someone scanned our QR code' event that named atproto.science's DID as the subject, written here by an airglow.run automation (pdsEventTrigger on at.youandme.connection, Gated on subject == atproto.science's DID, recordAction writing this record). Deliberately minimal, mirroring at.youandme.connection's own shape — kiosk.html resolves connectorDid to a handle client-side at render time rather than storing it here.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A youandme.at connection observed targeting atproto.science, relayed here by an airglow.run automation.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["connectorDid", "createdAt"],
+        "properties": {
+          "connectorDid": {
+            "type": "string",
+            "format": "did",
+            "description": "DID of the person who scanned atproto.science's QR code (the at.youandme.connection record's own repo/author DID)."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp of the original at.youandme.connection record, not of this relayed copy."
+          }
+        }
+      }
+    }
+  }
+}

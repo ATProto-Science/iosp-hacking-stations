@@ -1,31 +1,21 @@
 #!/usr/bin/env python3
 """Register every lexicon in this directory with HappyView's admin API.
 
-The four lexicons currently live for this station (note/listNotes/relayConfig/
-listRelayConfig) were registered by hand, one at a time, per the recipe
-documented in ../README.md ("The web app" section) — this script exists so
-that was a one-time manual chore, not a repeated one, and so extending
-note.json (as done 2026-09-02 for mode/sampleId/scrubPos/foldGain/foldBias)
-has a re-run-safe way to push the updated schema.
-
-Same env-var/header convention as ../../landing-page/reset-checkins.sh, the
-only other script in this repo that talks to HappyView's admin API:
+Same tool as ../../noizetoyz/lexicon/deploy_lexicons.py (copied, not shared —
+each station/page owns its own lexicon directory). Used here to register
+style.tilde.hacking.connection/listConnections, the new pair backing
+kiosk.html's "recently connected via youandme.at" feature — everything else
+in this repo's style.tilde.hacking.* namespace (checkin/listCheckins) was
+registered by hand in an earlier session with no lexicon JSON checked in
+anywhere, so this is the first time that authority gets a source-controlled
+schema file:
 
     HAPPYVIEW_ADMIN_KEY=hv_...  python3 deploy_lexicons.py
 
 Requires the DNS `_lexicon.<reversed-authority>` TXT record proving NSID
-ownership to already exist (a one-time, per-authority, out-of-band step —
-see ../README.md and tracker's reference_domains memory for the EasyDNS
-recipe) — HappyView will not persist a registration without it, admin key
-notwithstanding.
-
-Request body shape verified end-to-end 2026-09-05 (via the landing-page/
-lexicon/ sibling copy of this script, registering style.tilde.hacking.
-connection/listConnections): the lexicon JSON must be nested under a
-top-level `lexicon_json` field, with `target_collection` as a sibling field
-for query lexicons — NOT the raw lexicon spread at the top level, which
-this script originally guessed and which HappyView rejects with HTTP 422
-("missing field `lexicon_json`").
+ownership to already exist — but style.tilde.hacking is the same authority
+already in live use for style.tilde.hacking.checkin, so that proof should
+already be in place; this script doesn't create or check DNS itself.
 """
 
 import json
@@ -43,8 +33,8 @@ LEXICON_DIR = Path(__file__).parent
 
 def target_collection_for(lexicon: dict) -> str | None:
     """A query-type lexicon's companion record NSID, per the $ref its
-    output.schema.records array points at (see listNotes.json) — None for a
-    record-type lexicon, which doesn't need pairing.
+    output.schema.records array points at (see listConnections.json) — None
+    for a record-type lexicon, which doesn't need pairing.
     """
     main = lexicon.get("defs", {}).get("main", {})
     if main.get("type") != "query":
@@ -57,6 +47,12 @@ def target_collection_for(lexicon: dict) -> str | None:
 
 def register_one(path: Path) -> bool:
     lexicon = json.loads(path.read_text())
+    # HappyView's admin API wants the raw lexicon nested under `lexicon_json`,
+    # not spread at the top level — confirmed via a real HTTP 422
+    # ("missing field `lexicon_json`") on the first real end-to-end run of
+    # this script, 2026-09-05; the noizetoyz original this was copied from
+    # had the same never-verified shape (its docstring flagged the pairing
+    # request body as unverified).
     payload = {"lexicon_json": lexicon}
     target = target_collection_for(lexicon)
     if target:

@@ -1,0 +1,11 @@
+{
+  "client_id": "https://kiosk.tilde.style/client-metadata.json",
+  "client_name": "IOSP 2026 Kiosk",
+  "client_uri": "https://kiosk.tilde.style/",
+  "redirect_uris": ["https://kiosk.tilde.style/staff"],
+  "grant_types": ["authorization_code"],
+  "response_types": ["code"],
+  "scope": "atproto transition:generic",
+  "application_type": "web",
+  "dpop_bound_access_tokens": true
+}
