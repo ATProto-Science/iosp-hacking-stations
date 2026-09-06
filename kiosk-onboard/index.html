@@ -148,8 +148,8 @@
     });
 
     // The desk's QR code encodes ?invite=<code> so this never needs typing —
-    // one shared multi-use code (cocoon `create-invite-code --uses N`), never
-    // committed to this (public) repo's source.
+    // one shared multi-use code minted via the PDS's own admin invite-code
+    // API, never committed to this (public) repo's source.
     const inviteFromUrl = new URLSearchParams(location.search).get("invite");
     if (inviteFromUrl) document.getElementById("invite").value = inviteFromUrl;
 
@@ -180,7 +180,7 @@
             Authorization: `Bearer ${accessJwt}`,
           },
           body: JSON.stringify({
-            repo: did, // cocoon requires the literal DID here, not the handle
+            repo: did, // the DID always works here, regardless of which PDS is running
             collection: CHECKIN_COLLECTION,
             record: {
               $type: CHECKIN_COLLECTION,
@@ -208,9 +208,9 @@
 
       const prefix = document.getElementById("prefix").value.trim().toLowerCase();
       const handle = `${prefix}.memo.dog`;
-      // memo.dog's cocoon instance has no SMTP configured — no verification
-      // email is ever actually sent, so there's no reason to ask for a real
-      // one. Derived, not typed: satisfies cocoon's required-field check only.
+      // memo.dog's PDS has no SMTP configured — no verification email is
+      // ever actually sent, so there's no reason to ask for a real one.
+      // Derived, not typed: satisfies the PDS's required-field check only.
       const email = `${prefix}@memo.dog`;
       const password = document.getElementById("password").value;
       const inviteCode = document.getElementById("invite").value.trim();
