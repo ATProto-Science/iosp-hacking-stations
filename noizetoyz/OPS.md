@@ -5,7 +5,7 @@ the station is running — during setup, during the workshop, or just while
 debugging. See `README.md` for the station's own architecture; this file is
 just "how do I look at it."
 
-Run `./ops.sh` to set up all of it at once: a tmux session (`station5-tasks`)
+Run `./ops.sh` to set up all of it at once: a tmux session (`noizetoyz-tasks`)
 with `flash` (ready for `firmware/flash.sh`), `tests` (ready for
 `relay/test_modes.py` — standalone now, not just reachable via flash.sh's
 own post-flash prompt), `relay` (`synth_relay.py` itself, added
@@ -14,7 +14,7 @@ own post-flash prompt), `relay` (`synth_relay.py` itself, added
 `landing` (a plain-HTTP mirror of `landing-page/` on port 8000,
 `LANDING_PORT` env var to change it) windows — upserts, safe to re-run any
 time, never kills/recreates an already-running window. `tmux attach -t
-station5-tasks`, `Ctrl-b w` to switch.
+noizetoyz-tasks`, `Ctrl-b w` to switch.
 
 **Runs on robopi too**, not just a laptop — confirmed 2026-09-03/04, the
 actual Primary-plan setup (see README.md's "Workshop network topology").
@@ -86,7 +86,7 @@ want structured JSON to script against or pipe elsewhere.
 ps aux | grep synth_relay.py                      # process running?
 ss -tlnp | grep -E '8477|8478|8479|8480'           # listening on its ports?
 ss -tnp | grep 8479                                # any board actually connected to the downlink?
-tail -f /tmp/station5-test-modes.log               # if it was started via flash.sh/tmux
+tail -f /tmp/noizetoyz-test-modes.log               # if it was started via flash.sh/tmux
 ```
 
 An empty result from the `ss -tnp | grep 8479` check means no board is

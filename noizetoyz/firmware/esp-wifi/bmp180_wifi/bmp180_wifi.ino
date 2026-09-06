@@ -5,7 +5,7 @@
     fix, and the earlier orientation-of-the-shield lesson) with WiFi: every
     reading cycle, sends one line to
     ../../../live-data/wifi_sensor_relay.py's TCP port, which
-    publishes it as two science.iosp.sensor.reading records (temperature +
+    publishes it as two style.tilde.hacking.sensorReading records (temperature +
     pressure — the lexicon holds one sensorType/value pair per record, not
     a bundle, so the relay splits these itself).
 

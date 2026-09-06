@@ -153,7 +153,7 @@ const char *HAPPYVIEW_CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc";
 String relayHost;
 uint16_t relayPort;
 uint16_t sensorRelayPort; // sensorTcpPort from the same relayConfig record — a different port
-                          // on the same relayHost, station-2's wifi_sensor_relay.py rather than
+                          // on the same relayHost, live-data's wifi_sensor_relay.py rather than
                           // synth_relay.py's downlink; see fetchRelayConfig()'s parsing loop
 WiFiClient downlink;
 String lineBuffer;

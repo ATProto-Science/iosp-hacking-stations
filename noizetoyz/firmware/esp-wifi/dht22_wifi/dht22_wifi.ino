@@ -16,7 +16,7 @@
     it's redundant.
 
     Power VCC from the Wemos's 3V3 pin, NOT 5V — the opposite gotcha from
-    station-5's own LM386 amp (which specifically needs 5V for current
+    noizetoyz's own LM386 amp (which specifically needs 5V for current
     headroom). DHT22 is happy anywhere in its 3.3-6V range and only draws
     ~1.5mA, so current isn't the concern here — what matters is that its
     DATA line's HIGH level tracks whatever VCC it's given, and the

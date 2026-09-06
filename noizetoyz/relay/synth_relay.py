@@ -12,7 +12,7 @@ ends up here and here alone writes to ATProto (the uplink):
 
 It also runs a downlink: a background thread subscribes to Jetstream for
 music.atproto.noizetoyz.synth.note (same connection recipe as
-synth_console_viewer.py/station-2's consumer_viewer.py — see that file's
+synth_console_viewer.py/live-data's consumer_viewer.py — see that file's
 docstring for why this is hand-rolled) and re-broadcasts every record it
 sees — from any device, any participant, not just ones this relay itself
 published — to every client connected on BROADCAST_PORT, as the same plain
@@ -23,7 +23,7 @@ any JSON/TLS/ATProto logic of its own — same reasoning as the uplink wire
 format.
 
 ATProto session/Jetstream-URL logic lives in atproto_helpers.py, not
-nebra (station-2's sensor_producer.py borrows nebra, Emily Hunt's
+nebra (live-data's sensor_producer.py borrows nebra, Emily Hunt's
 astronomy-telemetry library, and that's the right call there — it's
 genuinely streaming sensor telemetry, nebra's actual purpose. This relay
 publishes music note events, not telemetry, so depending on an astronomy
@@ -34,12 +34,12 @@ atproto_helpers.py's own docstring). The tolerant-get_profile patch there
 (a brand-new, not-yet-crawled account's first write otherwise crashes,
 since atproto SDK's login() unconditionally fetches the account's own
 profile right after auth, and that profile doesn't exist anywhere in the
-network yet) is the same one station-2's sensor_producer.py verified
+network yet) is the same one live-data's sensor_producer.py verified
 against a real PDS — not nebra-specific, it's patching the underlying
 `atproto` SDK either way.
 
 Auth via ATPROTO_HANDLE, ATPROTO_PASSWORD, ATPROTO_BASE_URL (optional) —
-not NEBRA_* (station-2's env vars, a different library, correctly kept as
+not NEBRA_* (live-data's env vars, a different library, correctly kept as
 NEBRA_* there).
 """
 

@@ -40,7 +40,7 @@ Usage:
 
 Auth via the same env vars as synth_relay.py: ATPROTO_HANDLE,
 ATPROTO_PASSWORD, ATPROTO_BASE_URL (optional) — see atproto_helpers.py's
-docstring for why this station uses those instead of station-2's NEBRA_*.
+docstring for why this station uses those instead of live-data's NEBRA_*.
 """
 
 import argparse

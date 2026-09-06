@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
   "id": "music.atproto.noizetoyz.synth.listNotes",
-  "_comment": "Companion query lexicon for music.atproto.noizetoyz.synth.note — HappyView needs both the record lexicon and a paired query lexicon (this one, with target_collection pointing back at the record collection) registered to create the /xrpc/music.atproto.noizetoyz.synth.listNotes read endpoint. Modeled on the science.iosp.sensor.listReadings / run.saito.listFacts pairs already registered for stations 2/4 in this same HappyView instance.",
+  "_comment": "Companion query lexicon for music.atproto.noizetoyz.synth.note — HappyView needs both the record lexicon and a paired query lexicon (this one, with target_collection pointing back at the record collection) registered to create the /xrpc/music.atproto.noizetoyz.synth.listNotes read endpoint. Modeled on the style.tilde.hacking.listSensorReadings / run.saito.listFacts pairs already registered for stations 2/4 in this same HappyView instance.",
   "defs": {
     "main": {
       "type": "query",

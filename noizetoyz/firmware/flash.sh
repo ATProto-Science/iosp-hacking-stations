@@ -113,7 +113,7 @@ echo
 read -r -p "Run the mode test suite too (noizetoyz/relay/test_modes.py, in tmux)? [y/N] " run_tests
 if [[ "$run_tests" =~ ^[Yy]$ ]]; then
   RELAY_DIR="$(cd "$FIRMWARE_ROOT/../relay" && pwd)"
-  LOG_FILE="/tmp/station5-test-modes.log"
+  LOG_FILE="/tmp/noizetoyz-test-modes.log"
 
   TEST_ARGS=""
   read -r -p "Fast (correctness only) or paced for listening? [f/A] " pace_choice
@@ -121,14 +121,14 @@ if [[ "$run_tests" =~ ^[Yy]$ ]]; then
     TEST_ARGS="--audition"
   fi
 
-  tmux has-session -t station5-tasks 2>/dev/null || tmux new-session -d -s station5-tasks
-  tmux list-windows -t station5-tasks -F '#{window_name}' | grep -qx ops || tmux new-window -t station5-tasks -n ops
-  tmux list-windows -t station5-tasks -F '#{window_name}' | grep -qx log || tmux new-window -t station5-tasks -n log
+  tmux has-session -t noizetoyz-tasks 2>/dev/null || tmux new-session -d -s noizetoyz-tasks
+  tmux list-windows -t noizetoyz-tasks -F '#{window_name}' | grep -qx ops || tmux new-window -t noizetoyz-tasks -n ops
+  tmux list-windows -t noizetoyz-tasks -F '#{window_name}' | grep -qx log || tmux new-window -t noizetoyz-tasks -n log
 
-  tmux pipe-pane -t station5-tasks:ops -o "cat >> $LOG_FILE"
-  tmux send-keys -t station5-tasks:ops "cd '$RELAY_DIR' && python3 test_modes.py $TEST_ARGS" Enter
-  tmux send-keys -t station5-tasks:log "tail -f $LOG_FILE" Enter
+  tmux pipe-pane -t noizetoyz-tasks:ops -o "cat >> $LOG_FILE"
+  tmux send-keys -t noizetoyz-tasks:ops "cd '$RELAY_DIR' && python3 test_modes.py $TEST_ARGS" Enter
+  tmux send-keys -t noizetoyz-tasks:log "tail -f $LOG_FILE" Enter
 
-  echo "Test suite launched in tmux session 'station5-tasks' (window: ops, log tailed in: log)."
-  echo "Attach with: tmux attach -t station5-tasks  (Ctrl-b w to switch windows)"
+  echo "Test suite launched in tmux session 'noizetoyz-tasks' (window: ops, log tailed in: log)."
+  echo "Attach with: tmux attach -t noizetoyz-tasks  (Ctrl-b w to switch windows)"
 fi

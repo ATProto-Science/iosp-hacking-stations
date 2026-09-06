@@ -3,12 +3,12 @@
     No WiFi, no ATProto — just proves the sensor itself reads on real
     hardware before wiring it into any network path. This is the second
     Wemos stack from the hardware pile (see noizetoyz/README.md's
-    2026-09-01 hardware-inventory note) — a real candidate for station-2's
+    2026-09-01 hardware-inventory note) — a real candidate for live-data's
     temp/(pressure, not humidity) sensor gadget, sourced over WiFi instead
     of local GPIO.
 
-    BMP180 gives temperature + barometric pressure, not humidity — station-2
-    lexicon's `sensorType`/`unit` fields would need "pressure"/"pascal" (or
+    BMP180 gives temperature + barometric pressure, not humidity — live-data's
+    lexicon `sensorType`/`unit` fields would need "pressure"/"pascal" (or
     similar) alongside "temperature"/"celsius", not "humidity"/"percent".
 
     Pins: same I2C convention as the other Wemos shield stack (OLED) —

@@ -43,7 +43,7 @@ STATION_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FIRMWARE_DIR="$STATION_ROOT/firmware"
 RELAY_DIR="$STATION_ROOT/relay"
 LANDING_DIR="$(cd "$STATION_ROOT/../landing-page" && pwd)"
-SESSION="station5-tasks"
+SESSION="noizetoyz-tasks"
 COLLECTION="music.atproto.noizetoyz.synth.note"
 LANDING_PORT="${LANDING_PORT:-8000}"
 

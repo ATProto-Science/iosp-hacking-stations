@@ -1,6 +1,6 @@
 """Noizetoyz: direct ATProto session helpers, no nebra.
 
-station-2's sensor_producer.py borrows nebra (Emily Hunt's astronomy-
+live-data's sensor_producer.py borrows nebra (Emily Hunt's astronomy-
 telemetry library) for its login/session-reuse and UTC-timestamp helpers —
 justified there because that station genuinely *is* streaming sensor
 telemetry, nebra's actual purpose. synth publishes music note
@@ -17,7 +17,7 @@ this relay is a long-running process, not a bot restarted often enough for
 that to matter; a fresh login once at startup is enough.
 
 Env vars: ATPROTO_HANDLE, ATPROTO_PASSWORD, ATPROTO_BASE_URL (optional) —
-not NEBRA_* (station-2's env vars, a different library, kept as-is there
+not NEBRA_* (live-data's env vars, a different library, kept as-is there
 since that dependency is still correct for that station).
 """
 
@@ -34,7 +34,7 @@ def _get_profile_tolerant(self, *args, **kwargs):
     atproto SDK's login() unconditionally fetches the account's own profile
     right after authenticating, and that profile doesn't exist anywhere in
     the network yet ("Profile not found"). Tolerates just that one failure —
-    a no-op once the account is indexed. Same patch station-2's
+    a no-op once the account is indexed. Same patch live-data's
     sensor_producer.py verified against a real PDS; not nebra-specific,
     it's patching the underlying `atproto` SDK either way.
     """

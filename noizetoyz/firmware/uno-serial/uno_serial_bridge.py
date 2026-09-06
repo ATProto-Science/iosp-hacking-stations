@@ -7,7 +7,7 @@ hitting two real hardware dead ends in one session: the Linksys WRT54G
 earmarked for it has no USB port at all, and the D-Link DIR-505 (Superglue)
 dongle that does have one was locked out (custom WiFi/admin credentials,
 reset button behavior unconfirmed). A Raspberry Pi sidesteps both — it's
-already the hardware station-2 assumes ("Raspberry Pi + sensor", per that
+already the hardware live-data assumes ("Raspberry Pi + sensor", per that
 station's own README), guaranteed to have working USB-serial drivers
 (ftdi_sio/ch341/cp210x all ship in a standard Raspberry Pi OS image, no
 brltty-style surprises to debug), and can just run this directly instead of

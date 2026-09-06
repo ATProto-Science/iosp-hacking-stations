@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Noizetoyz skeleton: console viewer — watches music.atproto.noizetoyz.synth.note over
-Jetstream, Matadisco-style, same shape as station-2's consumer_viewer.py
+Jetstream, Matadisco-style, same shape as live-data's consumer_viewer.py
 (same connection recipe, same reasons: nebra.stream() isn't an importable
 generator, and nebra's zstd dictionary download 404s upstream — see that
 file's docstring for the verified detail; the Jetstream helpers below are

@@ -1,8 +1,8 @@
 # 🎹🎶 Noizetoyz — ATProto-networked Mozzi synth (+ temp/humidity sibling)
 
 Two gadgets showcasing sensor/interaction data flowing through the same
-substrate as station-2 and station-4: a temp/humidity sensor (an extra
-hardware source for station-2's existing `science.iosp.sensor.reading`
+substrate as live-data and station 4: a temp/humidity sensor (an extra
+hardware source for live-data's existing `style.tilde.hacking.sensorReading`
 pattern — see `../live-data/`, nothing new needed here) and a
 small [Mozzi](https://sensorium.github.io/Mozzi/) sensorium-based synth that
 anyone in the room can play — from real hardware or an on-screen keyboard —
@@ -26,7 +26,7 @@ timonsfiretruck-esp32) <──plain wire lines── downlink (Jetstream subscri
 ```
 
 One relay (`relay/synth_relay.py`) is the only thing that ever talks to
-ATProto — same auth/DID/cocoon-quirk logic as station-2's
+ATProto — same auth/DID/cocoon-quirk logic as live-data's
 `sensor_producer.py`, copied verbatim rather than re-derived (see that
 file's docstring for the full verified detail: the tolerant-`get_profile`
 patch for a brand-new account's first write, and resolving `repo` to a DID
@@ -49,7 +49,7 @@ reading to drive its siren pitch and sample-loop threshold.
 Records are `music.atproto.noizetoyz.synth.note` (`lexicon/`), NSID authority
 `atproto.music` (owned, clean slate). Every numeric field is an integer —
 AT Protocol's on-wire record model has no floating-point type (verified in
-station-2; see its README's "no floats" section) — so `fxAmount`/`cutoffHz`
+live-data; see its README's "no floats" section) — so `fxAmount`/`cutoffHz`
 are plain integers, no scaled-value trick needed since they were never
 fractional to begin with.
 
@@ -95,7 +95,7 @@ button's exact behavior also unconfirmed — see the session's own notes if
 picking this back up later, it's not a dead end, just not solved yet).
 
 **Current plan: a Raspberry Pi instead of a router** — already the
-hardware station-2 assumes anyway, guaranteed USB-serial driver support
+hardware live-data assumes anyway, guaranteed USB-serial driver support
 (no brltty-style surprises to debug, unlike this laptop's own first
 attempt at any of this), and simpler than a router bridge besides: no
 serial↔TCP tool needed at all, just
@@ -144,7 +144,7 @@ because of this).
 
 ## The relay — `relay/`
 
-Talks to ATProto directly via the `atproto` SDK, not nebra — station-2's
+Talks to ATProto directly via the `atproto` SDK, not nebra — live-data's
 `sensor_producer.py` borrows nebra (Emily Hunt's astronomy-telemetry
 library) because that station genuinely is telemetry; this one publishes
 music notes, a mismatch pointed out directly and fixed 2026-09-01. See
@@ -164,7 +164,7 @@ Listens on two ports (`SYNTH_TCP_PORT`, default 8477; `SYNTH_HTTP_PORT`,
 default 8478) and writes every note it receives as a
 `music.atproto.noizetoyz.synth.note` record under one ATProto account. Watch it land
 in real time with `relay/synth_console_viewer.py` — same hand-rolled
-Jetstream recipe as station-2's `consumer_viewer.py` (nebra's `stream()`
+Jetstream recipe as live-data's `consumer_viewer.py` (nebra's `stream()`
 isn't an importable generator and its zstd-dictionary download 404s
 upstream; see that file's docstring for the full detail — the read side's
 verified reasoning still applies even though the Jetstream URL helpers
@@ -191,7 +191,7 @@ reads).
 writes, watched live on an OLED — see the milestone entries below):
 `music.atproto.noizetoyz.synth.listNotes` is registered and live, not a
 guess anymore. Registration mechanism (found in `tracker-vss7`, used for
-station-2/4's own collections): HappyView has a real `POST /admin/lexicons`
+live-data/station 4's own collections): HappyView has a real `POST /admin/lexicons`
 REST endpoint (Bearer-token auth, documented at happyview.dev) — each
 collection needs *two* registered lexicons, the record schema and a
 companion `query`-type lexicon whose `target_collection` points back at
@@ -271,9 +271,9 @@ WiFi smoke test above.
 
 `firmware/esp-wifi/bmp180_wifi/` extends the smoke test with WiFi: sends
 each reading to `live-data/wifi_sensor_relay.py` (new — same
-uplink-only shape as `synth_relay.py`, but publishing to station-2's
-existing `science.iosp.sensor.reading` collection instead of a station-5
-one, since a BMP180 is exactly the sensor station-2 already has a lexicon
+uplink-only shape as `synth_relay.py`, but publishing to live-data's
+existing `style.tilde.hacking.sensorReading` collection instead of a noizetoyz-only
+one, since a BMP180 is exactly the sensor live-data already has a lexicon
 for). One BMP180 reading produces *two* records (temperature, pressure) —
 the lexicon holds one `sensorType`/`value` pair per record, not a bundle.
 
@@ -342,10 +342,10 @@ background) — `tmux` installed there, `firmware/`/`landing-page/` synced
 alongside `relay/`, `ops.sh`'s `pipenv run`-or-plain-`python3` auto-detect
 (`$PY_RUN`) making the same script work with robopi's plain
 `pip3 install --user` setup — so `relay`, `jetstream`, and `landing` all
-run from the one already-networked box, `tmux attach -t station5-tasks`
+run from the one already-networked box, `tmux attach -t noizetoyz-tasks`
 same as on a laptop. Its MOTD reminds anyone who SSHes in how to attach.
 robopi also runs `live-data/wifi_sensor_relay.py` now, in its own
-`sensor` tmux window — the actual station-2/5 sensor crossover, confirmed
+`sensor` tmux window — the actual live-data/noizetoyz sensor crossover, confirmed
 working 2026-09-04 with a real BMP180 board publishing live readings; see
 that station's own README.md ("wifi_sensor_relay.py drops nebra") for why
 that needed its own `nebra`-removal fix, separate from the two rounds above.
@@ -446,7 +446,7 @@ a power-cycle recovered it cleanly with the committed config intact.
 ## Open questions / not yet decided
 
 - Whether this becomes a full 5th self-select station at the workshop, or
-  stays a stretch-goal/demo extension of station-2 — raise in `tracker-vss7`
+  stays a stretch-goal/demo extension of live-data — raise in `tracker-vss7`
   (this repo's own CLAUDE.md: task-tracking lives there, not here).
 - ~~Whether `webapp/index.html` gets promoted into `../landing-page/`~~ —
   done 2026-09-02, now `../landing-page/player.html`. Still open: whether
@@ -490,7 +490,7 @@ a power-cycle recovered it cleanly with the committed config intact.
   little gain; the footer-overlay approach kept the original 28px
   waveform band intact. Draft icons for what's next (note-playing pulse,
   active preset/instrument, sequence running, humidity/temperature —
-  station-2 sensor crossover) sketched but not wired in; see the
+  live-data sensor crossover) sketched but not wired in; see the
   `noizetoyz`/design conversation this came out of for the actual bitmap
   bytes if picking one up later.
 - `esp_multi_synth_oled.ino` gained a second icon row, top-right corner,
@@ -509,7 +509,7 @@ a power-cycle recovered it cleanly with the committed config intact.
   both genuinely optional, a missing/failed BMP180 only logs and moves on
   (unlike `bmp180_wifi.ino`'s own halt-on-failure, appropriate there since
   sensing is that sketch's whole job, not here). Readings publish to
-  station-2's `wifi_sensor_relay.py` via a new `sensorRelayPort` (the same
+  live-data's `wifi_sensor_relay.py` via a new `sensorRelayPort` (the same
   relayConfig record's `sensorTcpPort` field the standalone sensor
   boards already use — extracted alongside the existing downlink-port
   parsing, not a separate discovery mechanism), throttled to

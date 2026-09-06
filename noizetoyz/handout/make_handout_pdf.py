@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render station5-handout.html to a print-ready PDF via Playwright.
+"""Render noizetoyz-hardware-handout.html to a print-ready PDF via Playwright.
 
 Renders the local HTML source directly, not the published Artifact URL —
 the Artifact platform wraps every page in its own frame-runtime/iframe
@@ -27,11 +27,11 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 HERE = Path(__file__).resolve().parent  # noizetoyz/handout/
-SOURCE = HERE / "station5-handout.html"
+SOURCE = HERE / "noizetoyz-hardware-handout.html"
 
 
 def main():
-    output = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "station5-handout.pdf"
+    output = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "noizetoyz-hardware-handout.pdf"
 
     if not SOURCE.exists():
         raise SystemExit(f"source file not found: {SOURCE}")
