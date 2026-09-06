@@ -30,6 +30,49 @@ Handles starting/stopping the right container, swapping the right Caddy config, 
 and prints which backend answered. Only ever leave `tranquil` as the resting state — that's
 production.
 
+## Relays memo.dog can crawler-notify (`requestCrawl`)
+
+**Currently active** (confirmed live via `tranquil_pds::crawlers` startup logs, every restart,
+consistently — see the discrepancy note below):
+```
+https://relay.fire.hose.cam        https://relay3.fr.hose.cam
+https://bsky.network                https://northamerica.firehose.network
+https://europe.firehose.network     https://asia.firehose.network
+https://atproto.africa              https://relay.upcloud.world
+```
+
+**Configurable** via `config.toml`'s `[firehose] crawlers = [...]` (or env var `CRAWLERS`, comma-
+separated) — currently unset in our `config.toml`, so tranquil-pds is falling back to some
+default. **Unresolved discrepancy**: tranquil-pds's own source
+(`tranquil-config/src/lib.rs`, `FirehoseConfig::crawler_list()`) says the fallback when unset
+should be a single `["https://bsky.network"]`, but the real runtime consistently notifies all 8
+relays above instead. Didn't chase why — noting it here rather than losing it, since it matters
+if the `crawlers` field ever gets set explicitly (expect the actual behavior to change from
+whatever this hidden-default mechanism currently is, not from the single-relay default the source
+comment implies).
+
+**All endpoints tested during the 2026-09-06 Jetstream/relay-crawl investigation**, for
+reference before choosing a faster/better one:
+
+| Endpoint | Operator | Result |
+|---|---|---|
+| `wss://jetstream1.us-east.bsky.network` | Bluesky (legacy v1) | No commit ever arrived |
+| `wss://jetstream.us-east.bsky.network` | Bluesky (**v2**, current, supports replay/snapshot) | No commit ever arrived |
+| `wss://relay1.us-east.bsky.network` | Bluesky (current relay, Sync 1.1) | `getRepoStatus` → `RepoNotFound` for our account |
+| `wss://bsky.network` | Bluesky (legacy relay) | `getRepoStatus` → `RepoNotFound` for our account |
+| `sfo/london/jet/nyc/chennai.firehose.stream` | vayumandala (community) | No commit ever arrived |
+| `europe.firehose.network` | firehose.network (in our own crawler list above) | No commit ever arrived (raw firehose via `goat`) |
+| `jetstream.fire.hose.cam` / `jetstream2.fr.hose.cam` | **microcosm.blue** (community — also backs Constellation/Slingshot/Spacedust/UFOs) | No commit ever arrived |
+| Slingshot (`slingshot.microcosm.blue`) | microcosm.blue | `listRecords` → not found, checked directly (no live-stream wait needed) |
+
+Bottom line as of this entry: **no external crawler anywhere has successfully indexed memo.dog
+since the tranquil-pds migration**, `RepoNotFound` on Bluesky's own current relay despite accepted
+`requestCrawl` calls — see the "Correction" tracker-vss7 entry for the full writeup. This is
+likely a real bug/gap on the relay side (host-keyed crawl-state, no signal distinguishes a fresh
+PDS instance under the same hostname), not something fixable purely from our side. A `setval()`-
+based sequence bump (documented in tracker) fixed an observable symptom (a connect/instant-
+disconnect retry loop) but did not fix this deeper registration gap.
+
 ## Rate limiting — a real workshop-day risk, not yet triggered
 
 tranquil-pds's `AccountCreation` limit is **10 signups/hour per client IP, hardcoded** (not
