@@ -12,7 +12,7 @@ reasoning); this is the same fix applied here, since wifi_sensor_relay.py
 only ever used nebra for those same two helpers plus
 nebra.get_atproto_utc_time(), all three a few lines each once read.
 
-Kept the NEBRA_* env var names (unlike station-5's ATPROTO_* — see that
+Kept the NEBRA_* env var names (unlike noizetoyz's ATPROTO_* — see that
 file's docstring for why it differs) since .env.test and sensor_producer.py
 already use them, and sensor_producer.py's own nebra dependency is
 untouched here — that script runs on real GPIO hardware, not robopi, so it
@@ -22,7 +22,7 @@ Deliberately simpler than nebra.get_client(): no session-file persistence
 across process restarts — this relay is a long-running process, not a bot
 restarted often enough for that to matter; a fresh login once at startup is
 enough (same call site previously passed reuse_session=True to nebra;
-dropped here, matching station-5's identical reasoning).
+dropped here, matching noizetoyz's identical reasoning).
 """
 
 import os

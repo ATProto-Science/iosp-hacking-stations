@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
-  "id": "science.iosp.sensor.reading",
-  "_comment": "DRAFT — placeholder NSID for the workshop only. NSID authority (the domain that owns 'science.iosp.*') hasn't been decided by the group; finalize a real namespace before anyone publishes records under this at the actual event. Modeled on tilde.cards' cards.tilde.card.json lexicon template. `value`/`valueScale`: AT Protocol's on-wire record data model has no floating-point type (verified 2026-07-16 against a real PDS — a float `value` gets a 400 from com.atproto.repo.createRecord), so readings are stored as a scaled integer instead; see each field's description.",
+  "id": "style.tilde.hacking.sensorReading",
+  "_comment": "NSID authority: style.tilde.hacking (same reversed-domain authority as the existing style.tilde.hacking.checkin/connection/toon — already DNS-_lexicon-proven for hacking.tilde.style, no new DNS step needed). Renamed 2026-09-06 from the placeholder `science.iosp.sensor.reading` (authority `science.iosp`/domain `iosp.science` was never decided by the group, never DNS-proven, not ours — confirmed via mcp__atmosphere__get_lexicon_schema returning not_found for lack of any resolvable authority). This is the real namespace the old lexicon's own _comment said to finalize before the actual event. Modeled on tilde.cards' cards.tilde.card.json lexicon template. `value`/`valueScale`: AT Protocol's on-wire record data model has no floating-point type (verified 2026-07-16 against a real PDS — a float `value` gets a 400 from com.atproto.repo.createRecord), so readings are stored as a scaled integer instead; see each field's description.",
   "defs": {
     "main": {
       "type": "record",

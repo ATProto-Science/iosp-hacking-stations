@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "style.tilde.hacking.listToons",
+  "_comment": "Companion query lexicon for style.tilde.hacking.toon — HappyView needs both the record lexicon and a paired query lexicon (this one, with target_collection pointing back at the record collection) registered to create the /xrpc/style.tilde.hacking.listToons read endpoint. Modeled directly on style.tilde.hacking.listConnections.",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Lists style.tilde.hacking.toon records, most recent first — read by cartoon-wall/index.html.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["records"],
+          "properties": {
+            "records": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "style.tilde.hacking.toon"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

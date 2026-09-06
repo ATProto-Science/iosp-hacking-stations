@@ -80,19 +80,54 @@ import nebra
 from atproto import models
 from nebra.client import get_client, get_credentials
 
+import local_sensors
+import webcam_sensors
+
 SENSOR_TYPE = os.environ.get("SENSOR_TYPE", "temperature")
-UNIT = "celsius" if SENSOR_TYPE == "temperature" else "percent"
+UNIT = {
+    "temperature": "celsius",
+    "cpu-temperature": "celsius",
+    "weather-temperature": "celsius",
+    "weather-humidity": "percent",
+    "ping-latency": "ms",
+    "uptime": "seconds",
+    "brightness": "luma",
+    "saturation": "chroma",
+    "hue": "degrees",
+    "contrast": "luma",
+}.get(SENSOR_TYPE, "percent")
 DEVICE_ID = os.environ.get("DEVICE_ID", "workshop-pi-demo")
 INTERVAL_SECONDS = float(os.environ.get("INTERVAL_SECONDS", "5"))
 VALUE_SCALE = 10  # store readings as integer tenths — see the VERIFIED note above
 
-# DRAFT namespace — see lexicon/science.iosp.sensor.reading.json's _comment.
-# Finalize a real NSID before publishing at the actual event.
-RECORD_TYPE = "science.iosp.sensor.reading"
+RECORD_TYPE = "style.tilde.hacking.sensorReading"
 
 
 def read_sensor():
-    """TODO(live-data): replace with a real GPIO/DHT read. Simulated for now."""
+    """TODO(live-data): replace with a real GPIO/DHT read for `temperature`.
+
+    The other SENSOR_TYPE values are real (non-simulated) readings — laptop
+    ones from local_sensors.py (see LOCAL-SENSORS.md), webcam ones from
+    webcam_sensors.py (see WEBCAM-SENSORS.md).
+    """
+    if SENSOR_TYPE == "cpu-temperature":
+        return round(local_sensors.read_cpu_temperature(), 1)
+    if SENSOR_TYPE == "weather-temperature":
+        return round(local_sensors.read_weather_temperature(), 1)
+    if SENSOR_TYPE == "weather-humidity":
+        return round(local_sensors.read_weather_humidity(), 1)
+    if SENSOR_TYPE == "ping-latency":
+        return round(local_sensors.read_ping_latency(), 1)
+    if SENSOR_TYPE == "uptime":
+        return round(local_sensors.read_uptime(), 1)
+    if SENSOR_TYPE == "brightness":
+        return round(webcam_sensors.read_brightness(), 1)
+    if SENSOR_TYPE == "saturation":
+        return round(webcam_sensors.read_saturation(), 1)
+    if SENSOR_TYPE == "hue":
+        return round(webcam_sensors.read_hue(), 1)
+    if SENSOR_TYPE == "contrast":
+        return round(webcam_sensors.read_contrast(), 1)
     if SENSOR_TYPE == "temperature":
         return round(random.uniform(18.0, 24.0), 1)
     return round(random.uniform(30.0, 60.0), 1)

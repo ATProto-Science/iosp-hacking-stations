@@ -41,7 +41,7 @@ import json
 from httpx_ws import connect_ws
 from nebra.jetstream import get_jetstream_query_url, get_public_jetstream_base_url
 
-COLLECTION = "science.iosp.sensor.reading"
+COLLECTION = "style.tilde.hacking.sensorReading"
 
 
 def stream_records(collections, geo="us-east", instance=1):

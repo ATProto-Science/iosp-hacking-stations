@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "style.tilde.hacking.toon",
+  "_comment": "NSID authority: style.tilde.hacking (same reversed-domain authority as the existing style.tilde.hacking.checkin/connection — already DNS-_lexicon-proven for hacking.tilde.style, no new DNS step needed even though the reader here is a different Pages project, cartoon-wall/index.html at cartoon.tilde.style). One record per 'cartoon wall' event: participants' own airglow.run automations (built during the workshop's custom-feeds/airglow segment) write directly to this collection under their own repo as their automation's action, and cartoon-wall shows every new one as a flying emoji. Deliberately generic (just emoji + label) so any automation can target it without a bespoke lexicon per participant. `tier` added 2026-09-06, once toons/index.html grew two rendering tiers (rare 'avatar' events that wander/persist vs frequent 'item' events that hop-and-fade): defaults to avatar, since a rare one-off custom automation is the common case this lexicon was designed for — an automation expecting to fire often (mirroring a high-frequency source like a sensor board) should set tier='item' explicitly so it doesn't flood the wall with persistent avatars.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "One event for the Airglow Cartoon Wall, written by a participant's own airglow.run automation.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["emoji", "createdAt"],
+        "properties": {
+          "emoji": {
+            "type": "string",
+            "maxLength": 32,
+            "description": "The emoji (one or a short cluster) to fly across the wall for this event."
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Short human-readable description shown as the emoji's tooltip, e.g. 'new post matched my keyword filter'. Optional — falls back to a generic label client-side."
+          },
+          "tier": {
+            "type": "string",
+            "enum": ["avatar", "item"],
+            "description": "How this event renders on the wall: 'avatar' (default) — rare, persistent, wanders around the screen; pick this for a one-off, one-per-person kind of event. 'item' — frequent, hops across and fades; pick this if your automation fires often (e.g. mirroring a sensor or other high-frequency source)."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the triggering event happened, per the participant's own automation."
+          }
+        }
+      }
+    }
+  }
+}

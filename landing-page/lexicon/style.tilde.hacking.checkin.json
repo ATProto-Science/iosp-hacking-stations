@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "style.tilde.hacking.checkin",
+  "_comment": "NSID authority: style.tilde.hacking (DNS-_lexicon-proven for hacking.tilde.style). Recovered 2026-09-07 — this lexicon was registered with HappyView's admin API early in the workshop-prep session but its source JSON was never written back to the repo; reconstructed here from the actual write sites (kiosk-onboard/staff.html's logCheckin(), kiosk-onboard/index.html's memo.dog signup flow) rather than guessed. One record per station check-in: memo.dog logged automatically at account creation, the other four tracks logged manually via the staff console (kiosk-onboard/staff.html) since there's no automated signal for them. Read back by landing-page/kiosk.html (the on-screen tally display) and landing-page/viewer.html.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A single station check-in, logged either automatically (memo.dog, at account creation) or by staff (the other tracks).",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["track", "createdAt"],
+        "properties": {
+          "track": {
+            "type": "string",
+            "enum": ["memo.dog", "aster", "bluesky", "byoh", "selfhosted"],
+            "description": "Which account track this check-in is for."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the check-in was logged."
+          }
+        }
+      }
+    }
+  }
+}

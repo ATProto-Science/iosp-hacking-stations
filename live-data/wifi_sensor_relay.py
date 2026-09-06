@@ -7,7 +7,7 @@ variant: the sensor lives on a separate ESP8266 board and sends readings
 over the network instead, so this relay is the thing that actually talks
 to ATProto — same shape as noizetoyz's synth_relay.py (a networked
 device -> one small Python relay -> ATProto), pointed at this station's
-science.iosp.sensor.reading collection instead of Noizetoyz's synth notes.
+style.tilde.hacking.sensorReading collection instead of Noizetoyz's synth notes.
 
 Auth/DID-resolution/cocoon-quirk logic is copied verbatim from
 sensor_producer.py rather than re-derived — see that file's own docstring
@@ -24,7 +24,7 @@ library, no scaling needed):
 
     temp=298 pressure=100031 deviceId=d1mini-bmp180-a
 
-One BMP180 reading produces TWO science.iosp.sensor.reading records
+One BMP180 reading produces TWO style.tilde.hacking.sensorReading records
 (temperature and pressure) — the lexicon's `main` record type holds exactly
 one sensorType/value pair, not a bundle, so this relay splits each incoming
 line into two separate creates rather than inventing a new combined record
@@ -43,7 +43,7 @@ import threading
 from atproto import models
 from atproto_helpers import get_atproto_utc_time, get_client, get_credentials
 
-RECORD_TYPE = "science.iosp.sensor.reading"
+RECORD_TYPE = "style.tilde.hacking.sensorReading"
 TCP_PORT = int(os.environ.get("SENSOR_TCP_PORT", "8480"))
 TEMP_SCALE = 10  # matches sensor_producer.py's VALUE_SCALE — one decimal place
 PRESSURE_SCALE = 1  # BMP180's readPressure() is already an integer Pascal value
