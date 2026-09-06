@@ -48,11 +48,11 @@ here means whatever Python has nebra installed — same idea either way.)
 
 **Tip**: a split-pane terminal (`tmux`, or your terminal app's own split) keeps
 producer and consumer side by side so you can watch both at once — `tmux new
--s station2`, then `Ctrl-b %` to split, `Ctrl-b ←/→` to move between panes.
+-s live-data`, then `Ctrl-b %` to split, `Ctrl-b ←/→` to move between panes.
 
 `sensor_producer.py` simulates the sensor reading by default (`read_sensor()`) so
 this runs on a laptop with nothing attached — swap in a real GPIO/DHT read (see the
-`TODO(station-2)` in that file) once you're at a Pi with actual hardware.
+`TODO(live-data)` in that file) once you're at a Pi with actual hardware.
 
 ## Files
 
@@ -60,7 +60,7 @@ this runs on a laptop with nothing attached — swap in a real GPIO/DHT read (se
 |---|---|
 | `sensor_producer.py` | The producer half — reads a sensor, sends a record via `nebra.send()`. |
 | `consumer_viewer.py` | The consumer half — watches for those records via Jetstream, Matadisco's producer/consumer pattern. |
-| `lexicon/science.iosp.sensor.reading.json` | Draft record schema, JSON-Schema-style, modeled on `tilde.cards`' own lexicon template. **Placeholder NSID** — the group hasn't picked a real namespace yet; don't treat `science.iosp.*` as final. |
+| `lexicon/style.tilde.hacking.sensorReading.json` | Record schema, JSON-Schema-style, modeled on `tilde.cards`' own lexicon template. NSID authority `style.tilde.hacking` — same already-owned, DNS-proven namespace as `landing-page/lexicon`'s `checkin`/`connection`/`toon` (renamed 2026-09-06 from a placeholder, `science.iosp.sensor.reading`, whose authority was never ours). |
 | `../run_forever.sh` | Repo-root helper — wraps either script so it restarts on crash/exit instead of ending the demo. See "Run it" above. |
 | `webcam-grab.sh` | No-Pi alternative for `read_sensor()` — grabs one webcam frame, prints a numeric reading (`brightness`/`saturation`/`hue`/`contrast`) via `ffmpeg`'s `signalstats` filter. See `WEBCAM-SENSORS.md`. |
 | `webcam_sensors.py` | Python wrapper around `webcam-grab.sh` — each reading as a plain function (`read_brightness()` etc.) instead of shelling out yourself. See `WEBCAM-SENSORS.md`. |
@@ -129,9 +129,21 @@ SensorThings entity model (`dev.sensorthings.*` lexicons) and ships a
 `atproto-sensorthings` Python package — but that package is a *read-side*
 tool (flattens existing `dev.sensorthings` CAR exports into tables), not a
 publishing library, so it wasn't a drop-in fix here. Worth a look if this
-station ever considers moving off the placeholder `science.iosp.sensor.reading`
+station ever considers moving off its own `style.tilde.hacking.sensorReading`
 lexicon (see the Files table above) onto an established standard instead —
 a separate, bigger decision from the nebra removal above.
+
+## Deploying to robopi
+
+`./deploy_robopi.sh` — `git pull`s on robopi and restarts
+`wifi_sensor_relay.py` in its `sensor` tmux window (see
+`noizetoyz/README.md`'s "own sensor tmux window" note), so a code change
+here — like the `style.tilde.hacking.sensorReading` rename — actually takes
+effect on the real running relay instead of just sitting in this repo.
+Written 2026-09-06 while the lab hardware wasn't set up — **untested
+against a real robopi**, verify it before trusting it blind once hardware's
+back. `ROBOPI_HOST`/`ROBOPI_REPO_PATH` env vars override the defaults if
+robopi's address or checkout path has moved.
 
 ## Note on AT Protocol's data model — no floats
 
@@ -148,7 +160,7 @@ continuous-valued sensor data on ATProto hits it.
 scaled-integer convention: readings are multiplied by `VALUE_SCALE` (10) and
 stored as an integer `value`, alongside a `valueScale` field so a consumer can
 recover the real reading (`value / valueScale`) without hardcoding the scale
-factor. See `lexicon/science.iosp.sensor.reading.json` for the schema.
+factor. See `lexicon/style.tilde.hacking.sensorReading.json` for the schema.
 
 ## Note on self-hosted PDSs (e.g. cocoon)
 
@@ -179,7 +191,7 @@ goals, three real alternatives (roughly simplest → most production-grade):
 - **[`goat`](https://github.com/bluesky-social/goat)** (Bluesky's own Go
   CLI) — verified working, genuinely a one-liner:
   ```
-  goat firehose --ops -c science.iosp.sensor.reading
+  goat firehose --ops -c style.tilde.hacking.sensorReading
   ```
   Connects to the raw relay firehose (`wss://bsky.network`), not Jetstream
   — a different upstream than `consumer_viewer.py` uses, same records.

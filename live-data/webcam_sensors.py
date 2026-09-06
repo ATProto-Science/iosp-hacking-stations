@@ -35,3 +35,24 @@ def read_hue():
 
 def read_contrast():
     return _grab("contrast")
+
+
+def read_all():
+    """One camera open, all four readings — see webcam_producer.py, which
+    uses this instead of calling read_brightness()/read_saturation()/
+    read_hue()/read_contrast() separately (each of those is its own
+    independent ffmpeg grab; four of them per cycle means four device
+    opens for stats ffmpeg's signalstats filter already computes together
+    in one pass).
+    """
+    result = subprocess.run(
+        [str(_SCRIPT), "all"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    fields = {}
+    for pair in result.stdout.strip().split():
+        key, value = pair.split("=", 1)
+        fields[key] = float(value)
+    return fields

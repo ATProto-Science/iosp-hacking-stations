@@ -3,3 +3,4 @@ __pycache__/
 node_modules/
 .env.test
 *.session
+.local_sensors_pids/

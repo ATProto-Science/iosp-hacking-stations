@@ -18,6 +18,16 @@
 # | hue          | HUEAVG           | 0-360       | average hue angle -- dominant color   |
 # | contrast     | YMAX-YMIN        | 0-255       | luma spread -- flat vs. high-contrast |
 #
+# `all` grabs ONE frame and prints all four as space-separated key=value
+# pairs (brightness=... saturation=... hue=... contrast=...) instead of
+# just one -- added 2026-09-06 once webcam_producer.py needed all four
+# from a single camera open per cycle rather than four separate
+# processes each independently re-grabbing a frame just to throw away
+# 3 of the 4 stats ffmpeg's signalstats pass already computed together.
+# Same device-contention reasoning as wifi_sensor_relay.py's one-BMP180-
+# read-produces-two-records pattern, just for a local webcam instead of a
+# networked board.
+#
 # (default: brightness)
 set -euo pipefail
 
@@ -42,6 +52,9 @@ case "$READING" in
   saturation) get SATAVG ;;
   hue)        get HUEAVG ;;
   contrast)   python3 -c "print($(get YMAX) - $(get YMIN))" ;;
+  all)
+    echo "brightness=$(get YAVG) saturation=$(get SATAVG) hue=$(get HUEAVG) contrast=$(python3 -c "print($(get YMAX) - $(get YMIN))")"
+    ;;
   *)
     echo "Unknown reading '$READING' -- see the table in this script's header." >&2
     exit 1
