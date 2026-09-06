@@ -59,6 +59,11 @@
     details.fallback summary { cursor: pointer; color: var(--spark); }
     details.fallback ol { padding-left: 1.25em; margin-top: 0.75rem; }
     details.fallback ol li { margin-bottom: 0.5em; }
+    .fill-default {
+      cursor: pointer;
+      border-bottom: 1px dashed var(--spark);
+    }
+    .fill-default:hover, .fill-default:focus { background-color: var(--night); }
   </style>
 </head>
 <body class="clearing">
@@ -86,7 +91,9 @@
               <span class="handle-suffix">.memo.dog</span>
             </div>
 
-            <label for="password">Password — pre-filled as <code>W00f-b@rk</code>, change it if you like</label>
+            <label for="password">Password — pre-filled as
+            <code class="fill-default" id="password-default" tabindex="0" role="button" title="Click to use this password">W00f-b@rk</code>,
+            change it if you like</label>
             <input id="password" type="password" required minlength="8" pattern="(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{8,}" autocomplete="new-password" value="W00f-b@rk">
 
             <label for="invite">Invite code</label>
@@ -129,6 +136,16 @@
     const HAPPYVIEW_URL = "https://happyview.werk.museum";
     const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc";
     const CHECKIN_COLLECTION = "style.tilde.hacking.checkin";
+
+    const DEFAULT_PASSWORD = document.getElementById("password-default").textContent;
+    function fillDefaultPassword() {
+      document.getElementById("password").value = DEFAULT_PASSWORD;
+    }
+    const passwordDefaultEl = document.getElementById("password-default");
+    passwordDefaultEl.addEventListener("click", fillDefaultPassword);
+    passwordDefaultEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fillDefaultPassword(); }
+    });
 
     // The desk's QR code encodes ?invite=<code> so this never needs typing —
     // one shared multi-use code (cocoon `create-invite-code --uses N`), never
