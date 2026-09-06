@@ -42,6 +42,7 @@
             <h3>🐕 memo.dog</h3>
             <p class="track-count" id="count-memo.dog">–</p>
             <p class="smoke-text">Self-service at kiosk.tilde.style.</p>
+            <p class="smoke-text">🎟️ <span id="invite-remaining">–</span> invite uses left</p>
           </div>
           <div class="style-card track-card">
             <h3>🌸 Aster</h3>
@@ -88,6 +89,11 @@
     const HAPPYVIEW_URL = "https://happyview.werk.museum";
     const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc";
     const POLL_MS = 4000;
+    // The real invite code (memo-dog-ewyxt-4pp6v) was minted with useCount=50.
+    // No public, unauthenticated way to read its actual remaining-uses count
+    // (that needs an admin session) — estimated instead from how many
+    // memo.dog check-ins have landed, since every real signup writes one.
+    const TOTAL_INVITE_USES = 50;
 
     const TRACK_EMOJI = { "memo.dog": "🐕", "aster": "🌸", "bsky": "🌻", "selfhosted": "🏠" };
 
@@ -160,6 +166,8 @@
         }
 
         document.getElementById("count-memo.dog").textContent = counts["memo.dog"];
+        document.getElementById("invite-remaining").textContent =
+          Math.max(0, TOTAL_INVITE_USES - counts["memo.dog"]);
         document.getElementById("count-aster").textContent = counts.aster;
         document.getElementById("count-bsky").textContent = counts.bsky;
         document.getElementById("count-selfhosted").textContent = counts.selfhosted;
