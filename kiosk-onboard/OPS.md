@@ -65,13 +65,13 @@ reference before choosing a faster/better one:
 | `jetstream.fire.hose.cam` / `jetstream2.fr.hose.cam` | **microcosm.blue** (community — also backs Constellation/Slingshot/Spacedust/UFOs) | No commit ever arrived |
 | Slingshot (`slingshot.microcosm.blue`) | microcosm.blue | `listRecords` → not found, checked directly (no live-stream wait needed) |
 
-Bottom line as of this entry: **no external crawler anywhere has successfully indexed memo.dog
-since the tranquil-pds migration**, `RepoNotFound` on Bluesky's own current relay despite accepted
-`requestCrawl` calls — see the "Correction" tracker-vss7 entry for the full writeup. This is
-likely a real bug/gap on the relay side (host-keyed crawl-state, no signal distinguishes a fresh
-PDS instance under the same hostname), not something fixable purely from our side. A `setval()`-
-based sequence bump (documented in tracker) fixed an observable symptom (a connect/instant-
-disconnect retry loop) but did not fix this deeper registration gap.
+**Resolved 2026-09-06**: the above was true for several hours after the migration, but the crawl
+gap cleared on its own with no further action on our side — `getRepoStatus` on both
+`relay1.us-east.bsky.network` and legacy `bsky.network` now returns `"active":true` for our
+account, and HappyView (`listCheckins`/`listConnections`) is receiving real, current records. See
+the "Relay registration gap resolved" tracker-vss7 entry for the full recheck. No outreach to
+Bluesky Protocol Services was needed — leaving the table above as a reference for what to try if
+this ever recurs, but the pipeline is confirmed live end-to-end as of this entry.
 
 ## Rate limiting — a real workshop-day risk, not yet triggered
 
