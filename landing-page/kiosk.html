@@ -14,6 +14,13 @@
     @media (max-width: 600px) { .kiosk-tracks { grid-template-columns: 1fr; } }
     .track-card h3 { font-size: 1.6rem; }
     .track-count { font-size: 3rem; line-height: 1; margin: 0.5rem 0; }
+    .codes-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+    .code-cell {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 1.6rem; height: 1.6rem; border-radius: 5px;
+      border: 1px solid var(--log); color: var(--smoke); font-size: 0.95rem;
+    }
+    .code-cell.taken { border-color: var(--fire); background-color: var(--night); }
     .checkin-log { list-style: none; margin: 1rem 0 0; padding: 0; max-height: 60vh; overflow-y: auto; }
     .checkin-log li {
       display: flex; align-items: baseline; gap: 0.75rem;
@@ -43,6 +50,7 @@
             <p class="track-count" id="count-memo.dog">–</p>
             <p class="smoke-text">Self-service at kiosk.tilde.style.</p>
             <p class="smoke-text">🎟️ <span id="invite-remaining">–</span> invite uses left</p>
+            <div class="codes-grid" id="codes-grid"></div>
           </div>
           <div class="style-card track-card">
             <h3>🌸 Aster</h3>
@@ -96,6 +104,18 @@
     const TOTAL_INVITE_USES = 50;
 
     const TRACK_EMOJI = { "memo.dog": "🐕", "aster": "🌸", "bsky": "🌻", "selfhosted": "🏠" };
+
+    function renderCodesGrid(takenCount) {
+      const cells = [];
+      for (let i = 0; i < TOTAL_INVITE_USES; i++) {
+        cells.push(
+          i < takenCount
+            ? '<span class="code-cell taken">🐕</span>'
+            : '<span class="code-cell">·</span>'
+        );
+      }
+      document.getElementById("codes-grid").innerHTML = cells.join("");
+    }
 
     function renderLog(records) {
       const logEl = document.getElementById("checkin-log");
@@ -168,6 +188,7 @@
         document.getElementById("count-memo.dog").textContent = counts["memo.dog"];
         document.getElementById("invite-remaining").textContent =
           Math.max(0, TOTAL_INVITE_USES - counts["memo.dog"]);
+        renderCodesGrid(counts["memo.dog"]);
         document.getElementById("count-aster").textContent = counts.aster;
         document.getElementById("count-bsky").textContent = counts.bsky;
         document.getElementById("count-selfhosted").textContent = counts.selfhosted;
