@@ -30,7 +30,8 @@
         <a href="#base" class="spark">Get set up</a>
         <a href="#stations" class="spark">What's built here</a>
         <a href="#engines" class="spark">Start the engines</a>
-        <a href="#looking" class="spark">Looking around</a>
+        <a href="#looking" class="spark">Look around</a>
+        <a href="#make-noise" class="spark">Make noise</a>
         <a href="#code" class="spark">Code</a>
         <a href="#contact" class="spark">Contact</a>
       </nav>
@@ -47,7 +48,7 @@
           <li><strong>pds.rip</strong> — a public test PDS, zero commitment. Good if you just want to poke around today. Heads up if you're doing Live Data Streaming specifically: it rate-limits at roughly 10 requests/24h per IP, which a continuous producer will hit fast.</li>
           <li><strong>Aster</strong> — the new science PDS, via invite code. Good if you want this to still exist after today.</li>
           <li><strong>memo.dog</strong> — our own self-hosted test PDS, invite-code only (ask at the station). Built and load-tested specifically for Live Data Streaming's continuous-write pattern — not a permanent service, workshop duration + a few days only.
-          <a href="https://kiosk.tilde.style/" class="spark">One-page signup form</a> — same account-creation API the Bluesky app uses, skips its multi-screen flow.</li>
+          <a href="https://kiosk.tilde.style/" class="spark">Sign up at kiosk.tilde.style</a> — one-page form, same account-creation API the Bluesky app uses, skips its multi-screen flow.</li>
         </ol>
         <p class="stones">
           <span class="stone">Aster signup — coming with the launch</span>
@@ -105,19 +106,21 @@
 
     <section class="gathered" id="looking">
       <div class="gathered-inner">
-        <h2>Looking around</h2>
+        <h2>Look around</h2>
         <p>Once you've written something, here's how to see it:</p>
 
         <div class="style-card">
           <h3>Viewer</h3>
           <p>Read Live Data Streaming's live sensor readings, station 4's SAITO facts,
-          Noizetoyz's last played note, and who's checked in, side by side —
-          plain <code>fetch()</code> against HappyView, no separate backend.
+          Noizetoyz's last played note, and who's checked in — 🐕 memo.dog /
+          🌸 Aster / 🦋 Bluesky / 🌻 BYOH / 🏠 self-hosted, plus the
+          "recently connected via youandme.at" feed — side by side, plain
+          <code>fetch()</code> against HappyView, no separate backend.
           <a href="viewer.html" class="spark">Open the viewer.</a></p>
           <p class="stones"><span class="stone">live</span></p>
         </div>
 
-        <div class="style-card">
+        <div class="style-card" id="make-noise">
           <h3>Make noise</h3>
           <p>Noizetoyz — an ATProto-networked Mozzi synth. Play notes,
           scrub samples, fold waves, sweep a filter, or FM synthesize from
@@ -125,16 +128,17 @@
           on real speakers. Every interaction is a real ATProto record,
           shared live over the network — same no-separate-backend pattern
           as the viewer.
-          <a href="make-noise.html" class="spark">What it does, how to connect &amp; play, how to diagnose.</a></p>
+          <a href="player.html" class="spark">Open the player</a> ·
+          <a href="make-noise.html" class="spark">what it does, how to connect &amp; play, how to diagnose.</a></p>
           <p class="stones"><span class="stone">live</span></p>
         </div>
 
         <div class="style-card">
-          <h3>Who's here</h3>
-          <p>Live check-in board for the room — 🐕 memo.dog / 🌸 Aster /
-          🌻 Bluesky / 🏠 self-hosted, one emoji per account track, same
-          no-separate-backend pattern as the viewer above.
-          <a href="kiosk.html" class="spark">Open the kiosk view.</a></p>
+          <h3>Staff</h3>
+          <p>Password-protected console for whoever's staffing the desk —
+          logs Aster/Bluesky/self-hosted check-ins into the same feed the
+          kiosk view above reads.
+          <a href="https://kiosk.tilde.style/staff" class="spark">Open staff console.</a></p>
           <p class="stones"><span class="stone">live</span></p>
         </div>
 

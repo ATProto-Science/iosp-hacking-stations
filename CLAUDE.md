@@ -48,11 +48,14 @@ yet confirmed whether `station-4-bots/` is still the actual basis for it. See `t
   git-integration deploy — pushed by hand via `wrangler pages deploy` from this
   directory). Merged into this repo via `git subtree` on 2026-07-19 (was a standalone
   repo at `~/hacking.tilde.style`, now gone — full history preserved under this prefix,
-  `git log -- landing-page` shows it). `index.html` is the front door; `viewer.html`
-  reads Live Data Streaming/station 4 records back out through HappyView; `kiosk.html`
-  is the on-screen check-in display for the station (dog/aster/garden emoji per
-  account track, plus a "recently connected via youandme.at" feed). Reads/writes real
-  ATProto records, no separate backend of its own.
+  `git log -- landing-page` shows it). `index.html` is the front door, linking to
+  `viewer.html` (live sensor readings, station 4's SAITO facts, Noizetoyz's last
+  note, and — since `kiosk.html` was folded in and removed 2026-09-08 — the
+  on-screen check-in grid too: dog/aster/garden emoji per account track, plus a
+  "recently connected via youandme.at" feed), `player.html` (Noizetoyz browser
+  player), and `kiosk-onboard/staff.html` on the other domain (password-protected
+  check-in console). Reads/writes real ATProto records, no separate backend of
+  its own.
 - **`kiosk-onboard/`** — deployed as its *own* Cloudflare Pages project at
   `kiosk.tilde.style` (separate from `landing-page/`'s `hacking.tilde.style`, since the
   two domains need different root content). `index.html` is the one-page memo.dog
@@ -62,9 +65,10 @@ yet confirmed whether `station-4-bots/` is still the actual basis for it. See `t
   code, minted via cocoon's `create-invite-code --uses N` — never committed to this
   public repo) needs zero typing; a bare `kiosk.tilde.style` link is the manual-entry
   fallback. `staff.html` (at `kiosk.tilde.style/staff`, moved here same day, was
-  `checkin.html` under `landing-page/`) is the staff-only console for logging Aster/
-  Bluesky/self-hosted check-ins — no public link, hand the URL to whoever's staffing
-  the desk.
+  `checkin.html` under `landing-page/`) is the password-protected console for logging
+  Aster/Bluesky/self-hosted check-ins — linked (2026-09-08) from both `index.html`'s
+  own footer here and `landing-page/index.html`'s "Staff" card, password protection
+  standing in for the earlier no-public-link approach.
 
 `WORKSHEET.md` (repo root) is the actual participant-facing worksheet — every station's
 setup instructions, account options, and stretch goals in one place. `README.md` is the

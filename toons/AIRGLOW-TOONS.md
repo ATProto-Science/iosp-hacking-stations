@@ -141,7 +141,7 @@ playing.
 
 ## Station check-ins — trigger `style.tilde.hacking.checkin`, condition on `track`
 
-Matches `TRACK_EMOJI`, already used identically in `viewer.html`/`kiosk.html`.
+Matches `TRACK_EMOJI`, already used identically in `viewer.html`.
 Lowest priority of the three — check-ins already work fine as their own lane
 without this. Omit `tier` (defaults to `avatar`) — check-ins are rare, one
 per person, exactly what the avatar tier is for.

@@ -13,6 +13,29 @@
     .section-nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 0.75rem; }
     .section-nav a { scroll-behavior: smooth; }
 
+    /* Check-in grid, folded in from the old standalone kiosk.html (removed
+       2026-09-08 — this page took over "who's here" duty, big-screen and
+       all, so there was no reason to keep two pages reading the same
+       feeds). */
+    .kiosk-tracks { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1.5rem; }
+    .track-card h3 { font-size: 1.3rem; }
+    .track-count { font-size: 2.5rem; line-height: 1; margin: 0.5rem 0; }
+    .codes-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+    .code-cell {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 1.6rem; height: 1.6rem; border-radius: 5px;
+      border: 1px solid var(--log); color: var(--smoke); font-size: 0.95rem;
+    }
+    .code-cell.taken { border-color: var(--fire); background-color: var(--night); }
+    .checkin-log { list-style: none; margin: 1rem 0 0; padding: 0; max-height: 40vh; overflow-y: auto; }
+    .checkin-log li {
+      display: flex; align-items: baseline; gap: 0.75rem;
+      padding: 0.5rem 0; border-bottom: 1px solid var(--log);
+    }
+    .checkin-log .emoji { font-size: 1.3rem; }
+    .checkin-log .when { color: var(--smoke); font-size: 0.9rem; margin-left: auto; }
+    .connection-log .handle { font-weight: 600; }
+
     /* Cartoonish "workshop pulse" banner — a strip of emoji that hop across
        whenever a new sensor reading / check-in / note lands, so the room can
        tell the substrate is alive without reading a table. Purely decorative
@@ -46,15 +69,6 @@
       from { transform: translateX(0); }
       to   { transform: translateX(-50%); }
     }
-    .pulse-label {
-      position: relative;
-      z-index: 2;
-      margin: 0 1rem;
-      color: var(--ash);
-      font-weight: 700;
-      white-space: nowrap;
-      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
-    }
     .pulse-emoji {
       position: absolute;
       left: 0;
@@ -84,7 +98,6 @@
 
   <div class="pulse-banner" id="pulse-banner" aria-hidden="true">
     <p class="pulse-bg">🌻🌿☁️🦋🌱☁️🌸🦋🌿☁️🌻🌱☁️🦋🌿🌻☁️🌱🦋🌿☁️🌻🌱🦋☁️🌿🌻🌱☁️🦋🌿☁️🌻🌱🦋🌿☁️🌻🌱🦋☁️🌿🌻🌱🦋☁️🌿🌻🌱🦋☁️🌿🌻🌻🌿☁️🦋🌱☁️🌸🦋🌿☁️🌻🌱☁️🦋🌿🌻☁️🌱🦋🌿☁️🌻🌱🦋☁️🌿🌻🌱☁️🦋🌿☁️🌻🌱🦋🌿☁️🌻🌱🦋☁️🌿🌻🌱🦋☁️🌿🌻</p>
-    <p class="pulse-label">🎉 workshop pulse — live activity, one emoji at a time</p>
   </div>
 
   <header class="hearth">
@@ -92,8 +105,8 @@
       <h1 class="site-name">📡🌡️ Live Data Streaming + 🎹🎶 Noizetoyz — one substrate</h1>
       <p class="site-tagline">Both stations read/write real ATProto records through the same HappyView AppView — no separate backends.</p>
       <nav class="section-nav">
-        <a href="#sensors" class="spark">📡🌡️ Sensor readings</a>
         <a href="#checkins" class="spark">🐕🌸🦋🌻🏠 Who's checked in</a>
+        <a href="#sensors" class="spark">📡🌡️ Sensor readings</a>
         <a href="#notes" class="spark">🎹🎶 Noizetoyz</a>
       </nav>
     </div>
@@ -102,7 +115,55 @@
   <main>
     <section class="gathered">
       <div class="gathered-inner">
-        <div class="style-card" id="sensors">
+        <h2 id="checkins">🐕🌸🦋🌻🏠 Who's checked in — memo.dog / Aster / Bluesky / BYOH / self-hosted</h2>
+        <p class="smoke-text" id="status-checkins">loading…</p>
+
+        <div class="kiosk-tracks">
+          <div class="style-card track-card">
+            <h3>🐕 memo.dog</h3>
+            <p class="track-count" id="count-memo.dog">–</p>
+            <p class="smoke-text">Self-service at kiosk.tilde.style.</p>
+            <p class="smoke-text">🎟️ <span id="invite-remaining">–</span> invite uses left</p>
+            <div class="codes-grid" id="codes-grid"></div>
+          </div>
+          <div class="style-card track-card">
+            <h3>🌸 Aster</h3>
+            <p class="track-count" id="count-aster">–</p>
+            <p class="smoke-text">Checked in by station staff.</p>
+          </div>
+          <div class="style-card track-card">
+            <h3>🦋 Bluesky</h3>
+            <p class="track-count" id="count-bluesky">–</p>
+            <p class="smoke-text">Checked in by station staff.</p>
+          </div>
+          <div class="style-card track-card">
+            <h3>🌻 BYOH</h3>
+            <p class="track-count" id="count-byoh">–</p>
+            <p class="smoke-text">Brought their own (non-Bluesky) handle.</p>
+          </div>
+          <div class="style-card track-card">
+            <h3>🏠 Self-hosted</h3>
+            <p class="track-count" id="count-selfhosted">–</p>
+            <p class="smoke-text">Unrecognized self-hosted PDS.</p>
+          </div>
+        </div>
+
+        <div class="style-card" style="margin-top: 1.5rem;">
+          <h3>Just joined</h3>
+          <ul class="checkin-log" id="checkin-log">
+            <li class="smoke-text">loading…</li>
+          </ul>
+        </div>
+
+        <div class="style-card" style="margin-top: 1.5rem;">
+          <h3>🤝 Recently connected via youandme.at</h3>
+          <p class="smoke-text">Scan @atproto.science's QR code to show up here.</p>
+          <ul class="checkin-log connection-log" id="connection-log">
+            <li class="smoke-text">loading…</li>
+          </ul>
+        </div>
+
+        <div class="style-card" id="sensors" style="margin-top: 1.5rem;">
           <h3>📡🌡️ Live Data Streaming — live sensor readings</h3>
           <p class="smoke-text" id="status-sensors">loading…</p>
           <table class="kindling-table">
@@ -111,16 +172,7 @@
           </table>
         </div>
 
-        <div class="style-card" id="checkins">
-          <h3>🐕🌸🦋🌻🏠 Who's checked in — memo.dog / Aster / Bluesky / BYOH / self-hosted</h3>
-          <p class="smoke-text" id="status-checkins">loading…</p>
-          <table class="kindling-table">
-            <thead><tr><th>track</th><th>handle</th><th>when</th></tr></thead>
-            <tbody id="rows-checkins"></tbody>
-          </table>
-        </div>
-
-        <div class="style-card" id="notes">
+        <div class="style-card" id="notes" style="margin-top: 1.5rem;">
           <h3>🎹🎶 Noizetoyz — last played note</h3>
           <p class="smoke-text" id="status-notes">loading…</p>
           <p class="last-note" id="last-note-display">—</p>
@@ -143,10 +195,6 @@
     const HAPPYVIEW_URL = "https://happyview.werk.museum";
     const CLIENT_KEY = "hvc_4f63d844f5a253fe658f1491160126dc"; // read-only, rate-limited
     const POLL_MS = 5000;
-
-    function truncate(s, n) {
-      return s && s.length > n ? s.slice(0, n - 1) + "…" : s;
-    }
 
     // Cartoonish activity banner: spawns a hopping emoji for each genuinely
     // new record (by uri) across the three feeds, so the room sees the
@@ -257,8 +305,8 @@
       });
     }
 
-    async function fetchRecords(nsid) {
-      const res = await fetch(`${HAPPYVIEW_URL}/xrpc/${nsid}?limit=50`, {
+    async function fetchRecords(nsid, limit = 50) {
+      const res = await fetch(`${HAPPYVIEW_URL}/xrpc/${nsid}?limit=${limit}`, {
         headers: { "X-Client-Key": CLIENT_KEY },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -294,8 +342,8 @@
     const TRACK_EMOJI = { "memo.dog": "🐕", aster: "🌸", bluesky: "🦋", byoh: "🌻", selfhosted: "🏠" };
 
     // did -> handle, resolved lazily via the public Bluesky AppView (no auth
-    // needed for public profiles) since style.tilde.hacking.checkin only
-    // stores the checked-in account's DID (via its record uri), not a handle.
+    // needed for public profiles) since style.tilde.hacking.checkin and
+    // style.tilde.hacking.connection only store DIDs, not handles.
     const handleCache = new Map();
 
     async function resolveHandle(did) {
@@ -312,33 +360,90 @@
       }
     }
 
+    // The real invite code (memo-dog-ewyxt-4pp6v) was minted with useCount=50.
+    // No public, unauthenticated way to read its actual remaining-uses count
+    // (that needs an admin session) — estimated instead from how many
+    // memo.dog check-ins have landed, since every real signup writes one.
+    const TOTAL_INVITE_USES = 50;
+
+    function renderCodesGrid(takenCount) {
+      const cells = [];
+      for (let i = 0; i < TOTAL_INVITE_USES; i++) {
+        cells.push(
+          i < takenCount
+            ? '<span class="code-cell taken">🐕</span>'
+            : '<span class="code-cell">·</span>'
+        );
+      }
+      document.getElementById("codes-grid").innerHTML = cells.join("");
+    }
+
+    function renderCheckinLog(records) {
+      const logEl = document.getElementById("checkin-log");
+      if (!records.length) {
+        logEl.innerHTML = '<li class="smoke-text">no check-ins yet</li>';
+        return;
+      }
+      logEl.innerHTML = records
+        .slice(0, 30)
+        .map((r) => {
+          const emoji = TRACK_EMOJI[r.track] ?? "❓";
+          const when = new Date(r.createdAt).toLocaleTimeString();
+          return `<li><span class="emoji">${emoji}</span><span>${r.track}</span><span class="when">${when}</span></li>`;
+        })
+        .join("");
+    }
+
     async function loadCheckins() {
       const statusEl = document.getElementById("status-checkins");
-      const rowsEl = document.getElementById("rows-checkins");
       try {
-        const records = await fetchRecords("style.tilde.hacking.listCheckins");
-        statusEl.textContent = `${records.length} check-in(s)`;
-        pulseCheckins(records);
-        if (!records.length) {
-          rowsEl.innerHTML = `<tr><td colspan="3" class="empty">no check-ins yet</td></tr>`;
-          return;
-        }
+        const records = await fetchRecords("style.tilde.hacking.listCheckins", 200);
         const sorted = records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        const dids = sorted.map((r) => r.uri.split("/")[2]);
-        const handles = await Promise.all(dids.map(resolveHandle));
-        rowsEl.innerHTML = sorted
-          .map((r, i) => {
-            const did = dids[i];
-            const emoji = TRACK_EMOJI[r.track] ?? "❓";
-            return `<tr>
-              <td>${emoji} ${r.track}</td>
-              <td><a href="https://pdsls.dev/at://${did}" class="spark">${truncate(handles[i], 24)}</a></td>
-              <td>${new Date(r.createdAt).toLocaleTimeString()}</td>
-            </tr>`;
-          })
-          .join("");
+        statusEl.textContent = `${records.length} check-in(s)`;
+        pulseCheckins(sorted);
+
+        const counts = { "memo.dog": 0, aster: 0, bluesky: 0, byoh: 0, selfhosted: 0 };
+        for (const r of sorted) {
+          if (r.track in counts) counts[r.track]++;
+        }
+        document.getElementById("count-memo.dog").textContent = counts["memo.dog"];
+        document.getElementById("invite-remaining").textContent =
+          Math.max(0, TOTAL_INVITE_USES - counts["memo.dog"]);
+        renderCodesGrid(counts["memo.dog"]);
+        document.getElementById("count-aster").textContent = counts.aster;
+        document.getElementById("count-bluesky").textContent = counts.bluesky;
+        document.getElementById("count-byoh").textContent = counts.byoh;
+        document.getElementById("count-selfhosted").textContent = counts.selfhosted;
+        renderCheckinLog(sorted);
       } catch (err) {
         statusEl.textContent = `error: ${err.message}`;
+      }
+    }
+
+    async function renderConnections(records) {
+      const logEl = document.getElementById("connection-log");
+      if (!records.length) {
+        logEl.innerHTML = '<li class="smoke-text">no connections yet</li>';
+        return;
+      }
+      const recent = records.slice(0, 20);
+      const handles = await Promise.all(recent.map((r) => resolveHandle(r.connectorDid)));
+      logEl.innerHTML = recent
+        .map((r, i) => {
+          const when = new Date(r.createdAt).toLocaleTimeString();
+          return `<li><span class="emoji">🤝</span><span class="handle">@${handles[i]}</span><span class="when">${when}</span></li>`;
+        })
+        .join("");
+    }
+
+    async function loadConnections() {
+      const logEl = document.getElementById("connection-log");
+      try {
+        const records = await fetchRecords("style.tilde.hacking.listConnections", 100);
+        const sorted = records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        await renderConnections(sorted);
+      } catch (err) {
+        logEl.innerHTML = `<li class="smoke-text">couldn't load (${err.message})</li>`;
       }
     }
 
@@ -375,6 +480,7 @@
     function loadAll() {
       loadSensors();
       loadCheckins();
+      loadConnections();
       loadLastNote();
     }
 

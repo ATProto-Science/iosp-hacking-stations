@@ -16,6 +16,9 @@
       border: 1px solid var(--log); border-radius: 4px; color: var(--ash);
       font-family: var(--font-body); font-size: 1rem;
     }
+    .handle-row { display: flex; align-items: center; gap: 0.5rem; }
+    .handle-row input { flex: 1; margin-top: 0.4rem; }
+    .handle-suffix { color: var(--smoke); white-space: nowrap; padding-top: 0.4rem; }
     button.track-btn {
       display: block; width: 100%; margin-top: 1rem; padding: 1rem;
       background-color: var(--fire); color: var(--ash); border: none;
@@ -38,7 +41,7 @@
   <header class="hearth">
     <div class="hearth-inner">
       <h1 class="site-name">Staff check-in console</h1>
-      <p class="site-tagline">Not linked publicly — for whoever's staffing the station.</p>
+      <p class="site-tagline">Password-protected — for whoever's staffing the station.</p>
     </div>
   </header>
 
@@ -55,7 +58,10 @@
 
           <form id="login-form" class="login-form">
             <label for="handle">Your handle</label>
-            <input id="handle" placeholder="you.memo.dog" required autocomplete="username">
+            <div class="handle-row">
+              <input id="handle" placeholder="yourname" required pattern="[a-zA-Z0-9-]+" autocomplete="username">
+              <span class="handle-suffix">.memo.dog</span>
+            </div>
             <label for="password">Password</label>
             <input id="password" type="password" required autocomplete="current-password">
             <button id="login-btn" type="submit">Log in</button>
@@ -102,7 +108,7 @@
       e.preventDefault();
       const resultEl = document.getElementById("login-result");
       resultEl.innerHTML = "";
-      const identifier = document.getElementById("handle").value.trim();
+      const identifier = document.getElementById("handle").value.trim() + ".memo.dog";
       const password = document.getElementById("password").value;
       const loginBtn = document.getElementById("login-btn");
       loginBtn.disabled = true;

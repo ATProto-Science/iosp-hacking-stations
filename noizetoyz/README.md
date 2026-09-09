@@ -175,7 +175,7 @@ themselves are no longer imported from nebra).
 **Moved 2026-09-02** from `webapp/index.html` into `landing-page/`,
 restyled to use the site's shared Bonfire CSS (`site.css` — `.style-card`,
 `.kindling-table`, `.smoke-text`, `a.spark`), same component vocabulary as
-`viewer.html`/`kiosk.html`. Linked from `index.html`'s "Looking around"
+`viewer.html`. Linked from `index.html`'s "Looking around"
 section. Not yet deployed live (`wrangler pages deploy`) — that's a
 separate, explicit step.
 

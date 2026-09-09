@@ -238,7 +238,7 @@ to see your note land as a real record, same live feed the player's own table re
 **The idea**: [airglow.run](https://airglow.run) is a no-code "if this ATProto
 event happens, do that" automation platform — already the plumbing behind
 hacking.tilde.style's "recently connected via youandme.at" feed on
-`kiosk.html`. Build your own automation, point its action at a shared
+`viewer.html`. Build your own automation, point its action at a shared
 lexicon, and it shows up live as a flying emoji on **Toons**
 (`toons.tilde.style`), the workshop's big-screen wall — no code, no waiting
 on anyone else to wire your feed in.
