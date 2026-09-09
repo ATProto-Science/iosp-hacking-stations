@@ -59,7 +59,7 @@
           <form id="login-form" class="login-form">
             <label for="handle">Your handle</label>
             <div class="handle-row">
-              <input id="handle" placeholder="yourname" required pattern="[a-zA-Z0-9-]+" autocomplete="username">
+              <input id="handle" placeholder="yourname" required autocomplete="username">
               <span class="handle-suffix">.memo.dog</span>
             </div>
             <label for="password">Password</label>
@@ -108,7 +108,11 @@
       e.preventDefault();
       const resultEl = document.getElementById("login-result");
       resultEl.innerHTML = "";
-      const identifier = document.getElementById("handle").value.trim() + ".memo.dog";
+      const rawHandle = document.getElementById("handle").value.trim();
+      // Accept either the bare prefix the field now asks for, or a full
+      // handle typed out of habit (the field used to require it) — avoid
+      // double-suffixing "name.memo.dog" into "name.memo.dog.memo.dog".
+      const identifier = rawHandle.endsWith(".memo.dog") ? rawHandle : `${rawHandle}.memo.dog`;
       const password = document.getElementById("password").value;
       const loginBtn = document.getElementById("login-btn");
       loginBtn.disabled = true;
