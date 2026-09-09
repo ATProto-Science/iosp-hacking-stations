@@ -91,8 +91,13 @@
           <p>A full Linux VM per person if you want Python for Live Data Streaming, or
           a persistent environment across sessions. Needs a GitHub account;
           120 free core-hours/month, on your own account, not shared.
-          Open from the repo's Code → Codespaces button, or
-          <code>gh codespace create --repo ATProto-Science/iosp-hacking-stations</code>.</p>
+          Open from the repo's Code → Codespaces button, or from the CLI:</p>
+          <p><code>NAME=$(gh codespace create --repo ATProto-Science/iosp-hacking-stations)</code></p>
+          <p class="smoke-text">The CLI hands back a random name like
+          <code>bookish-yodel-9gx56g547524q</code> — the trailing hash is the
+          only unique part, so give it a recognizable display name instead of
+          hunting for it later in a list of "bookish yodel"s:</p>
+          <p><code>gh api -X PATCH /user/codespaces/$NAME -f display_name="atscience-station-${NAME##*-}"</code></p>
           <p class="stones"><span class="stone">live</span> <span class="stone">external tool</span></p>
         </div>
 
