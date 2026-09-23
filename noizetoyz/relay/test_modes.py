@@ -37,6 +37,12 @@ _comment:
   - mode="pluck" with just note/velocity, no extra fields.
   - the rickroll easter egg (synthType="rickroll-easteregg"), exactly as
     landing-page/player.html's own hidden button publishes it.
+  - the promenade easter egg (synthType="promenade-easteregg"), both as a
+    direct trigger (for testing playback in isolation) and as a *detection*
+    case: posts the real "Promenade I" (Mussorgsky) melody as separate
+    ordinary note-on events and confirms synth_relay.py's
+    check_promenade_egg() actually notices and fires it — this is the only
+    way to validate that logic without a human at a keyboard.
 
 Usage:
     python3 test_modes.py [--relay-url http://localhost:8478]
@@ -45,9 +51,9 @@ Usage:
 By default this runs as fast as the ATProto/HappyView round-trip allows —
 correctness, not listening. Pass --audition to pace it for a human at a
 connected board's speaker instead: prints "Now playing: ..." before each
-case and pauses after it (longer for the rickroll case, since that's a
-~17s melody, not a ~400ms note) — same test cases, same pass/fail logic,
-just slowed down and narrated.
+case and pauses after it (longer for the rickroll/promenade cases, since
+those are melodies, not a ~400ms note) — same test cases, same pass/fail
+logic, just slowed down and narrated.
 
 Exits non-zero if any test case failed.
 """
@@ -111,14 +117,14 @@ def fetch_notes():
         return json.loads(resp.read().decode("utf-8")).get("records", [])
 
 
-def record_matches(record, expected, since):
+def record_matches(record, expected, since, device_id=DEVICE_ID):
     """True if `record` is the one this test case just published: same
     deviceId, created at/after `since`, and every expected field present
     with the right value AND the right JSON type (int fields as int, not
     str — this is the actual point of the type check, AT Protocol/JSON both
     happily round-trip "40" as a string if something upstream got sloppy).
     """
-    if record.get("deviceId") != DEVICE_ID:
+    if record.get("deviceId") != device_id:
         return False
     if record.get("createdAt", "") < since:
         return False
@@ -137,7 +143,7 @@ def record_matches(record, expected, since):
     return True
 
 
-def poll_for_record(expected, since):
+def poll_for_record(expected, since, device_id=DEVICE_ID):
     """Poll listNotes a few times, with a short sleep between, looking for
     a record matching `expected`. Returns (found_record_or_None, last_error).
     """
@@ -150,7 +156,7 @@ def poll_for_record(expected, since):
             time.sleep(POLL_SLEEP_S)
             continue
         for record in records:
-            if record_matches(record, expected, since):
+            if record_matches(record, expected, since, device_id=device_id):
                 return record, None
         last_error = f"no matching record in {len(records)} listNotes result(s) after {attempt} attempt(s)"
         if attempt < POLL_RETRIES:
@@ -171,6 +177,49 @@ def run_case(relay_url, name, body, expected=None):
         return False
 
     record, error = poll_for_record(expected, since)
+    if record is None:
+        print(f"FAIL  {name}: {error}")
+        return False
+
+    print(f"PASS  {name}")
+    return True
+
+
+# Real "Promenade I" opening phrase (Mussorgsky, Pictures at an Exhibition) —
+# same absolute MIDI notes as synth_relay.py's _EGG_REFERENCE_NOTES, see that
+# constant's own comment for the Mutopia/Hooktheory sourcing. Used only to
+# turn the target melody into note-on events for this detection test.
+_PROMENADE_NOTES = [67, 65, 70, 72, 77, 74, 72, 77, 74, 70, 72, 67, 65]  # G F Bb C F D C F D Bb C G F
+_PROMENADE_EGG_DEVICE_ID = "relay-detector"  # synth_relay.py's check_promenade_egg() publish
+_PROMENADE_NOTE_GAP_S = 0.3  # well under synth_relay.py's _EGG_IDLE_RESET_S (2.0s)
+
+
+def run_promenade_detection_case(relay_url, audition):
+    """Posts the real Promenade I melody as separate note-on events (one at
+    a time, small delay between — simulating someone actually playing it)
+    and confirms synth_relay.py's check_promenade_egg() fired: a
+    synthType="promenade-easteregg" record from deviceId="relay-detector"
+    should show up afterward. This is the only way to test the detector's
+    rolling-window/contour-matching logic without a human at a keyboard.
+    """
+    name = "promenade easter egg detection (played note-by-note)"
+    if audition:
+        print(f"\n>>> Now playing: {name}")
+    since = utc_now_str()
+
+    for note in _PROMENADE_NOTES:
+        body = {
+            "note": note, "velocity": 100,
+            "deviceId": DEVICE_ID, "synthType": "test-promenade-detect",
+        }
+        status, text = post_note(relay_url, body)
+        if status != 204:
+            print(f"FAIL  {name}: POST /note returned {status} (expected 204): {text!r}")
+            return False
+        time.sleep(_PROMENADE_NOTE_GAP_S)
+
+    expected = {"note": 0, "velocity": 100, "synthType": "promenade-easteregg"}
+    record, error = poll_for_record(expected, since, device_id=_PROMENADE_EGG_DEVICE_ID)
     if record is None:
         print(f"FAIL  {name}: {error}")
         return False
@@ -244,6 +293,13 @@ def build_cases():
         "note": 0, "velocity": 100, "deviceId": DEVICE_ID, "synthType": "rickroll-easteregg",
     }))
 
+    # --- promenade easter egg direct trigger — tests playback in isolation,
+    # without needing check_promenade_egg()'s detector to actually fire.
+    # See run_promenade_detection_case() for the detection-side test. ---
+    cases.append(("promenade easter egg (direct trigger)", {
+        "note": 0, "velocity": 100, "deviceId": DEVICE_ID, "synthType": "promenade-easteregg",
+    }))
+
     return cases
 
 
@@ -260,7 +316,7 @@ def main():
     )
     parser.add_argument(
         "--pace", type=float, default=2.5,
-        help="Seconds to pause after each case in --audition mode (default: %(default)s); the rickroll case always gets longer, it's a ~17s melody",
+        help="Seconds to pause after each case in --audition mode (default: %(default)s); the rickroll/promenade cases always get longer, they're melodies",
     )
     args = parser.parse_args()
     relay_url = args.relay_url.rstrip("/")
@@ -274,8 +330,13 @@ def main():
             print(f"\n>>> Now playing: {name}")
         results.append(run_case(relay_url, name, body))
         if args.audition:
-            pause = 18.0 if "rickroll" in name.lower() else args.pace
+            pause = 18.0 if ("rickroll" in name.lower() or "promenade" in name.lower()) else args.pace
             time.sleep(pause)
+
+    results.append(run_promenade_detection_case(relay_url, args.audition))
+    if args.audition:
+        time.sleep(18.0)  # let the triggered playback (see above) actually finish
+
     passed = sum(results)
     total = len(results)
 

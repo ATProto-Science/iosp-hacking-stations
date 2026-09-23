@@ -55,8 +55,12 @@ Connects to the public Jetstream firehose (`wss://jetstream1.us-east.bsky.networ
 filtered server-side to just this collection. Prints one human-readable line
 per event, mode-aware — shows the actual parameters for whichever mode fired
 (`scrubPos`/`sampleId` for scrub, `foldGain`/`foldBias` for fold, `cutoffHz`/
-`resonance` for filter, `fmIndex`/`fmRatio` for fm), and the rickroll easter
-egg gets called out on its own line instead of looking like a bare note.
+`resonance` for filter, `fmIndex`/`fmRatio` for fm), and the rickroll/promenade
+easter eggs get called out on their own line instead of looking like a bare
+note. The promenade egg isn't manually triggered like rickroll — it fires on
+its own, from `synth_relay.py`'s `check_promenade_egg()`, whenever it notices
+the opening phrase of Mussorgsky's "Promenade I" (Pictures at an Exhibition)
+actually being played by anyone, anywhere on the network.
 
 `--did` filters to specific author(s) (Jetstream's `wantedDids`) — useful for
 isolating one board/participant out of a room full of players.

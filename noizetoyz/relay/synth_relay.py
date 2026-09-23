@@ -48,6 +48,7 @@ import os
 import socketserver
 import threading
 import time
+from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from httpx_ws import connect_ws
@@ -99,6 +100,82 @@ def publish_note(fields):
             models.ComAtprotoRepoCreateRecord.Data(collection=RECORD_TYPE, record=record, repo=_repo_did)
         )
     print(f"[noizetoyz] published: {record}")
+
+
+# Real opening phrase (bars 1-2, before the harmonized answering phrase) of
+# "Promenade I" from Mussorgsky's Pictures at an Exhibition -- not a
+# paraphrase like the first draft of this egg was. Absolute MIDI pitches
+# transcribed from the Mutopia Project's engraved score (promenade-1.mid,
+# LilyPond-generated from the public-domain original -- confirmed B-flat
+# major, alternating 5/4/6/4, opens on scale-degree 6, at
+# https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=475), cross-checked
+# against Hooktheory's Theorytab analysis of the same passage (B-flat major,
+# melody range F4-F5, opens vi -> V6 --
+# https://www.hooktheory.com/theorytab/view/modest-mussorgsky/pictures-at-an-exhibition---promenade-i).
+# Only the pitch classes (mod 12) matter for detection below -- these
+# absolute octaves are just the real transcription's, not a requirement.
+_EGG_REFERENCE_NOTES = [67, 65, 70, 72, 77, 74, 72, 77, 74, 70, 72, 67, 65]  # G F Bb C F D C F D Bb C G F
+_EGG_IDLE_RESET_S = 2.0
+_EGG_COOLDOWN_S = 30.0
+
+
+def _interval_contour(pitch_classes):
+    """Consecutive signed deltas between pitch classes, wrapped to the
+    shortest interval (-6..6) so the contour is octave/transposition
+    invariant -- a note played an octave away from the previous one still
+    reads as the same short interval, not +12/-12.
+    """
+    return [(cur - prev + 6) % 12 - 6 for prev, cur in zip(pitch_classes, pitch_classes[1:])]
+
+
+_EGG_TARGET_PITCH_CLASSES = [n % 12 for n in _EGG_REFERENCE_NOTES]
+_EGG_TARGET_CONTOUR = _interval_contour(_EGG_TARGET_PITCH_CLASSES)
+
+_egg_window = deque(maxlen=len(_EGG_TARGET_PITCH_CLASSES))
+_egg_last_note_at = 0.0
+_egg_last_fired_at = 0.0
+_egg_lock = threading.Lock()
+
+
+def check_promenade_egg(record):
+    """Watches every note-on record flowing through the downlink (any
+    source, any participant -- see jetstream_downlink_loop()'s own
+    docstring, this runs on the same per-commit record) for the Promenade
+    theme's pitch contour (transposition-invariant -- see
+    _interval_contour()). On a match, publishes a
+    synthType="promenade-easteregg" note exactly like the rickroll egg's
+    own manual trigger, so it broadcasts to every connected board through
+    the normal publish -> Jetstream -> broadcast_record() path.
+    """
+    global _egg_last_note_at, _egg_last_fired_at
+    note = record.get("note")
+    if note is None or record.get("synthType") == "promenade-easteregg":
+        return  # don't let the egg's own trigger note feed back into itself
+
+    now = time.time()
+    with _egg_lock:
+        if now - _egg_last_note_at > _EGG_IDLE_RESET_S:
+            _egg_window.clear()
+        _egg_last_note_at = now
+        _egg_window.append(int(note) % 12)
+
+        if len(_egg_window) < _egg_window.maxlen:
+            return
+        if _interval_contour(list(_egg_window)) != _EGG_TARGET_CONTOUR:
+            return
+        if now - _egg_last_fired_at < _EGG_COOLDOWN_S:
+            return
+        _egg_last_fired_at = now
+        _egg_window.clear()
+
+    print("[noizetoyz] Promenade easter egg detected!")
+    try:
+        publish_note({
+            "note": 0, "velocity": 100,
+            "deviceId": "relay-detector", "synthType": "promenade-easteregg",
+        })
+    except Exception as exc:
+        print(f"[noizetoyz] Promenade egg publish failed: {exc}")
 
 
 def parse_line(line):
@@ -202,6 +279,7 @@ def jetstream_downlink_loop():
                     record = message.get("commit", {}).get("record", {})
                     if record:
                         broadcast_record(record)
+                        check_promenade_egg(record)
         except Exception as exc:
             print(f"[noizetoyz] downlink subscription dropped ({exc}), reconnecting in 3s")
             time.sleep(3)

@@ -38,6 +38,10 @@ def on_record(message):
         print(f"[synth] {record.get('deviceId', '?')}: RICKROLL EASTER EGG @ {record.get('createdAt')}")
         return
 
+    if record.get("synthType") == "promenade-easteregg":
+        print(f"[synth] {record.get('deviceId', '?')}: PROMENADE EASTER EGG @ {record.get('createdAt')}")
+        return
+
     mode = record.get("mode", "tone")
     # per-mode detail — mirrors what esp_multi_synth.ino actually does with
     # each field (fm reinterprets foldGain/foldBias as fmIndex/fmRatio, see

@@ -183,7 +183,7 @@ int16_t rickrollStep = -1;
 unsigned long rickrollStepAt = 0;
 
 // ---- shared playback state ----
-enum PlayMode { MODE_TONE, MODE_SCRUB, MODE_FOLD, MODE_FILTER, MODE_FM, MODE_PLUCK, MODE_RICKROLL };
+enum PlayMode { MODE_TONE, MODE_SCRUB, MODE_FOLD, MODE_FILTER, MODE_FM, MODE_PLUCK, MODE_RICKROLL, MODE_PROMENADE };
 PlayMode currentMode = MODE_TONE;
 
 const unsigned int NOTE_DURATION_MS = 400;
@@ -341,6 +341,64 @@ void updateRickroll() {
   startRickrollStep();
 }
 
+// ---- promenade easter egg — triggered by synth_relay.py's
+// check_promenade_egg() noticing the "Promenade I" (Mussorgsky, Pictures at
+// an Exhibition) pitch contour played live (from any device, any
+// participant), not by a hidden button like the rickroll egg above. Real
+// opening phrase (bars 1-2), transcribed from the Mutopia Project's
+// engraved score (promenade-1.mid — B-flat major, alternating 5/4/6/4,
+// opens on scale-degree 6) and cross-checked against Hooktheory's
+// Theorytab analysis of the same passage (B-flat major, melody range
+// F4-F5, opens vi -> V6) — see synth_relay.py's own _EGG_REFERENCE_NOTES
+// comment for both source URLs. F4 reuses the existing #define above
+// (same pitch); the rest get their own PROM_* names since Bb4/C5/D5/F5
+// aren't otherwise defined in this file. Tempo 100 BPM per Hooktheory's
+// tempo marking. ----
+#define PROM_G4  67
+#define PROM_BB4 70
+#define PROM_C5  72
+#define PROM_D5  74
+#define PROM_F5  77
+const uint8_t PROMENADE_BPM = 100;
+const Step PROMENADE_MELODY[] = {
+  {PROM_G4,4}, {F4,4}, {PROM_BB4,4}, {PROM_C5,2}, {PROM_F5,2}, {PROM_D5,4},
+  {PROM_C5,2}, {PROM_F5,2}, {PROM_D5,4}, {PROM_BB4,4}, {PROM_C5,4}, {PROM_G4,4}, {F4,4},
+};
+const uint8_t PROMENADE_NUM_STEPS = sizeof(PROMENADE_MELODY) / sizeof(PROMENADE_MELODY[0]);
+const float PROMENADE_MS_PER_16TH = 60000.0 / PROMENADE_BPM / 4.0;
+int16_t promenadeStep = -1;
+unsigned long promenadeStepAt = 0;
+
+void startPromenade() {
+  currentMode = MODE_PROMENADE;
+  promenadeStep = -1;
+  promenadeStepAt = millis();
+  Serial.println("[multi-synth] promenade easter egg triggered");
+}
+
+void startPromenadeStep() {
+  promenadeStep++;
+  if (promenadeStep >= PROMENADE_NUM_STEPS) {
+    // played through once — back to idle, same non-looping choice as the
+    // rickroll egg above.
+    currentMode = MODE_TONE;
+    sounding = false;
+    return;
+  }
+  aSin.setFreq(midiToFreq(PROMENADE_MELODY[promenadeStep].note));
+  sounding = true;
+  promenadeStepAt = millis();
+}
+
+void updatePromenade() {
+  unsigned long elapsed = millis() - promenadeStepAt;
+  unsigned int slotMs = (unsigned int)(PROMENADE_MELODY[promenadeStep].dur16 * PROMENADE_MS_PER_16TH);
+  bool inGap = sounding && slotMs > RICKROLL_GAP_MS && elapsed >= (slotMs - RICKROLL_GAP_MS);
+  if (inGap) sounding = false;
+  if (elapsed < slotMs) return;
+  startPromenadeStep();
+}
+
 // Parses one wire line ("note=60 velocity=100 mode=fold foldGain=90 ..."),
 // same format as every other device in this station — see
 // synth_relay.py's record_to_line(). Collects every field this sketch
@@ -379,6 +437,11 @@ void applyLine(const String &line) {
 
   if (synthType == "rickroll-easteregg") {
     startRickroll();
+    return;
+  }
+
+  if (synthType == "promenade-easteregg") {
+    startPromenade();
     return;
   }
 
@@ -522,6 +585,10 @@ void updateControl() {
     updateRickroll();
     return;
   }
+  if (currentMode == MODE_PROMENADE) {
+    updatePromenade();
+    return;
+  }
 
   bool gatedMode = currentMode == MODE_TONE || currentMode == MODE_FOLD ||
                    currentMode == MODE_FILTER || currentMode == MODE_FM;
@@ -567,6 +634,9 @@ AudioOutput updateAudio() {
       return MonoOutput::from16Bit(gain * aSin.next());
     }
     case MODE_RICKROLL:
+      if (!sounding) return MonoOutput::from8Bit(0);
+      return MonoOutput::from8Bit(aSin.next());
+    case MODE_PROMENADE:
       if (!sounding) return MonoOutput::from8Bit(0);
       return MonoOutput::from8Bit(aSin.next());
     default: { // MODE_TONE
