@@ -6,6 +6,9 @@
 *its own. All planning and task-tracking lives in tracker's `tracker-vss7` bean*
 *(`~/txt/tracker/.beans/tracker-vss7--iosp-atscience-workshop-resilient-data-sovereign-i.md`)*
 *— read that first for status, decisions, and open questions; this file is code orientation only.*
+*For the registration desk specifically (now its own repo, see below), the actively-updated*
+*bean is `tracker-unef`, not `tracker-vss7` — `tracker-vss7` was split into sub-beans on*
+*2026-09-15 and just points to `tracker-unef` for that thread.*
 
 ---
 
@@ -59,10 +62,13 @@ yet confirmed whether `station-4-bots/` is still the actual basis for it. See `t
 - **Kiosk / registration desk — moved out 2026-09-29** to its own repo,
   [`ATProto-Science/iosp-kiosk`](https://github.com/ATProto-Science/iosp-kiosk) (local clone
   `~/src/iosp-kiosk`, history preserved minus the desk QR assets that embedded a real invite
-  code). It's `kiosk.tilde.style`, its own Cloudflare Pages project (`kiosk-tilde-style`,
-  deployed by hand with `wrangler pages deploy`): the account-creation form, `staff.html`
-  check-in console, and `OPS.md`. Kiosk work happens there, not here. This repo keeps the
-  shared `style.tilde.hacking.*` lexicons and `viewer.html`'s check-in grid.
+  code; own `CLAUDE.md` there). It's `kiosk.tilde.style`, its own Cloudflare Pages project
+  (`kiosk-tilde-style`, deployed by hand): a ticket/voucher system (scan a QR → pick Aster or
+  memo.dog → get an invite code) that replaced the earlier plain account-creation form and
+  `staff.html` check-in console — confirmed working with a real Aster signup 2026-09-29. Kiosk
+  work happens there, not here. This repo keeps the shared `style.tilde.hacking.*` lexicons and
+  `viewer.html`'s check-in grid (now fed by the ticket system's automatic signup writes, not a
+  manual staff step).
 
 `WORKSHEET.md` (repo root) is the actual participant-facing worksheet — every station's
 setup instructions, account options, and stretch goals in one place. `README.md` is the
@@ -88,6 +94,7 @@ top-level repo README (deploys to hacking.tilde.style's "Code" section).
 
 | Project | Path | Role |
 |---|---|---|
-| tracker | `~/txt/tracker/` | All planning/tasks (`tracker-vss7`); this repo is code only |
+| tracker | `~/txt/tracker/` | All planning/tasks (`tracker-vss7` overview, `tracker-unef` for kiosk detail); this repo is code only |
+| iosp-kiosk | `~/src/iosp-kiosk/` | Sibling repo, split off 2026-09-29 — the registration desk (ticket/voucher system, `kiosk.tilde.style`), previously `kiosk-onboard/` here. See its own `CLAUDE.md`. Reads/writes the `style.tilde.hacking.*` lexicons this repo owns. |
 | werk.museum | `~/werk.museum/` | Hosts the workshop's base-station infra (gretel: code-server, HappyView) — see its own CLAUDE.md for ops detail |
 | haiku.garden | `~/haiku.garden/` | `sail-judge.mjs` there is the production/Rust-Restate sibling of station-4-bots' JS bandit pattern |
