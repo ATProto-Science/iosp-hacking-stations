@@ -112,7 +112,7 @@
 
         <div class="style-card">
           <h3>Viewer</h3>
-          <p>Read Live Data Streaming's live sensor readings, station 4's SAITO facts,
+          <p>Read Live Data Streaming's live sensor readings,
           Noizetoyz's last played note, and who's checked in — 🐕 memo.dog /
           🌸 Aster, plus the
           "recently connected via youandme.at" feed — side by side, plain
@@ -164,11 +164,10 @@
           (or its Admin API — that's how the check-in lexicons below were
           actually registered this time, no dashboard clicking needed) — the
           record schema itself (<code>style.tilde.hacking.sensorReading</code>,
-          <code>run.saito.fact</code>, <code>style.tilde.hacking.checkin</code>,
+          <code>style.tilde.hacking.checkin</code>,
           <code>music.atproto.noizetoyz.synth.note</code>)
           <em>and</em> a companion query lexicon
           (<code>style.tilde.hacking.listSensorReadings</code>,
-          <code>run.saito.listFacts</code>,
           <code>style.tilde.hacking.listCheckins</code>,
           <code>music.atproto.noizetoyz.synth.listNotes</code>) whose
           <code>target_collection</code> points back at the record NSID —
@@ -189,11 +188,10 @@
           correctly even before you've wired up a list query. URL pattern:
           <code>pdsls.dev/at://&lt;your-handle&gt;</code>, or add a collection
           NSID to see just that one, e.g.
-          <code>pdsls.dev/at://&lt;your-handle&gt;/run.saito.fact</code>.</p>
+          <code>pdsls.dev/at://&lt;your-handle&gt;/style.tilde.hacking.sensorReading</code>.</p>
           <p class="stones">
             <a href="https://pdsls.dev" class="spark">pdsls.dev</a>
             <a href="https://pdsls.dev/at://torsten.memo.dog" class="spark">example repo</a>
-            <a href="https://pdsls.dev/at://torsten.memo.dog/run.saito.fact" class="spark">example: saito facts</a>
             <a href="https://pdsls.dev/at://torsten.memo.dog/style.tilde.hacking.sensorReading" class="spark">example: sensor readings</a>
           </p>
           <p class="stones"><span class="stone">live</span> <span class="stone">external tool</span></p>
