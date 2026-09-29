@@ -23,10 +23,14 @@ Pick one (see hacking.tilde.style for the current status of each):
       enforces a strict per-IP rate limit (~10 requests/24h) — fine for
       light use, but a producer writing every 5 seconds will blow through
       it fast. Prefer `memo.dog` (below) or Aster if you're doing Live Data Streaming.
-- [ ] **Aster** — the new science PDS, via invite code, if it's live by the
-      time you're reading this.
-- [ ] **`memo.dog`** — our own self-hosted test PDS (invite-code only, ask
-      at the station for a code), built specifically to handle Live Data Streaming's
+- [ ] **Aster** — the new science PDS, our main recommendation. Scan the
+      ticket QR code you got at registration, pick Aster on the page it opens,
+      and it hands you straight to Aster's own sign-up screen with an invite
+      code already set aside for you.
+- [ ] **`memo.dog`** — our own self-hosted test PDS, the walk-up option if
+      you don't have a ticket handy or just want something temporary. Pick
+      memo.dog from the same ticket page, or go straight to
+      `kiosk.tilde.style` — built specifically to handle Live Data Streaming's
       continuous-write load without the `pds.rip` rate limit. Load-tested
       at 10 concurrent accounts writing every 5s with zero errors.
       **Not a permanent service** — workshop duration + a few days, not
@@ -37,7 +41,7 @@ Pick one (see hacking.tilde.style for the current status of each):
       to the relay network, so this is already handled, not something you
       need to do per account. Nothing else to configure.
 
-Either way, you end up with a **handle** (e.g. `you.pds.rip` or
+Either way, you end up with a **handle** (e.g. `you.pds.rip`, `you.aster.id`, or
 `you.memo.dog`) and a **password**. That's all every station below needs.
 
 - [ ] Clone the code: `git clone https://github.com/ATProto-Science/iosp-hacking-stations`
