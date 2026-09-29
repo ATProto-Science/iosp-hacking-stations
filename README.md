@@ -36,9 +36,12 @@ note to receive-only instruments and the browser player. See `noizetoyz/README.m
 
 One identity gets participants into every station — `landing-page/index.html`'s "Get
 set up" section is the real, working entry point: **pds.rip** (zero-commitment, rate-
-limited), **memo.dog** (our own self-hosted test PDS, one-page signup at
-`kiosk.tilde.style`, its own Cloudflare Pages project — see [`iosp-kiosk`](https://github.com/ATProto-Science/iosp-kiosk)), or
-**Aster** (the new science PDS, pending its own launch — see `tracker-vss7`). A shared OAuth-to-OIDC login bridge (`atlogin`) is the longer-term
+limited), **Aster** (the new science PDS, our main recommendation — get invited at the
+registration desk by scanning the ticket QR code), or **memo.dog** (our own self-hosted
+test PDS, the walk-up/temporary option, one-page signup at `kiosk.tilde.style`). Both
+Aster and memo.dog signup, plus the ticket/invite-code system behind the desk's QR
+codes, live in their own repo — see [`iosp-kiosk`](https://github.com/ATProto-Science/iosp-kiosk).
+A shared OAuth-to-OIDC login bridge (`atlogin`) is the longer-term
 plan for one identity working across every station's tooling without re-auth —
 described, not yet wired into the landing page.
 
