@@ -70,7 +70,7 @@ On the Toons wall (`toons.tilde.style`) the 4 webcam readings render as
 colored geometric emoji keyed off the reading's own value (a colored
 circle for hue, a black/white square for brightness, an up/down triangle
 for saturation, a blue/orange diamond for contrast) rather than one fixed
-icon — see `toons/index.html`'s `WEBCAM_EMOJI`.
+icon — see `toons/public/index.html`'s `WEBCAM_EMOJI`.
 
 **Confirmed working end-to-end 2026-09-06**: all 6 drivers launched
 together, resolved a real account (`torsten.memo.dog`), published real
@@ -107,7 +107,7 @@ whichever's already open:
 - `goat firehose --ops -c style.tilde.hacking.sensorReading` — one-liner,
   no local script needed
 - `curl .../xrpc/style.tilde.hacking.listSensorReadings` against HappyView
-  (`landing-page/viewer.html`'s and `toons/index.html`'s own read path) —
+  (`landing-page/viewer.html`'s and `toons/public/index.html`'s own read path) —
   already-indexed records, not the raw firehose
 
 ## Deploying to robopi

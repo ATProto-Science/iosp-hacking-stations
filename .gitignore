@@ -5,3 +5,4 @@ node_modules/
 *.session
 .local_sensors_pids/
 *.local.html
+__pycache__/

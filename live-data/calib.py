@@ -14,7 +14,7 @@ same signalstats pass webcam-grab.sh uses:
     red=161  yellow=99  green=38  cyan=341  blue=279  magenta=218
 
 roughly a REVERSED wheel with a ~161 offset, not the 0/60/120/180/240/300
-this repo's current WEBCAM_EMOJI (toons/index.html, viewer.html) assumes —
+this repo's current WEBCAM_EMOJI (toons/public/index.html, viewer.html) assumes —
 which is very likely why real cards were mapping to visibly wrong colors.
 This script's "reference guess" column uses the empirical anchors above
 instead, so you can see whether that calibration actually holds for a
@@ -65,7 +65,7 @@ REFERENCE_HUES = {
     "magenta": 218,
 }
 
-# The CURRENT (believed-wrong) bucket logic from toons/index.html's
+# The CURRENT (believed-wrong) bucket logic from toons/public/index.html's
 # WEBCAM_EMOJI.hue, reproduced here unchanged so you can see exactly how
 # far off it is from the reference-guess column, side by side.
 def current_broken_bucket(h):

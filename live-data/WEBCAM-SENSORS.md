@@ -55,7 +55,7 @@ INTERVAL_SECONDS=10 DEVICE_ID=pad ./webcam_producer.py
 
 On the Toons wall specifically, these four render as colored geometric
 emoji whose shape/color come from the reading's own value, not a fixed
-emoji per type like every other sensor — see `toons/index.html`'s
+emoji per type like every other sensor — see `toons/public/index.html`'s
 `WEBCAM_EMOJI` for the mapping (hue picks a colored circle straight off
 the color wheel; brightness a black/white square; saturation an up/down
 triangle; contrast an orange/blue diamond).

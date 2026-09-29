@@ -6,7 +6,7 @@
 (`toons.tilde.style`) the same way the youandme.at connection relay already
 does. Not required for the wall to work — sensors/notes/check-ins already
 have their own dedicated lanes reading their native collections directly
-(see `toons/index.html`'s `LANES` array) — this is purely for eventually
+(see `toons/public/index.html`'s `LANES` array) — this is purely for eventually
 running the wall off one unified lane instead of five, and/or giving station
 events the same "any airglow automation can add to the wall" path
 participants get in `WORKSHEET.md` §3.
@@ -85,7 +85,7 @@ knowing before building more:
   - `label` — literal, from the table
   - `tier` — **`item` for the sensor-reading and noizetoyz-note automations,
     omit it (defaults to `avatar`) for check-ins.** Added 2026-09-06 once
-    `toons/index.html` grew two rendering tiers: `avatar` wanders around the
+    `toons/public/index.html` grew two rendering tiers: `avatar` wanders around the
     screen and is meant for rare, one-per-person events — exactly wrong for
     a sensor board firing ~24 records/min, which would flood the wall with
     avatars. `item` hops-and-fades instead, same as these streams' own
@@ -106,7 +106,7 @@ ours) with a "hold off" warning here. Renamed to
 authority as `checkin`/`connection`/`toon`, no new DNS step, no more
 "finalize before the event" caveat. All 18 relays are buildable now.
 
-Matches the OLED-icon-derived table already in `toons/index.html`'s
+Matches the OLED-icon-derived table already in `toons/public/index.html`'s
 `SENSOR_EMOJI`. Set `tier: "item"` on all 7 — this is the busiest stream
 (~24/min per active board).
 
@@ -122,7 +122,7 @@ Matches the OLED-icon-derived table already in `toons/index.html`'s
 
 ## Noizetoyz notes — trigger `music.atproto.noizetoyz.synth.note`, condition on `mode`
 
-Matches `toons/index.html`'s `NOTE_EMOJI`. **Caveat**: `mode` is optional —
+Matches `toons/public/index.html`'s `NOTE_EMOJI`. **Caveat**: `mode` is optional —
 absent means `tone` (the original pre-2026-09-02 behavior). If airglow.run
 can't condition on "field is absent," the `tone` automation below will only
 catch notes that explicitly set `mode: "tone"`, missing any older-style note

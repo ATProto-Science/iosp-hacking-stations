@@ -1,7 +1,7 @@
 # Webcam hue calibration notes
 
 Raw data for rebuilding `WEBCAM_EMOJI.hue`'s bucket boundaries in
-`toons/index.html` and `landing-page/viewer.html` — currently still the
+`toons/public/index.html` and `landing-page/viewer.html` — currently still the
 disproven standard-HSV-shaped assumption (red≈0°, yellow≈60°, etc.),
 confirmed wrong 2026-09-06 by a synthetic-color ffmpeg test (see
 `calib.py`'s own docstring) and now by real cards below. **Not yet
@@ -50,7 +50,7 @@ seeing if it's still this tight under daylight).
   ideally cyan/purple too so the full wheel is covered, not just the
   warm half.
 - Only after that: rewrite `WEBCAM_EMOJI.hue`'s bucket boundaries in
-  both `toons/index.html` and `landing-page/viewer.html` from the
+  both `toons/public/index.html` and `landing-page/viewer.html` from the
   combined dataset, and decide what to do below some saturation
   threshold (tonight's blue result suggests low-saturation readings
   should probably fall back to a neutral/grey indicator instead of
