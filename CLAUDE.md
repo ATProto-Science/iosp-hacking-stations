@@ -53,22 +53,16 @@ yet confirmed whether `station-4-bots/` is still the actual basis for it. See `t
   note, and — since `kiosk.html` was folded in and removed 2026-09-08 — the
   on-screen check-in grid too: dog/aster/garden emoji per account track, plus a
   "recently connected via youandme.at" feed), `player.html` (Noizetoyz browser
-  player), and `kiosk-onboard/staff.html` on the other domain (password-protected
+  player), and the kiosk repo's `staff.html` on the other domain (password-protected
   check-in console). Reads/writes real ATProto records, no separate backend of
   its own.
-- **`kiosk-onboard/`** — deployed as its *own* Cloudflare Pages project at
-  `kiosk.tilde.style` (separate from `landing-page/`'s `hacking.tilde.style`, since the
-  two domains need different root content). `index.html` is the one-page memo.dog
-  account-creation form (moved here 2026-09-05, was `memo-dog-signup.html` under
-  `landing-page/`) — reads an `?invite=` URL query param to pre-fill the invite-code
-  field, so the desk's printed/displayed QR code (encoding a single multi-use invite
-  code, minted via cocoon's `create-invite-code --uses N` — never committed to this
-  public repo) needs zero typing; a bare `kiosk.tilde.style` link is the manual-entry
-  fallback. `staff.html` (at `kiosk.tilde.style/staff`, moved here same day, was
-  `checkin.html` under `landing-page/`) is the password-protected console for logging
-  Aster/Bluesky/self-hosted check-ins — linked (2026-09-08) from both `index.html`'s
-  own footer here and `landing-page/index.html`'s "Staff" card, password protection
-  standing in for the earlier no-public-link approach.
+- **Kiosk / registration desk — moved out 2026-09-29** to its own repo,
+  [`ATProto-Science/iosp-kiosk`](https://github.com/ATProto-Science/iosp-kiosk) (local clone
+  `~/src/iosp-kiosk`, history preserved minus the desk QR assets that embedded a real invite
+  code). It's `kiosk.tilde.style`, its own Cloudflare Pages project (`kiosk-tilde-style`,
+  deployed by hand with `wrangler pages deploy`): the account-creation form, `staff.html`
+  check-in console, and `OPS.md`. Kiosk work happens there, not here. This repo keeps the
+  shared `style.tilde.hacking.*` lexicons and `viewer.html`'s check-in grid.
 
 `WORKSHEET.md` (repo root) is the actual participant-facing worksheet — every station's
 setup instructions, account options, and stretch goals in one place. `README.md` is the
