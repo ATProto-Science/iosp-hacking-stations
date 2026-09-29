@@ -105,7 +105,7 @@
       <h1 class="site-name">📡🌡️ Live Data Streaming + 🎹🎶 Noizetoyz — one substrate</h1>
       <p class="site-tagline">Both stations read/write real ATProto records through the same HappyView AppView — no separate backends.</p>
       <nav class="section-nav">
-        <a href="#checkins" class="spark">🐕🌸🦋🌻🏠 Who's checked in</a>
+        <a href="#checkins" class="spark">🐕🌸 Who's checked in</a>
         <a href="#sensors" class="spark">📡🌡️ Sensor readings</a>
         <a href="#notes" class="spark">🎹🎶 Noizetoyz</a>
       </nav>
@@ -115,36 +115,21 @@
   <main>
     <section class="gathered">
       <div class="gathered-inner">
-        <h2 id="checkins">🐕🌸🦋🌻🏠 Who's checked in — memo.dog / Aster / Bluesky / BYOH / self-hosted</h2>
+        <h2 id="checkins">🐕🌸 Who's checked in — memo.dog / Aster</h2>
         <p class="smoke-text" id="status-checkins">loading…</p>
 
         <div class="kiosk-tracks">
           <div class="style-card track-card">
             <h3>🐕 memo.dog</h3>
             <p class="track-count" id="count-memo.dog">–</p>
-            <p class="smoke-text">Self-service at kiosk.tilde.style.</p>
+            <p class="smoke-text">Self-service at kiosk.tilde.style — temporary account.</p>
             <p class="smoke-text">🎟️ <span id="invite-remaining">–</span> invite uses left</p>
             <div class="codes-grid" id="codes-grid"></div>
           </div>
           <div class="style-card track-card">
             <h3>🌸 Aster</h3>
             <p class="track-count" id="count-aster">–</p>
-            <p class="smoke-text">Checked in by station staff.</p>
-          </div>
-          <div class="style-card track-card">
-            <h3>🦋 Bluesky</h3>
-            <p class="track-count" id="count-bluesky">–</p>
-            <p class="smoke-text">Checked in by station staff.</p>
-          </div>
-          <div class="style-card track-card">
-            <h3>🌻 BYOH</h3>
-            <p class="track-count" id="count-byoh">–</p>
-            <p class="smoke-text">Brought their own (non-Bluesky) handle.</p>
-          </div>
-          <div class="style-card track-card">
-            <h3>🏠 Self-hosted</h3>
-            <p class="track-count" id="count-selfhosted">–</p>
-            <p class="smoke-text">Unrecognized self-hosted PDS.</p>
+            <p class="smoke-text">Self-service at kiosk.tilde.style — the main science PDS.</p>
           </div>
         </div>
 
@@ -339,7 +324,11 @@
       }
     }
 
-    const TRACK_EMOJI = { "memo.dog": "🐕", aster: "🌸", bluesky: "🦋", byoh: "🌻", selfhosted: "🏠" };
+    // bluesky/byoh/selfhosted tracks retired 2026-09-29 along with kiosk-onboard's staff
+    // check-in console (the only thing that ever wrote them) — memo.dog and aster now write
+    // their own check-in record automatically on real signup, no staff tap needed. The
+    // fallback emoji below still renders any old record with a track outside this map.
+    const TRACK_EMOJI = { "memo.dog": "🐕", aster: "🌸" };
 
     // did -> handle, resolved lazily via the public Bluesky AppView (no auth
     // needed for public profiles) since style.tilde.hacking.checkin and
@@ -402,7 +391,7 @@
         statusEl.textContent = `${records.length} check-in(s)`;
         pulseCheckins(sorted);
 
-        const counts = { "memo.dog": 0, aster: 0, bluesky: 0, byoh: 0, selfhosted: 0 };
+        const counts = { "memo.dog": 0, aster: 0 };
         for (const r of sorted) {
           if (r.track in counts) counts[r.track]++;
         }
@@ -411,9 +400,6 @@
           Math.max(0, TOTAL_INVITE_USES - counts["memo.dog"]);
         renderCodesGrid(counts["memo.dog"]);
         document.getElementById("count-aster").textContent = counts.aster;
-        document.getElementById("count-bluesky").textContent = counts.bluesky;
-        document.getElementById("count-byoh").textContent = counts.byoh;
-        document.getElementById("count-selfhosted").textContent = counts.selfhosted;
         renderCheckinLog(sorted);
       } catch (err) {
         statusEl.textContent = `error: ${err.message}`;

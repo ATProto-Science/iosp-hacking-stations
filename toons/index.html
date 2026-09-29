@@ -144,7 +144,7 @@
   <main id="lanes">
     <div class="lane" id="lane-toons" data-label="🎨 your airglow.run automations"></div>
     <div class="lane" id="lane-connections" data-label="🤝 airglow.run → youandme.at connections"></div>
-    <div class="lane" id="lane-checkins" data-label="🐕🌸🦋🌻🏠 station check-ins"></div>
+    <div class="lane" id="lane-checkins" data-label="🐕🌸 station check-ins"></div>
     <div class="lane" id="lane-sensors" data-label="📡🌡️ live data streaming"></div>
     <div class="lane" id="lane-notes" data-label="🎹🎶 noizetoyz notes"></div>
   </main>
@@ -185,7 +185,9 @@
     // polls; `emoji`/`title` describe how a fresh record shows up. The first
     // poll for a lane just primes its seen-set silently, so the wall doesn't
     // dump the whole backlog in at once on load.
-    const TRACK_EMOJI = { "memo.dog": "🐕", aster: "🌸", bluesky: "🦋", byoh: "🌻", selfhosted: "🏠" };
+    // bluesky/byoh/selfhosted retired 2026-09-29 with kiosk-onboard's staff check-in console
+    // (the only writer for them) — see landing-page/viewer.html for the matching change.
+    const TRACK_EMOJI = { "memo.dog": "🐕", aster: "🌸" };
     // Matches the OLED status-bar glyphs where one exists (ICON_TEMPERATURE,
     // ICON_PRESSURE, ICON_HUMIDITY — see esp_multi_synth_oled.ino) so the
     // wall reads as the same icon language as the hardware's own screen.
